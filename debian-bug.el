@@ -229,6 +229,8 @@
 ;;    given. thanks to Jeff Sheinberg (Closes: #211598).
 ;; V1.48 01Oct2003 Peter S Galbraith <psg@debian.org>
 ;;  - Make debian-bug accept P or F without a carriage return.
+;; V1.49 05Oct2003 Peter S Galbraith <psg@debian.org>
+;;  - Add tags "sarge-ignore" and "fixed-uptsream".
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -407,8 +409,9 @@ Debian maintainers.")
 
 (defvar debian-bug-alltags-alist
   '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
-    ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid")
-    ("experimental") ("confirmed") ("d-i") ("ipv6") ("lfs"))
+    ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge")
+    ("sarge-ignore") ("sid") ("experimental") ("confirmed") ("fixed-upstream")
+    ("d-i") ("ipv6") ("lfs"))
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
@@ -1065,8 +1068,11 @@ Feb 8th 2002, checked Apr 22 2003.")))
       severity.
  upstream
       This bug applies to the upstream part of the package.
+ fixed-upstream
+      The bug has been fixed by the upstream maintainer, but not yet in the
+      package (for whatever reason: perhaps it is too complicated to backport
+      the change or too minor to be worth bothering).
  d-i
-
       This bug is relevant to the development of debian-installer. It is
       expected that this will be used when the bug affects installer
       development but is not filed against a package that forms a direct
@@ -1081,6 +1087,10 @@ Feb 8th 2002, checked Apr 22 2003.")))
       This bug particularly applies to the woody distribution.
  sarge
       This bug particularly applies to the (unreleased) sarge distribution.
+ sarge-ignore
+      This release-critical bug is to be ignored for the purposes of releasing
+      sarge. This tag should only be used by the release manager; do not set
+      it yourself without explicit authorization from him. 
  sid
       This bug particularly applies to an architecture that is currently
       unreleased (that is, in the sid distribution).
