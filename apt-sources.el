@@ -1,7 +1,7 @@
 ;;; apt-sources.el --- Mode for editing apt source.list file
 ;;
-;; Time-stamp: "2002-07-18 18:21:02 drs"
-;; Version: 0.9.6
+;; Time-stamp: "03/05/12 00:06:03 drs"
+;; Version: 0.9.7
 ;; $Revision:
 ;; $Id:
 ;; $Source:
@@ -9,7 +9,7 @@
 ;; Author: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
 ;; Mantainer: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
 
-;; Copyright (C) 2001-2002, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
+;; Copyright (C) 2001-2003, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
 
 ;;   This program is free software; you can redistribute it and/or modify
 ;;   it under the terms of the GNU General Public License as published by
@@ -27,8 +27,7 @@
 ;;; Commentary:
 
 ;; This mode is for editing '/etc/apt/sources.list', the APT (Advanced
-;; Package Tool) configuration file found on Debian systems starting
-;; with Debian 2.0 'slink'.
+;; Package Tool) configuration file found on Debian systems.
 
 ;; APT is a package retrieval tool for Debian (a GNU distribution, see
 ;; http://www.debian.org); for example you could install Emacs with
@@ -48,11 +47,12 @@
 ;; This mode font-locks the file and add some things including new
 ;; source lines and modifying existing source lines.
 ;;
-;; This mode can be costumized in diferent parts. You can (interactively)
+;; This mode can be customized in diferent parts. You can (interactively)
 ;; change if you want blank lines around a new source line and comment
 ;; with `apt-sources-around-lines'. Also you can change the way that
 ;; this mode names each source line, with variable`apt-sources-source-name';
 ;; if no name is entered, no commente name will be inserted.
+;; To customize, try `M-x customize-group [RET] apt-sources'
 ;;
 ;; You can modify existing parts of the source line; check the mode
 ;; documentation for mor details. Another thing that this mode can do is to
@@ -60,17 +60,35 @@
 ;; 'deb-src' corresponding line. If it replicates a 'deb' line, an identical
 ;; 'deb-src' source line will be created.
 ;;
-;; To load this mode, because it is very file specific, is recomended to be
-;; loaded with variables at the end of the file. This variables can be inserted
-;; with `C-c C-v' after you change the file's mode to 'apt-sources'.
+;; To load this mode, you can add a "Local Variables" block at the end of
+;; the sources.list file with `C-c C-v' after you change the file's mode to
+;; 'apt-sources'.  But this should not be needed since an entry is added to
+;; `auto-mode-alist' to automatically enter this mode when editing files
+;; named `sources.list'.
 ;;
 ;; You can always find the latest version of this mode on
-;; 'http://www.gnulinux.org.mx/~drs/emacs/apt-sources.el'
+;; 'http://people.gnulinux.org.mx/drs/emacs/apt-sources.el'
 
 ;;; TODO:
 
 ;;; History:
 
+;; 0.9.7 -- Converted relevant defvar statements to defcustom, and added
+;;          `auto-mode-alist' entry. (Peter S. Galbraith <psg@debian.org>)
+;;       -- Add completion to some of the fields in `apt-sources-new-source'
+;;          and the functions that change parameters. (suggested by
+;;          Peter S. Galbraith <psg@debian.org>)
+;;       -- Add menu support. (suggested by Peter S. Galbraith <psg@debian.org>)
+;;       -- Change name from `apt-sources-insert-source' to
+;;          `apt-sources-new-source'. (suggested by Peter S. Galbraith
+;;          <psg@debian.org>)
+;;       -- Change name from `apt-sources-insert-local-var' to
+;;          `apt-sources-insert-local-vars'. (suggested by Peter S. Galbraith
+;;          <psg@debian.org>)
+;;       -- Change `apt-sources-change-components' to handle absence of
+;;          components. (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;       -- Change the web page address form where you can find the latest version.
+;;	   (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.6 -- Added a better description to what is APT and file 'sources.list'.
 ;;          (Ole Laursen <olau@hardworking.dk>)
 ;; 0.9.5 -- Fixed typo in docstring of function `apt-sources-around-lines'.
@@ -79,12 +97,12 @@
 ;;       -- Added a description to apt and sources.list
 ;;           (David Combs <dkcombs@panix.com>)
 ;;       -- Added name and email from contributors. :)
-;;          (Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>)
+;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.4 -- Added a missing option in function `apt-sources-insert-source' to
 ;;              select 'ftp' type.
 ;;       -- Added URI-type 'https'.
 ;;       -- Fix some function's documentation mistakes.
-;;          (Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>)
+;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.3 -- Fix a recently introduced bug that prevents keybindings work under
 ;;              Xemacs.
 ;;          (John Paul Wallington <jpw@shootybangbang.com>)
@@ -93,36 +111,47 @@
 ;;       -- Change the keybinding zone to be more compact and portable.
 ;;          (John Paul Wallington <jpw@shootybangbang.com>)
 ;;       -- Change some keybindings.
-;;          (Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>)
+;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;;
 ;; 0.9.1 -- Corrected a bug in the 'cond' clauses that prevented to byte-compile.
 ;;          (Perkens-Golomb, Burkhard <burkhard.perkens-golomb@sdm.de>)'
 ;;       -- Make variable `comment-start-skip' buffer-local.
 ;;          (Stefan Monnier <monnier+gnu.emacs.sources/news/@flint.cs.yale.edu>)
 ;; 0.9   -- first release.
-;;          (Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>)
+;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 
 ;;; Code:
 
 (require 'autoinsert)
 
-(defvar apt-sources-mode-hook nil
-   "*Hook for customising apt-sources mode.")
+(defgroup apt-sources nil "Mode for editing apt source.list file"
+  :group 'tools
+  :prefix "apt-sources-")
 
-(defvar apt-sources-load-hook nil
-  "*Hook run when the `apt-sources-mode' is loaded.")
+(defcustom apt-sources-mode-hook nil
+  "*Hook for customising apt-sources mode."
+  :type 'hook
+  :group 'apt-sources)
 
-(defvar apt-sources-around-lines t
+(defcustom apt-sources-load-hook nil
+  "*Hook run when the `apt-sources-mode' is loaded."
+  :type 'hook
+  :group 'apt-sources)  
+
+(defcustom apt-sources-around-lines t
   "Put blank lines around the inserted source lines.
-This variable can be changed by function `apt-sources-around-lines'")
+This variable can be changed by function `apt-sources-around-lines'"
+  :type 'boolean
+  :group 'apt-sources)  
 
-(defvar apt-sources-source-name "##\n## %s\n##\n\n"
+(defcustom apt-sources-source-name "##\n## %s\n##\n\n"
   "Format used in the name of a new source line.
-This line is inserted by `apt-source-insert-source' function.  You can
+This line is inserted by `apt-source-new-source' function.  You can
 use ANSI quoting as described in the info elisp manual, chapter
 'Character Type'.  The '%s' is where the name of the source line will be
-inserted.")
-
+inserted."
+  :type 'string
+  :group 'apt-sources)  
 
 ;;Regexps for identifying source line parts for font-lock.
 (defvar apt-sources-font-lock-deb-regexp "\\(deb \\|deb-src \\)"
@@ -156,16 +185,16 @@ inserted.")
       (4 font-lock-keyword-face))))
   "Info for function `font-lock-mode'.")
 
-
-
 (defvar apt-sources-mode-map nil
   "Keymap used in apt-sources mode.")
 
 (unless apt-sources-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-i") 'apt-sources-insert-source)
+
+    ;; Keybindings
+    (define-key map (kbd "C-c C-i") 'apt-sources-new-source)
     (define-key map (kbd "C-c C-l") 'apt-sources-around-lines)
-    (define-key map (kbd "C-c C-v") 'apt-sources-insert-local-var)
+    (define-key map (kbd "C-c C-v") 'apt-sources-insert-local-vars)
     (define-key map (kbd "C-c C-r") 'apt-sources-deb-or-src-replicate)
 
     (define-key map (kbd "C-c C-s") 'apt-sources-change-source-type)
@@ -176,9 +205,41 @@ inserted.")
 
     (define-key map (kbd "C-c C-n") 'apt-sources-next-source-line)
     (define-key map (kbd "C-c C-p") 'apt-sources-previous-source-line)
-    (setq apt-sources-mode-map map)))
+    (setq apt-sources-mode-map map)
 
+    ;; Menu
+    (define-key apt-sources-mode-map [menu-bar] (make-sparse-keymap))
+    (define-key apt-sources-mode-map [menu-bar apt-sources]
+      (cons "Apt-sources" map))
 
+    (define-key map [menu-bar apt-sources previous-source-line]
+      '("Go to previous source line" . apt-sources-previous-source-line))
+    (define-key map [menu-bar apt-sources next-source-line]
+      '("Go to next source line" . apt-sources-next-source-line))
+    (define-key map [menu-bar apt-sources separator-actions]
+      '("--"))
+    (define-key map [menu-bar apt-sources change-components]
+      '("Change components" . apt-sources-change-components))
+    (define-key map [menu-bar apt-sources change-distribution]
+      '("Change distribution" . apt-sources-change-distribution))
+    (define-key map [menu-bar apt-sources change-uri-address]
+      '("Change URI address" . apt-sources-change-uri-address))
+    (define-key map [menu-bar apt-sources change-uri-type]
+      '("Change URI type" . apt-sources-change-uri-type))
+    (define-key map [menu-bar apt-sources change-source-type]
+      '("Change source type" . apt-sources-change-source-type))
+    (define-key map [menu-bar apt-sources separator-changes]
+      '("--"))
+    (define-key map [menu-bar apt-sources insert-local-vars]
+      '("Insert local variables" . apt-sources-insert-local-vars))
+    (define-key map [menu-bar apt-sources around-lines]
+      '("Toogle empty lines between source" . apt-sources-around-lines))
+    (define-key map [menu-bar apt-sources deb-or-src-replicate]
+      '("Copy source changing type" . apt-sources-deb-or-src-replicate))
+    (define-key map [menu-bar apt-sources new-source]
+      '("Add new source" . apt-sources-new-source))))
+
+    
 
 ;;;###autoload
 (defun apt-sources-mode ()
@@ -203,36 +264,45 @@ Sets up command `font-lock-mode'.
 
 
 
-(defun apt-sources-insert-source (name type uri-type uri-address distribution &rest components)
-  "Insert interactively a source line into the current buffer.
-This will insert a source line in the current line.
+(defun apt-sources-new-source (name)
+  "Insert interactively a new source line into the current buffer.
+This will insert a new source in the current line.
 
-The variables used by the function are:
 NAME is the name you want to this source line; it will be a comment.
      If no NAME is entered, only the line will be inserted.
-TYPE is one of 'd' or 's' that equal to 'deb' or 'deb-src'.
-URI-TYPE is the type used to retrieve the URI; like http, ftp, etc.
-URI-ADDRESS is the URI that will be used to specify the base of the
-    Debian distribution, from which APT will find the information it
-    needs.
-DISTRIBUTION is used for specific arquitecture or an exact path.
-COMPONENTS are a list of components used by APT.
 
-You should read sources.list documentation for further explanation."
-  (interactive "*sName: \nc'deb' or 'deb-src' type (d, s): \n\
-cURI type 'file', 'cdrom', 'http', 'https', 'ftp', 'copy', 'rsh', 'ssh' \
-(f, c, p, s, t, o, r, h): \nsURI address: \nsDistribution: \nsComponents: ")
-  (let ((real-type (if (char-equal type ?d)
-		       "deb"
-		     "deb-src"))
-	(real-uri-type (cond ((char-equal uri-type ?f) "file:/")
-		             ((char-equal uri-type ?c) "cdrom://")
-		             ((char-equal uri-type ?s) "https://")
-		             ((char-equal uri-type ?t) "ftp://")
-		             ((char-equal uri-type ?o) "copy://")
-		             ((char-equal uri-type ?r) "rsh://")
-		             ((char-equal uri-type ?h) "ssh://")
-			     (t "http://")))
+You should read sources.list documentation for further explanation
+of the format."
+  (interactive "*sName of new source: ")
+  
+  (let ((source-type (completing-read "Source type: " '(("deb" 1) ("deb-src" 2)) nil t))
+	(uri-type (completing-read "URI type: " ;type used to retrieve the URI, like http, ftp, etc.
+					'(("cdrom:/" 1)
+					  ("copy://" 2)
+					  ("file://" 3)
+					  ("ftp://" 4)
+					  ("http://" 5)
+					  ("https://" 6)
+					  ("rsh://" 7)
+					  ("ssh://" 8)) nil t))
+	(uri-address (read-from-minibuffer "URI address: ")) ;URI that will be used to specify the base
+					                     ;of the Debian distribution, from which APT
+					                     ;will find the information it needs.
+	(distribution (completing-read "Distribution: " ;specific arquitecture or an exact path.
+				       '(("unstable" 1)
+					 ("testing" 2)
+					 ("frozen" 3)
+					 ("stable" 4)
+					 ("sid" 5)
+					 ("sarge" 6)
+					 ("woody" 7)) nil t))
+	(components (completing-read "Components: " ;list of componenst used by APT.
+				     '(("main")
+				       ("main contrib")
+				       ("main contrib non-free")
+				       ("contrib")
+				       ("contrib non-free")
+				       ("non-free"))))
 	(blank-line (if apt-sources-around-lines "\n" "")))
     	
     (save-excursion
@@ -241,16 +311,13 @@ cURI type 'file', 'cdrom', 'http', 'https', 'ftp', 'copy', 'rsh', 'ssh' \
       (and (< 0 (length name))
 	   (insert (format apt-sources-source-name name)))
       (insert                                       ;insert rest of arguments except components
-       (format "%s %s%s %s" real-type real-uri-type uri-address distribution))
+       (format "%s %s%s %s" source-type uri-type uri-address distribution))
 
       ;if `distribution' ends in '/', then don't process components.
       (if (string-match "/$" distribution)
 	  distribution
-	(insert " ")
-	(while components                            ;insert all components
-	  (insert (format "%s" (car components)))
-	  (setq components (cdr components)))
-	(insert blank-line)))))                     ;insert line if `apt-sources-around-lines'
+	(insert " " components)
+      (insert blank-line)))))                     ;insert line if `apt-sources-around-lines'
 
 
 (defun apt-sources-around-lines ()
@@ -262,7 +329,7 @@ This modifies the state of variable `apt-sources-around-lines'."
 	   (if apt-sources-around-lines "On" "Off")))
 
 
-(defun apt-sources-insert-local-var ()
+(defun apt-sources-insert-local-vars ()
   "Insert the current values of buffer local variables."
   (interactive)
   (end-of-buffer)
@@ -306,47 +373,42 @@ ARG is the prefix argument."
       nil))) ;return nil if we aren't in an apt source line
 
 
-(defun apt-sources-change-source-type (type)
+(defun apt-sources-change-source-type ()
   "Change the type of the source line.
 TYPE is either 'd' or 's' to change the type to 'deb' or 'deb-src'.
 
 This function will rise an error if we are not in a source line."
-  (interactive "c'deb' or 'deb-src' type (d, s): ")
-  
-  (save-excursion
+  (interactive)
     (and (apt-sources-source-line-p)
-	 (let ((new-type (if (char-equal type ?d)
-			     "deb"
-			   "deb-src")))
-	   (beginning-of-line)
-	   (delete-region (point) (re-search-forward "^deb[^ ]*" (line-end-position) nil 1))
-	   (insert new-type)))))
+	                                   ;type used to retrieve the URI, like http, ftp, etc.
+	 (let ((new-type (completing-read "'deb' or 'deb-src': " '(("deb" 1) ("deb-src" 2)) nil t)))
+	   (save-excursion
+	     (beginning-of-line)
+	     (delete-region (point) (re-search-forward "^deb[^ ]*" (line-end-position) nil 1))
+	     (insert new-type)))))
 
 
-(defun apt-sources-change-uri-type (uri-type)
+(defun apt-sources-change-uri-type ()
   "Change the URI type of the source line.
-URI-TYPE can be 'file', 'cdrom', 'http', 'ftp', 'copy', 'rsh' or 'ssh'
-     (f, c, h, t, o, r, s) respectively.
 
 This function will rise an error if we are not in a source line."
-  (interactive "cURI-type 'file', 'cdrom', 'http', 'https', 'ftp', 'copy', \
-'rsh', 'ssh' (f, c, p, s, t, o, r, h): ")
+  (interactive)
 
-  (save-excursion
-    (and (apt-sources-source-line-p)
-	 (let ((new-uri-type
-		(cond ((char-equal uri-type ?f) "file:/")
-		      ((char-equal uri-type ?c) "cdrom://")
-		      ((char-equal uri-type ?s) "https://")
-		      ((char-equal uri-type ?t) "ftp://")
-		      ((char-equal uri-type ?o) "copy://")
-		      ((char-equal uri-type ?r) "rsh://")
-		      ((char-equal uri-type ?h) "ssh://")
-		      (t "http://"))))
+  (and (apt-sources-source-line-p)
+       (let ((uri-type (completing-read "URI type: " ;type used to retrieve the URI, like http, ftp, etc.
+					  '(("cdrom:/" 1)
+					    ("copy://" 2)
+					    ("file://" 3)
+					    ("ftp://" 4)
+					    ("http://" 5)
+					    ("https://" 6)
+					    ("rsh://" 7)
+					    ("ssh://" 8)) nil t)))
+	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward "^deb[^ ]*." (line-end-position) nil 1)
 			  (re-search-forward ":/*" (line-end-position) nil 1))
-	   (insert new-uri-type)))))
+	   (insert uri-type)))))
 
 
 (defun apt-sources-change-uri-address (uri-address)
@@ -357,47 +419,60 @@ ex: 'http://').
 This function will rise an error if we are not in a source line."
   (interactive "sURI address: ")
 
-  (save-excursion
     (and (apt-sources-source-line-p)
-	 (progn
+	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward ":/*" (line-end-position) nil 1)
 			  (re-search-forward "[^ ]*" (line-end-position) nil 1))
-	   (insert uri-address)))))
+	   (insert uri-address))))
 
 
-(defun apt-sources-change-distribution (distribution)
+(defun apt-sources-change-distribution ()
   "Change the distribution of the source line.
-String DISTRIBUTION is the distribution to be used by APT.
 
 This function will rise an error if we are not in a source line."
-  (interactive "sDistribution: ")
+  (interactive)
 
-  (save-excursion
-    (and (apt-sources-source-line-p)
-	 (progn
+  (and (apt-sources-source-line-p)
+       (let ((distribution (completing-read "Distribution: " ;specific arquitecture or an exact path.
+					    '(("unstable" 1)
+					      ("testing" 2)
+					      ("frozen" 3)
+					      ("stable" 4)
+					      ("sid" 5)
+					      ("sarge" 6)
+					      ("woody" 7)) nil t)))
+	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward ":/*[^ ]*." (line-end-position) t 1)
 			  (re-search-forward "[^ ]*" (line-end-position) t 1))
 	   (insert distribution)))))
 
 
-(defun apt-sources-change-components (&rest components)
+(defun apt-sources-change-components ()
   "Change the components of the source line.
-String COMPONENTS are the components to be used by APT.
 
 This function will rise an error if we are not in a source line."
-  (interactive "sComponents: ")
+  (interactive)
 
-  (save-excursion
-    (and (apt-sources-source-line-p)
-	 (progn
+  (and (apt-sources-source-line-p)
+       (let ((components (completing-read "Components: " ;list of componenst used by APT.
+					  '(("main")
+					    ("main contrib")
+					    ("main contrib non-free")
+					    ("contrib")
+					    ("contrib non-free")
+					    ("non-free")))))
+	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward ":/*[^ ]* [^ ]*." (line-end-position) t 1)
 			  (line-end-position))
-	   (while components                            ;insert all components
-	     (insert (format "%s" (car components)))
-	     (setq components (cdr components)))))))
+	   (and (save-excursion
+		  (backward-char)
+		  (looking-at "[^ ]"))
+		(insert " "))
+	   (insert components)))))
+	   
 
 
 (defun apt-sources-deb-or-src-replicate ()
@@ -406,10 +481,10 @@ This function will rise an error if we are not in a source line."
 This function will rise an error if we are not on a source line."
   (interactive)
 
-  (save-excursion
-    (and (apt-sources-source-line-p)
-	 (let ((copy (buffer-substring (line-beginning-position)
+  (and (apt-sources-source-line-p)
+       (let ((copy (buffer-substring (line-beginning-position)
 				       (line-end-position))))
+	 (save-excursion
 	   (end-of-line)
 	   (insert (concat "\n" copy))
 	   (beginning-of-line)
@@ -423,7 +498,8 @@ This function will rise an error if we are not on a source line."
 
 
 
-(provide 'apt-sources)
 (run-hooks 'apt-sources-load-hook)
+(add-to-list 'auto-mode-alist '("sources.list$" . apt-sources-mode))
+(provide 'apt-sources)
 
 ;;; apt-sources.el ends here
