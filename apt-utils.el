@@ -1064,7 +1064,6 @@ TYPE can be forward, backward, or toggle."
         nil)
        ((and (re-search-forward "^\\([^ \n:]+\\): " eol t)
              (setq match (match-string 1))
-             (set-text-properties 0 (length match) nil match)
              (member match keywords))
         (setq posn (point))
         (goto-char (apt-field-end-position))
