@@ -270,6 +270,7 @@ Only works for installed packages; uses `apt-utils-dpkg-program'."
         (setq apt-utils-dired-buffer (dired-noselect files))
         (display-buffer apt-utils-dired-buffer))))))
 
+;;;###autoload
 (defun apt-utils-search ()
   "Search Debian packages for regular expression.
 To search for multiple patterns use a string like \"foo&&bar\"."
