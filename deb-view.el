@@ -1,6 +1,6 @@
 ;;; deb-view.el: View Debian package archive files with tar-mode.
 
-;; Author:  Rick Macdonald (rickm@vsl.com)
+;; Author:  Rick Macdonald <rickmacd@shaw.ca>
 ;; Version: 1.9
 ;; Latest version: http://www.cuug.ab.ca/~macdonal/deb-view.el
 ;; Latest version: http://www.cuug.ab.ca/~macdonal/deb-view.el.gz
