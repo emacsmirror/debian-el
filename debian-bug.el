@@ -92,7 +92,7 @@
 ;;  - load poe for match-string-no-properties if using XEmacs.
 ;;  - Use only one arg with format-time-string for XEmacs compatibility.
 ;;  - After generating the bug list menu in XEmacs, remove both menus and add
-;;    them again.  Otherwise the menu is not refreshed. (Closes: #111332)
+;;    them again.  Otherwise the menu is not refreshed.  (Closes: #111332)
 ;; V1.18 11nov01 Peter S Galbraith <psg@debian.org>
 ;;  - customize debian-bug-helper-program so bug isn't necessarily used first.
 ;; V1.19 11nov01 Peter S Galbraith <psg@debian.org>
@@ -102,7 +102,7 @@
 ;;    and bug to set the From line.
 ;;  - debian-bug-use-From-address: default to t if any of the above env vars
 ;;    are set.  I could also try to detect is debian-bug-From-address is
-;;    customized, but that's for another day. (closes #117855).
+;;    customized, but that's for another day.  (closes #117855).
 ;;  - debian-bug-prefill-report: don't add superfluous line at the beginning
 ;;    of the bug report body (closes #117842).
 ;; V1.20 11dec01 Peter S Galbraith <psg@debian.org>
@@ -179,7 +179,7 @@
 ;;  - Use executable-find.  Patch contributed by Romain FRANCOISE
 ;;    <romain@orebokech.com>.  Closes: #189605
 ;;  - New actions in Bugs list menu: can now read bug reports as file or Email!
-;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>. Thanks!
+;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>.  Thanks!
 ;;  - Byte-compilation cleanup.
 ;;  - Added debian-bug-menu-preload-flag.
 ;; V1.39 22Apr2003 Peter S Galbraith <psg@debian.org>
@@ -200,7 +200,7 @@
 ;;    Add `d-i', `ipv6' and `lfs' tags.
 ;; V1.43 01Sep2003 Peter S Galbraith <psg@debian.org>
 ;;    debian-bug-build-bug-menu: Create closing changlog entries in
-;;    debian-bug-open-alist cdr's. (Closes: #207852)
+;;    debian-bug-open-alist cdr's.  (Closes: #207852)
 ;; V1.44 03Sep2003 Peter S Galbraith <psg@debian.org>
 ;;  - Display help when prompting for package name and bug severity
 ;;    (Closes: #200058)
@@ -322,17 +322,22 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
   :group 'debian-bug
   :type 'boolean)
 
-(defvar debian-bug-menu-action)
-(defvar debian-bug-menu-action-default)
-(defun debian-bug-menu-action-set (symbol value)
-  (set-default symbol value)
-  (setq-default debian-bug-menu-action debian-bug-menu-action-default)
-  (setq debian-bug-menu-action debian-bug-menu-action-default))
+;;(defvar debian-bug-menu-action)
+;;(defvar debian-bug-menu-action-default)
+;;(defun debian-bug-menu-action-set (symbol value)
+;;  "Set SYMBOL to VALUE for
+;;  (set-default symbol value)
+;;  (setq-default debian-bug-menu-action debian-bug-menu-action-default)
+;;  (setq debian-bug-menu-action debian-bug-menu-action-default))
 
 (defcustom debian-bug-menu-action-default 'browse
   "Default action enabled at startup in Bugs menu-bar."
   :group 'debian-bug
-  :set 'debian-bug-menu-action-set
+;; :set 'debian-bug-menu-action-set
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (setq-default debian-bug-menu-action debian-bug-menu-action-default)
+         (setq debian-bug-menu-action debian-bug-menu-action-default))
   :type '(radio (const :tag "Browse" browse)
                 (const :tag "Read as File" readfile)
                 (const :tag "Read as Email" email)))
@@ -386,7 +391,7 @@ Debian maintainers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "boot-floppy" "bugs.debian.org" "cdimage.debian.org" "cdrom"
-    "ftp.debian.org" "general" "install" "installation" 
+    "ftp.debian.org" "general" "install" "installation"
     "installation-reports" "kernel" "listarchives"
     "lists.debian.org" "mirrors" "nonus.debian.org" "potato-cd" "press"
     "project" "qa.debian.org" "security.debian.org" "tech-ctte"
@@ -564,20 +569,20 @@ May 31st 2003
       development but is not filed against a package that forms a direct
       part of the installer itself.
  ipv6
-      This bug affects support for Internet Protocol version 6. 
+      This bug affects support for Internet Protocol version 6.
  lfs
-      This bug affects support for large files (over 2 gigabytes). 
+      This bug affects support for large files (over 2 gigabytes).
  potato
       This bug particularly applies to the potato release of Debian.
  woody
       This bug particularly applies to the woody distribution.
  sarge
-      This bug particularly applies to the (unreleased) sarge distribution. 
+      This bug particularly applies to the (unreleased) sarge distribution.
  sid
       This bug particularly applies to an architecture that is currently
       unreleased (that is, in the sid distribution).
  experimental
-    This bug particularly applies to the experimental distribution. 
+    This bug particularly applies to the experimental distribution.
 
  The latter five tags are intended to be used mainly for release critical
  bugs, for which it's important to know which distributions are affected to
@@ -613,6 +618,7 @@ Aug 10th 2001
 (autoload 'mh-inc-folder "mh-e")
 
 (defun debian-bug-intern (pair)
+  "Simple function to intern PAIR of car cdr in `debian-bug-packages-obarray'."
   (set (intern (car pair) debian-bug-packages-obarray) (cdr pair)))
 
 (defun debian-bug-fill-packages-obarray ()
@@ -657,6 +663,8 @@ Done by calling `executable-find' or the external \"which\" utility."
     (zerop (call-process "which" nil nil nil program))))
 
 (defun debian-bug-helper-program ()
+  "Return helper program found on system.
+This can be removed at some point since `bug' is not released in sarge."
   (or debian-bug-helper-program
       (cond
        ((debian-bug-check-for-program "reportbug")
@@ -667,8 +675,8 @@ Done by calling `executable-find' or the external \"which\" utility."
         'none))))
 
 (defun debian-bug-prefill-report (package severity)
+  "Prefill bug report for PACKAGE at SEVERITY, calling bug or reportbug."
   (cond
-
    ;; bug
    ((and (eq (debian-bug-helper-program) 'bug)
 	 (intern-soft package debian-bug-packages-obarray))
@@ -729,8 +737,8 @@ Reportbug may have sent an empty report!")))
     (debian-bug-fill-packages-obarray)
     (if (and (not (intern-soft package debian-bug-packages-obarray))
              (not (y-or-n-p
-                   "Package does not appear to be installed. Continue? ")))
-        (error "Quitting"))      
+                   "Package does not appear to be installed.  Continue? ")))
+        (error "Quitting"))
     (let ((severity (save-window-excursion
                       (if debian-bug-display-help
                           (debian-bug-help-severity))
@@ -903,6 +911,7 @@ Optional argument ACTION can be provided in programs."
 ;;  Peter S Galbraith <psg@debian.org>, August 12th 2001
 
 (defun debian-bug--is-custom-From ()
+  "Return t if first line begins in From:."
   (save-excursion
     (goto-char (point-min))
     (looking-at "^From:")))
@@ -934,6 +943,7 @@ Optional argument ACTION can be provided in programs."
     (debian-bug--set-custom-From)))
 
 (defun debian-bug--is-CC (address field)
+  "Return t if ADDRESS is present in FIELD."
   (save-excursion
     (goto-char (point-min))
     (let ((case-fold-search t))
@@ -958,7 +968,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 	(delete-region (match-beginning 0)(match-end 0)))))
 
 (defun debian-bug--set-CC (address field)
-  "Add ADDRESS to FIELD"
+  "Add ADDRESS to FIELD."
   (debian-bug--remove-CC address field t)
   (save-excursion
     (goto-char (point-min))
@@ -998,6 +1008,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
     (debian-bug--toggle-CC "debian-devel@lists.debian.org" "cc:")))
 
 (defun debian-bug--is-severity (severity)
+  "Return t is current report has severity of SEVERITY."
   (save-excursion
     (goto-char (point-min))
     (if (re-search-forward "^ *Severity: +\\([a-zA-Z]+\\)" nil t)
@@ -1027,6 +1038,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 
 
 (defun debian-bug--is-tags (tag)
+  "Return t if current report has a tags entry of TAG."
   (save-excursion
     (goto-char (point-min))
     (re-search-forward (concat "^ *Tags:.*" tag) nil t)))
@@ -1076,6 +1088,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
       (debian-bug--set-tags tag))))
 
 (defun debian-bug--is-bts-address (address)
+  "Return t if ADDRESS is present in address field."
   (save-excursion
     (goto-char (point-min))
     (re-search-forward (concat "^To:.*" (regexp-quote address)) nil t)))
@@ -1108,26 +1121,31 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 
 
 (defun debian-bug-help-severity ()
+  "Display severity help."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-severity-text)))
 
 (defun debian-bug-help-tags ()
+  "Display tags help."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-tags-text)))
 
 (defun debian-bug-help-pseudo-packages ()
+  "Display pseudo-packages help."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-pseudo-packages-text)))
 
 (defun debian-bug-help-email ()
+  "Display help about various bug report emails to use."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-email-text)))
 
 (defun debian-bug-help-control ()
+  "Display help about control interface."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-control-text)))
@@ -1524,7 +1542,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                            (debian-changelog-suggest-package-name))
                           (t
                            (read-string "Package name: "))))
-           (mh-e-folder (concat 
+           (mh-e-folder (concat
                          (if debian-bug-mh-folder
                              (concat debian-bug-mh-folder "/")
                            "+debian-bug-")
@@ -1622,7 +1640,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                            (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
                                (looking-at "\\(.*\\) &lt;")))
                   (setq shortdescription
-                        (concat "Bug fix: \"" shortdescription 
+                        (concat "Bug fix: \"" shortdescription
                                 "\", thanks to " (match-string 1)
                                 " (Closes: #" bugnumber ").")))
                 (setq bug-open-alist
