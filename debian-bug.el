@@ -181,6 +181,7 @@
 ;;  - New actions in Bugs list menu: can now read bug reports as file or Email!
 ;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>. Thanks!
 ;;  - Byte-compilation cleanup.
+;;  - Added debian-bug-menu-preload-flag.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -304,6 +305,12 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
 (defvar debian-bug-menu-action debian-bug-menu-action-default
   "Action to take when selecting a bug number from the Bugs menu-bar.")
 (make-variable-buffer-local 'debian-bug-menu-action)
+
+(defcustom debian-bug-menu-preload-flag nil
+  "Non-nil means to fetch bug list from the web and populate Bugs menu.
+Otherwise, simply use the menu entry to generate it."
+  :group 'debian-bug
+  :type 'boolean)
 
 ;;; Internal variables:
 
@@ -1458,7 +1465,7 @@ If SUBMENU is t, then check for current sexp submenu only."
 (defvar debian-changelog-mode-map)
 
 (defun debian-bug-build-bug-menu (package)
-  "Build a menu listing the bugs for this PACKAGE."
+  "Build a menu listing the bugs for PACKAGE."
   (setq debian-bug-alist nil
         debian-bug-open-alist nil)
   (let ((debian-bug-tmp-buffer
@@ -1599,11 +1606,13 @@ If SUBMENU is t, then check for current sexp submenu only."
 (defun debian-bug-bug-menu-init (minor-mode-map)
   "Initialize empty bug menu.
 Call this function from the mode setup with MINOR-MODE-MAP."
-  (easy-menu-define debian-bug-bugs-menu minor-mode-map
-    "Debian Bug Mode Bugs Menu"
-    '("Bugs"
-      ["* Generate menu *" (debian-bug-build-bug-this-menu)
-       (debian-bug-check-for-program "wget")]))
+  (if debian-bug-menu-preload-flag
+      (debian-bug-build-bug-this-menu)
+    (easy-menu-define debian-bug-bugs-menu minor-mode-map
+      "Debian Bug Mode Bugs Menu"
+      '("Bugs"
+        ["* Generate menu *" (debian-bug-build-bug-this-menu)
+         (debian-bug-check-for-program "wget")])))
   (easy-menu-add debian-bug-bugs-menu))
 
 ;;;-------------
@@ -1649,8 +1658,6 @@ Call this function from the mode setup with MINOR-MODE-MAP."
                                             package))))
               (if answer
                   (debian-bug package)))))))))
-
-(provide 'debian-bug)
 
 (provide 'debian-bug)
 
