@@ -285,8 +285,8 @@ With NAMES-ONLY, match names only."
       (setq truncate-lines nil))
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (insert (format "Debian package search%sfor %s\n\n" 
-                      (if names-only " (names only)" " ") regexp))
+      (insert (format "Debian package search%s for %s\n\n" 
+                      (if names-only " (names only)" "") regexp))
       (cond
        (names-only
         (apply 'call-process apt-utils-apt-cache-program nil t nil
