@@ -198,6 +198,9 @@
 ;;    template.
 ;; V1.42 31May2003 Peter S Galbraith <psg@debian.org>
 ;;    Add `d-i', `ipv6' and `lfs' tags.
+;; V1.43 01Sep2003 Peter S Galbraith <psg@debian.org>
+;;    debian-bug-build-bug-menu: Create closing changlog entries in
+;;    debian-bug-open-alist cdr's.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1573,12 +1576,13 @@ If SUBMENU is t, then check for current sexp submenu only."
 	(goto-char (point-min))
         (while
             (re-search-forward
-             "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">#\\(.+\\)</a>\\)"
+             "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
                 (bugnumber (match-string 5))
-                (description (match-string 6)))
+                (description (match-string 6))
+                (shortdescription (match-string 7)))
             (cond
              (type
               (setq bugs-are-open-flag (not (string-match "resolved" type)))
@@ -1587,9 +1591,18 @@ If SUBMENU is t, then check for current sexp submenu only."
                 (insert "\"-\"\n\"" type "\"\n")))
              (t
               (setq bug-alist (cons (list bugnumber description) bug-alist))
-              (if bugs-are-open-flag
-                  (setq bug-open-alist
-                        (cons (list bugnumber description) bug-open-alist)))
+              (when bugs-are-open-flag
+                (when (and (re-search-forward "Reported by: <a href=[^>]+>"
+                                              nil t)
+                           (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
+                               (looking-at "\\(.*\\) &lt;")))
+                  (setq shortdescription
+                        (concat "Bug fix: \"" shortdescription 
+                                "\", thanks to " (match-string 1)
+                                " (Closes: #" bugnumber ").")))
+                (setq bug-open-alist
+                      (cons
+                       (list bugnumber shortdescription) bug-open-alist)))
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert
