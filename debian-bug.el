@@ -355,7 +355,7 @@ Debian maintainers.")
 (defvar debian-bug-alltags-alist
   '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
     ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid")
-    ("experimental"))
+    ("experimental") ("confirmed"))
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
