@@ -124,7 +124,7 @@
 
 ;;; Code:
 
-(require 'autoinsert)
+;;(require 'autoinsert)
 
 (defgroup apt-sources nil "Mode for editing apt source.list file"
   :group 'tools
