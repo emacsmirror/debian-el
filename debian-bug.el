@@ -338,35 +338,39 @@ when the shell commands \"bug\" and \"reportbug\" are not available")
 
 (defvar debian-bug-tags-alist
   '(("patch") ("security") ("upstream"))
-;;'(("patch") ("security") ("upstream") ("potato") ("woody") ("sid"))
-  "Alist of valid Tags.")
+;;'(("patch") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid"))
+  "Alist of valid Tags aimed at Debian users.
+The complete list of valid tags is longer, but the others are for use by
+Debian maintainers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "boot-floppy" "bugs.debian.org" "cdimage.debian.org" "cdrom"
-    "ftp.debian.org" "general" "install" "installation" "kernel" "listarchives"
+    "ftp.debian.org" "general" "install" "installation" 
+    "installation-reports" "kernel" "listarchives"
     "lists.debian.org" "mirrors" "nonus.debian.org" "potato-cd" "press"
-    "project" "qa.debian.org" "security.debian.org" "tech-ctte" "wnpp"
-    "www.debian.org")
+    "project" "qa.debian.org" "security.debian.org" "tech-ctte"
+    "upgrade-reports" "wnpp" "www.debian.org")
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
 
 (defvar debian-bug-help-pseudo-packages-text
   "List of Debian pseudo packages
-from http://www.debian.org/Bugs/pseudo-packages
-Aug 10th 2001, checked Feb 8th 2002.
+from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
+Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+ 1997 nCipher Corporation Ltd.
 
  base -- Base system (baseX_Y.tgz) general bugs
  boot-floppy -- Installation system
  bugs.debian.org -- The bug tracking system, @bugs.debian.org
  cdimage.debian.org -- CD Image issues
  cdrom -- Installation system
- ftp.debian.org -- Problems with the FTP site or Debian archive
-                  (e.g. to have a package removed from testing or unstable)
+ ftp.debian.org -- Problems with the FTP site
  general -- General problems (e.g. \"many manpages are mode 755\")
  install -- Installation system
  installation -- Installation system
+ installation-reports -- Reports of installation problems with stable & testing
  kernel -- Problems with the Linux kernel, or that shipped with Debian
- listarchives -- Problems with the WWW mailiing list archives
+ listarchives -- Problems with the WWW mailing list archives
  lists.debian.org -- The mailing lists, debian-*@lists.debian.org
  mirrors -- Problems with the official mirrors
  nonus.debian.org -- Problems with the non-US FTP site
@@ -376,6 +380,7 @@ Aug 10th 2001, checked Feb 8th 2002.
  qa.debian.org -- The Quality Assurance group
  security.debian.org -- The Debian Security Team
  tech-ctte -- The Debian Technical Committee (see the Constitution)
+ upgrade-reports -- Reports of upgrade problems for stable & testing
  wnpp -- Work-Needing and Prospective Packages list
  www.debian.org -- Problems with the WWW site")
 
@@ -408,7 +413,9 @@ Used to determine if internal list is uptodate.")
 
 (defvar debian-bug-help-severity-text
  "Info from http://www.debian.org/Bugs/Developer#severities
-Feb 8th 2002
+Feb 8th 2002, checked Apr 22 2003.
+Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+ 1997 nCipher Corporation Ltd.
 
  Severity levels
 
@@ -453,7 +460,7 @@ have an impact on releasing the package with the stable release of
 Debian.  Currently, these are critical, grave and serious.")
 
 (defvar debian-bug-help-tags-text
- "Info from http://www.debian.org/Bugs/Developer#severities
+ "Info from http://www.debian.org/Bugs/Developer#tags
 Feb 8th 2002
 
  Tags for bug reports
@@ -507,10 +514,14 @@ Feb 8th 2002
  potato
       This bug particularly applies to the potato release of Debian.
  woody
-      This bug particularly applies to the (unreleased) woody distribution.
+      This bug particularly applies to the woody distribution.
+ sarge
+      This bug particularly applies to the (unreleased) sarge distribution. 
  sid
       This bug particularly applies to an architecture that is currently
       unreleased (that is, in the sid distribution).
+ experimental
+    This bug particularly applies to the experimental distribution. 
 
  The latter three tags are intended to be used mainly for release critical
  bugs, for which it's important to know which distributions are affected to
@@ -1413,7 +1424,7 @@ If SUBMENU is t, then check for current sexp submenu only."
     (text-mode)))
 
 (defun debian-bug-get-bug-as-email (&optional bug-number)
-  "Browse the BTS for BUG-NUMBER via `browse-url'."
+  "Read bug report #BUG-NUMBER via Email interface."
   (interactive (list (completing-read "Bug number to fetch: "
                                       debian-bug-alist nil nil)))
   (cond
@@ -1496,7 +1507,7 @@ If SUBMENU is t, then check for current sexp submenu only."
        :style radio :selected (equal debian-bug-menu-action 'close)]\n"))
       (insert "      \"-\"\n")
       (with-temp-buffer
-        (message "Fetching bug list via wget...")
+        (message "Fetching bug list...")
 	(call-process "wget" nil '(t t) nil "--quiet" "-O" "-"
 		      (concat
                        "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
