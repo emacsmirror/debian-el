@@ -169,6 +169,9 @@
 ;; V1.37 10Apr2003 Peter S Galbraith <psg@debian.org>
 ;;  - Switch priority of reportbug and bug, preferring reportbug. 
 ;;  - send to maintonly if priority wishlist or minor.  Closes: #176429.
+;; V1.38 14Apr2003 Peter S Galbraith <psg@debian.org>
+;;    Revert `send to maintonly if priority wishlist or minor' change.
+;;    maintonly is for mass filings.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -595,9 +598,6 @@ The obarray associates each package with the installed version of the package."
           (insert " " debian-bug-mail-address))
          (t
           (insert "To: " debian-bug-mail-address)))
-        (if (or (string-equal severity "wishlist")
-                (string-equal severity "minor"))
-            (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
         (goto-char (point-min))
         (cond
          ((re-search-forward "Subject: " nil t)
