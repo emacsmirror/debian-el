@@ -1,6 +1,6 @@
 ;;; apt-utils.el --- Emacs interface to APT (Debian package management)
 
-;;; Copyright (C) 2002, 03 Matthew P. Hodges
+;;; Copyright (C) 2002, 2003, 2004 Matthew P. Hodges
 
 ;; Author: Matthew P. Hodges <matt@tc.bham.ac.uk>
 ;;	$Id$
@@ -64,6 +64,22 @@
   "*Show APT descriptions for multiple package versions if t."
   :group 'apt-utils
   :type 'boolean)
+
+(defcustom apt-utils-automatic-update 'ask
+  "*Controls automatic rebuilding of APT package lists.
+
+If t always rebuilt when `apt-utils-timestamped-file' is newer than
+`apt-utils-package-list-update-time'. If equal to the symbol ask,
+ask the user about the update. If nil, never update automatically."
+  :group 'apt-utils
+  :type '(choice (const :tag "Always update automatically" t)
+                 (const :tag "Ask user about update" ask)
+                 (const :tag "Never update automatically" nil)))
+
+(defcustom apt-utils-grep-dctrl-args '("-e")
+  "*List of arguments to pass to `apt-utils-grep-dctrl-program'."
+  :group 'apt-utils
+  :type '(repeat string))
 
 ;; Faces
 
@@ -160,6 +176,15 @@ These are stored in a hash table.")
 (defvar apt-utils-dired-buffer nil
   "Keep track of dired buffer.")
 
+(defvar apt-utils-package-list-update-time nil
+  "The time that `apt-utils-build-package-lists' was last done.")
+
+(defvar apt-utils-automatic-update-asked nil
+  "Non-nil if user already asked about updating package lists.")
+
+(defvar apt-utils-timestamped-file "/var/cache/apt/pkgcache.bin"
+  "File to check timestamp of (see `apt-utils-automatic-update').")
+
 ;; XEmacs support
 
 (defconst apt-utils-xemacs-p
@@ -175,6 +200,7 @@ These are stored in a hash table.")
 With ARG, choose that package, otherwise prompt for one. If
 NEW-SESSION is non-nil, generate a new `apt-utils-mode' buffer."
   (interactive)
+  (apt-utils-check-package-lists)
   (let (package type)
     ;; If ARG is provided, the car is the package name and the cdr the
     ;; package type
@@ -302,6 +328,7 @@ To search for multiple patterns use a string like \"foo&&bar\"."
 (defun apt-utils-search-internal (&optional names-only)
   "Search Debian packages for regular expression.
 With NAMES-ONLY, match names only."
+  (apt-utils-check-package-lists)
   (let ((regexp (read-from-minibuffer "Search packages for regexp: ")))
     ;; Set up the buffer
     (cond
@@ -336,6 +363,7 @@ With NAMES-ONLY, match names only."
 (defun apt-utils-search-grep-dctrl ()
   "Search Debian packages for regular expression using grep-dctrl."
   (interactive)
+  (apt-utils-check-package-lists)
   (let (args
         (fields (apt-utils-read-fields "Search package fields: "))
         (show (apt-utils-read-fields "Show package fields: "))
@@ -360,7 +388,7 @@ With NAMES-ONLY, match names only."
     (let ((inhibit-read-only t))
       (erase-buffer)
       ;; Construct argument list (need to keep this)
-      (setq args (append (list regexp fields show)
+      (setq args (append apt-utils-grep-dctrl-args (list regexp fields show)
                          apt-utils-grep-dctrl-file-list))
       (insert (format "grep-dctrl search for %s\n\n"
                       (mapconcat
@@ -413,6 +441,7 @@ Use PROMPT for `completing-read'."
 (defun apt-utils-toggle-package-info ()
   "Toggle between package and showpkg info for normal packages."
   (interactive)
+  (apt-utils-check-package-lists)
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
   (let ((package (caar apt-utils-current-packages))
@@ -441,6 +470,24 @@ Use PROMPT for `completing-read'."
           (equal type 'search-names-only)
           (equal type 'search-grep-dctrl))
       (message "Cannot toggle info for searches.")))))
+
+(defun apt-utils-check-package-lists ()
+  "Determine whether package lists need rebuilding."
+  (cond
+   ((null apt-utils-package-lists-built)
+    (apt-utils-build-package-lists))
+   ((and (apt-utils-time-less-p apt-utils-package-list-update-time
+                      (nth 5 (file-attributes apt-utils-timestamped-file)))
+         ;; Only act for non-nil apt-utils-automatic-update
+         apt-utils-automatic-update
+         (cond
+          ((eq apt-utils-automatic-update t))
+          ((eq apt-utils-automatic-update 'ask)
+           (unless apt-utils-automatic-update-asked
+             (setq apt-utils-automatic-update-asked t)
+             (yes-or-no-p
+              "APT package lists may be out of date. Update them? ")))))
+    (apt-utils-build-package-lists t))))
 
 ;; Find ChangeLog files
 
@@ -803,18 +850,6 @@ With non-nil NEW-SESSION, follow link in a new buffer."
               (cons (cons package (apt-utils-package-type package))
                     apt-utils-current-packages))))))
 
-(defun apt-utils-package-list ()
-  "Return list of known Debian packages."
-  (unless apt-utils-package-lists-built
-    (apt-utils-build-package-lists))
-  apt-utils-package-list)
-
-(defun apt-utils-virtual-package-list ()
-  "Return list of known Debian packages."
-  (unless apt-utils-package-lists-built
-    (apt-utils-build-package-lists))
-  apt-utils-virtual-package-list)
-
 (defun apt-utils-build-package-lists (&optional force)
   "Build list of Debian packages known to APT.
 With optional argument FORCE, rebuild the packages lists even if they
@@ -822,7 +857,9 @@ are defined."
   (when (or force (null apt-utils-package-list))
     (unwind-protect
         (progn
-          (setq apt-utils-package-lists-built nil)
+          (setq apt-utils-package-lists-built nil
+                apt-utils-package-list-update-time nil
+                apt-utils-automatic-update-asked nil)
           (message "Building Debian package lists...")
           ;; All packages except virtual ones
           (with-temp-buffer
@@ -863,7 +900,9 @@ are defined."
                     (puthash (car elt) 'virtual apt-utils-package-hashtable))
                   apt-utils-virtual-package-list)
           (message "Building Debian package lists...done")
-          (setq apt-utils-package-lists-built t))
+          (setq apt-utils-package-lists-built t
+                apt-utils-package-list-update-time
+                (nth 5 (file-attributes apt-utils-timestamped-file))))
       (unless apt-utils-package-lists-built
         (message "Building Debian package lists...interrupted")
         (setq apt-utils-package-list nil
@@ -883,8 +922,8 @@ are defined."
               (cadr (member 'apt-package
                             (text-properties-at (point)))))))
     (completing-read "Choose Debian package: "
-                     (append (apt-utils-package-list)
-                             (apt-utils-virtual-package-list))
+                     (append apt-utils-package-list
+                             apt-utils-virtual-package-list)
                      nil t package)))
 
 ;; Add hyperlinks
@@ -973,9 +1012,7 @@ are defined."
                              (save-excursion
                                (or
                                 (re-search-forward "^[^ ]" (point-max) t)
-                                (progn
-                                  (end-of-buffer)
-                                  (point))))
+                                (point-max)))
                              '(face apt-utils-description-face)))
        ;; Conffiles doesn't have trailing space
        ((looking-at "$")
@@ -1057,8 +1094,6 @@ are defined."
   "Return what type of package PACKAGE is.
 With optional argument NO-ERROR, don't flag an error for unknown
 packages."
-  (unless apt-utils-package-lists-built
-    (apt-utils-build-package-lists))
   (or (gethash package apt-utils-package-hashtable)
       (cond
        (no-error
@@ -1210,6 +1245,14 @@ TYPE can be forward, backward, or toggle."
     (beginning-of-line)
     (backward-char)
     (point)))
+
+;; Borrowed from gnus/lisp/time-date.el
+
+(defun apt-utils-time-less-p (t1 t2)
+  "Say whether time value T1 is less than time value T2."
+  (or (< (car t1) (car t2))
+      (and (= (car t1) (car t2))
+	   (< (nth 1 t1) (nth 1 t2)))))
 
 ;; Mode settings
 
