@@ -48,7 +48,8 @@
   :group 'debian-el)
 
 ;; deb-view.el
-(setq auto-mode-alist (append '(("\\.deb$" . deb-view-mode)) auto-mode-alist))
+(setq auto-mode-alist
+      (append '(("\\.u?deb$" . deb-view-mode)) auto-mode-alist))
 (defgroup deb-view nil
   "View Debian package files with tar-mode"
   :group 'tools
