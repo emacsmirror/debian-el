@@ -1844,7 +1844,10 @@ Call this function from the mode setup with MINOR-MODE-MAP."
                      (read-char-exclusive)))))
     (cond
      ((or (equal 13 type)               ; <CR>
+          (equal ?\r type)              ; <CR>
+          (equal ?\  type)              ; <space>
           (equal 32 type)               ; <space>
+          (equal ?p type)
           (equal ?P type))
       (debian-bug-package))
      ((equal ?F type)
