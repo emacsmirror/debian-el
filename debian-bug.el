@@ -212,6 +212,7 @@
 ;;  - debian-bug: make it a front-end to `debian-bug-package' (the old
 ;;    `debian-bug') and `debian-bug-filename' and make those non-interactive,
 ;;    reducing the number of interactive commands.
+;;  - checkdoc fixes.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -281,6 +282,13 @@ Use it to specify what email your bugs will be archived under."
 ;; For MH-E, this means a folder beneath `debian-bug-mh-folder'."
 ;;   :group 'debian-bug
 ;;   :type 'boolean)
+
+(defvar debian-bug-minor-mode nil)
+(defvar debian-bug-minor-mode-map nil
+  "Keymap for `debian-bug' minor mode.")
+(if debian-bug-minor-mode-map
+    nil
+  (setq debian-bug-minor-mode-map (make-sparse-keymap)))
 
 (if (not (fboundp 'match-string-no-properties))
     (load "poe" t t))                   ;XEmacs21.1 doesn't autoload this
@@ -399,37 +407,6 @@ Debian maintainers.")
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
 
-(defvar debian-bug-help-pseudo-packages-text
-  "List of Debian pseudo packages
-from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
-Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
- 1997 nCipher Corporation Ltd.
-
- base -- Base system (baseX_Y.tgz) general bugs
- boot-floppy -- Installation system
- bugs.debian.org -- The bug tracking system, @bugs.debian.org
- cdimage.debian.org -- CD Image issues
- cdrom -- Installation system
- ftp.debian.org -- Problems with the FTP site
- general -- General problems (e.g. \"many manpages are mode 755\")
- install -- Installation system
- installation -- Installation system
- installation-reports -- Reports of installation problems with stable & testing
- kernel -- Problems with the Linux kernel, or that shipped with Debian
- listarchives -- Problems with the WWW mailing list archives
- lists.debian.org -- The mailing lists, debian-*@lists.debian.org
- mirrors -- Problems with the official mirrors
- nonus.debian.org -- Problems with the non-US FTP site
- potato-cd -- Potato CD
- press -- Press release issues
- project -- Problems related to project administration
- qa.debian.org -- The Quality Assurance group
- security.debian.org -- The Debian Security Team
- tech-ctte -- The Debian Technical Committee (see the Constitution)
- upgrade-reports -- Reports of upgrade problems for stable & testing
- wnpp -- Work-Needing and Prospective Packages list
- www.debian.org -- Problems with the WWW site")
-
 (defvar debian-bug-packages-obarray nil
   "List of Debian packages from status file used for completion.")
 
@@ -454,156 +431,6 @@ Used to determine if internal list is uptodate.")
 (make-variable-buffer-local 'debian-bug-open-alist)
 
 (defalias 'report-debian-bug 'debian-bug)
-
-;;; Help texts:
-
-(defvar debian-bug-help-severity-text
- "Info from http://www.debian.org/Bugs/Developer#severities
-Feb 8th 2002, checked Apr 22 2003.
-Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
- 1997 nCipher Corporation Ltd.
-
- Severity levels
-
- The bug system records a severity level with each bug report. This is set to
- normal by default, but can be overridden either by supplying a Severity line
- in the pseudo-header when the bug is submitted (see the instructions for
- reporting bugs), or by using the severity command with the control request
- server.
-
- The severity levels are:
-
- critical
-      makes unrelated software on the system (or the whole system) break, or
-      causes serious data loss, or introduces a security hole on systems
-      where you install the package.
- grave
-      makes the package in question unuseable or mostly so, or causes data
-      loss, or introduces a security hole allowing access to the accounts of
-      users who use the package.
- serious
-      is a severe violation of Debian policy (that is, it violates a \"must\"
-      or \"required\" directive), or, in the package maintainer's opinion,
-      makes the package unsuitable for release.
- important
-      a bug which has a major effect on the usability of a package, without
-      rendering it completely unusable to everyone.
- normal
-      the default value, applicable to most bugs.
- minor
-      a problem which doesn't affect the package's usefulness, and is
-      presumably trivial to fix.
- wishlist
-      for any feature request, and also for any bugs that are very difficult
-      to fix due to major design considerations.
- fixed
-      for bugs that are fixed but should not yet be closed. This is an
-      exception for bugs fixed by non-maintainer uploads. Note: the \"fixed\"
-      tag should be used instead.
-
-Certain severities are considered release-critical, meaning the bug will
-have an impact on releasing the package with the stable release of
-Debian.  Currently, these are critical, grave and serious.")
-
-(defvar debian-bug-help-tags-text
- "Info from http://www.debian.org/Bugs/Developer#tags
-May 31st 2003
-
- Tags for bug reports
-
- Each bug can have zero or more of a set of given tags. These tags are
- displayed in the list of bugs when you look at a package's page, and when
- you look at the full bug log.
-
- Tags can be set by supplying a Tags line in the pseudo-header when the bug
- is submitted (see the instructions for reporting bugs), or by using the tags
- command with the control request server.
-
- The current bug tags are:
-
- patch
-      A patch or some other easy procedure for fixing the bug is included in
-      the bug logs. If there's a patch, but it doesn't resolve the bug
-      adequately or causes some other problems, this tag should not be used.
- wontfix
-      This bug won't be fixed. Possibly because this is a choice between two
-      arbitrary ways of doing things and the maintainer and submitter prefer
-      different ways of doing things, possibly because changing the behaviour
-      will cause other, worse, problems for others, or possibly for other
-      reasons.
- moreinfo
-      This bug can't be addressed until more information is provided by the
-      submitter. The bug will be closed if the submitter doesn't provide more
-      information in a reasonable (few months) timeframe. This is for bugs
-      like \"It doesn't work\". What doesn't work?
- unreproducible
-      This bug can't be reproduced on the maintainer's system. Assistance
-      from third parties is needed in diagnosing the cause of the problem.
- help
-      The maintainer is requesting help with dealing with this bug.
- pending
-      The problem described in the bug is being actively worked on, i.e.
-      a solution is pending.  It is marked in the BTS as \"pending upload\".
- confirmed
-      for bugs that you've looked at, understand, and basically agree with,
-      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
-      generally can't be \"confirmed\", bugs marked \"help\" could be depending
-      on what sort of help you're asking for.
- fixed
-      This bug is fixed or worked around (by a non-maintainer upload, for
-      example), but there's still an issue that needs to be resolved. This
-      tag replaces the old \"fixed\" severity.
- security
-      This bug describes a security problem in a package (e.g., bad
-      permissions allowing access to data that shouldn't be accessible;
-      buffer overruns allowing people to control a system in ways they
-      shouldn't be able to; denial of service attacks that should be fixed,
-      etc). Most security bugs should also be set at critical or grave
-      severity.
- upstream
-      This bug applies to the upstream part of the package.
- d-i
-
-      This bug is relevant to the development of debian-installer. It is
-      expected that this will be used when the bug affects installer
-      development but is not filed against a package that forms a direct
-      part of the installer itself.
- ipv6
-      This bug affects support for Internet Protocol version 6.
- lfs
-      This bug affects support for large files (over 2 gigabytes).
- potato
-      This bug particularly applies to the potato release of Debian.
- woody
-      This bug particularly applies to the woody distribution.
- sarge
-      This bug particularly applies to the (unreleased) sarge distribution.
- sid
-      This bug particularly applies to an architecture that is currently
-      unreleased (that is, in the sid distribution).
- experimental
-    This bug particularly applies to the experimental distribution.
-
- The latter five tags are intended to be used mainly for release critical
- bugs, for which it's important to know which distributions are affected to
- make sure fixes (or removals) happen in the right place.")
-
-(defvar debian-bug-help-email-text
-  "Info from http://www.debian.org/Bugs/Reporting
-Aug 10th 2001
-
- If a bug report is minor, for example, a documentation typo or a
- trivial build problem, please adjust the severity appropriately and
- send it to maintonly@bugs instead of submit@bugs. maintonly will
- forward the report to the package maintainer only, it won't forward it
- to the BTS mailing lists.
-
- If you wish to report a bug to the bug tracking system that's already been
- sent to the maintainer, you can use quiet@bugs. Bugs sent to quiet@bugs
- will not be forwarded anywhere, only filed.
-
- Bugs sent to maintonly@bugs or to quiet@bugs are *still* posted to
- the Debian Bug Tracking System web site (--psg).")
 
 ;;; Functions:
 (autoload 'reporter-compose-outgoing "reporter")
@@ -937,7 +764,6 @@ Optional argument ACTION can be provided in programs."
 
 (defun debian-bug--toggle-custom-From ()
   "Toggle the From line using the `debian-bug-From-address' variable."
-  (interactive)
   (if (debian-bug--is-custom-From)
       (debian-bug--unset-custom-From)
     (debian-bug--set-custom-From)))
@@ -994,7 +820,6 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 
 (defun debian-bug--toggle-CC-myself ()
   "Toggle X-Debbugs-CC: or Cc: line for myself in the mail header."
-  (interactive)
   (when debian-bug-From-address
     (if debian-bug-minor-mode
         (debian-bug--toggle-CC debian-bug-From-address "X-Debbugs-CC:")
@@ -1002,7 +827,6 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 
 (defun debian-bug--toggle-CC-devel ()
   "Toggle X-Debbugs-CC: or CC: line for debian-devel in the mail header."
-  (interactive)
   (if debian-bug-minor-mode
       (debian-bug--toggle-CC "debian-devel@lists.debian.org" "X-Debbugs-CC:")
     (debian-bug--toggle-CC "debian-devel@lists.debian.org" "cc:")))
@@ -1119,43 +943,194 @@ Non-nil optional argument NOCLEANUP means remove empty field."
        (t
 	(insert "To: " address "\n"))))))
 
-
 (defun debian-bug-help-severity ()
   "Display severity help."
-  (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (princ debian-bug-help-severity-text)))
+    (princ  "Info from http://www.debian.org/Bugs/Developer#severities
+Feb 8th 2002, checked Apr 22 2003.
+Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+ 1997 nCipher Corporation Ltd.
+
+ Severity levels
+
+ The bug system records a severity level with each bug report. This is set to
+ normal by default, but can be overridden either by supplying a Severity line
+ in the pseudo-header when the bug is submitted (see the instructions for
+ reporting bugs), or by using the severity command with the control request
+ server.
+
+ The severity levels are:
+
+ critical
+      makes unrelated software on the system (or the whole system) break, or
+      causes serious data loss, or introduces a security hole on systems
+      where you install the package.
+ grave
+      makes the package in question unuseable or mostly so, or causes data
+      loss, or introduces a security hole allowing access to the accounts of
+      users who use the package.
+ serious
+      is a severe violation of Debian policy (that is, it violates a \"must\"
+      or \"required\" directive), or, in the package maintainer's opinion,
+      makes the package unsuitable for release.
+ important
+      a bug which has a major effect on the usability of a package, without
+      rendering it completely unusable to everyone.
+ normal
+      the default value, applicable to most bugs.
+ minor
+      a problem which doesn't affect the package's usefulness, and is
+      presumably trivial to fix.
+ wishlist
+      for any feature request, and also for any bugs that are very difficult
+      to fix due to major design considerations.
+ fixed
+      for bugs that are fixed but should not yet be closed. This is an
+      exception for bugs fixed by non-maintainer uploads. Note: the \"fixed\"
+      tag should be used instead.
+
+Certain severities are considered release-critical, meaning the bug will
+have an impact on releasing the package with the stable release of
+Debian.  Currently, these are critical, grave and serious.")))
 
 (defun debian-bug-help-tags ()
   "Display tags help."
-  (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (princ debian-bug-help-tags-text)))
+    (princ
+     "Info from http://www.debian.org/Bugs/Developer#tags
+May 31st 2003
+
+ Tags for bug reports
+
+ Each bug can have zero or more of a set of given tags. These tags are
+ displayed in the list of bugs when you look at a package's page, and when
+ you look at the full bug log.
+
+ Tags can be set by supplying a Tags line in the pseudo-header when the bug
+ is submitted (see the instructions for reporting bugs), or by using the tags
+ command with the control request server.
+
+ The current bug tags are:
+
+ patch
+      A patch or some other easy procedure for fixing the bug is included in
+      the bug logs. If there's a patch, but it doesn't resolve the bug
+      adequately or causes some other problems, this tag should not be used.
+ wontfix
+      This bug won't be fixed. Possibly because this is a choice between two
+      arbitrary ways of doing things and the maintainer and submitter prefer
+      different ways of doing things, possibly because changing the behaviour
+      will cause other, worse, problems for others, or possibly for other
+      reasons.
+ moreinfo
+      This bug can't be addressed until more information is provided by the
+      submitter. The bug will be closed if the submitter doesn't provide more
+      information in a reasonable (few months) timeframe. This is for bugs
+      like \"It doesn't work\". What doesn't work?
+ unreproducible
+      This bug can't be reproduced on the maintainer's system. Assistance
+      from third parties is needed in diagnosing the cause of the problem.
+ help
+      The maintainer is requesting help with dealing with this bug.
+ pending
+      The problem described in the bug is being actively worked on, i.e.
+      a solution is pending.  It is marked in the BTS as \"pending upload\".
+ confirmed
+      for bugs that you've looked at, understand, and basically agree with,
+      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
+      generally can't be \"confirmed\", bugs marked \"help\" could be depending
+      on what sort of help you're asking for.
+ fixed
+      This bug is fixed or worked around (by a non-maintainer upload, for
+      example), but there's still an issue that needs to be resolved. This
+      tag replaces the old \"fixed\" severity.
+ security
+      This bug describes a security problem in a package (e.g., bad
+      permissions allowing access to data that shouldn't be accessible;
+      buffer overruns allowing people to control a system in ways they
+      shouldn't be able to; denial of service attacks that should be fixed,
+      etc). Most security bugs should also be set at critical or grave
+      severity.
+ upstream
+      This bug applies to the upstream part of the package.
+ d-i
+
+      This bug is relevant to the development of debian-installer. It is
+      expected that this will be used when the bug affects installer
+      development but is not filed against a package that forms a direct
+      part of the installer itself.
+ ipv6
+      This bug affects support for Internet Protocol version 6.
+ lfs
+      This bug affects support for large files (over 2 gigabytes).
+ potato
+      This bug particularly applies to the potato release of Debian.
+ woody
+      This bug particularly applies to the woody distribution.
+ sarge
+      This bug particularly applies to the (unreleased) sarge distribution.
+ sid
+      This bug particularly applies to an architecture that is currently
+      unreleased (that is, in the sid distribution).
+ experimental
+    This bug particularly applies to the experimental distribution.
+
+ The latter five tags are intended to be used mainly for release critical
+ bugs, for which it's important to know which distributions are affected to
+ make sure fixes (or removals) happen in the right place.")))
 
 (defun debian-bug-help-pseudo-packages ()
   "Display pseudo-packages help."
-  (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (princ debian-bug-help-pseudo-packages-text)))
+    (princ "List of Debian pseudo packages
+from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
+Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+ 1997 nCipher Corporation Ltd.
+
+ base -- Base system (baseX_Y.tgz) general bugs
+ boot-floppy -- Installation system
+ bugs.debian.org -- The bug tracking system, @bugs.debian.org
+ cdimage.debian.org -- CD Image issues
+ cdrom -- Installation system
+ ftp.debian.org -- Problems with the FTP site
+ general -- General problems (e.g. \"many manpages are mode 755\")
+ install -- Installation system
+ installation -- Installation system
+ installation-reports -- Reports of installation problems with stable & testing
+ kernel -- Problems with the Linux kernel, or that shipped with Debian
+ listarchives -- Problems with the WWW mailing list archives
+ lists.debian.org -- The mailing lists, debian-*@lists.debian.org
+ mirrors -- Problems with the official mirrors
+ nonus.debian.org -- Problems with the non-US FTP site
+ potato-cd -- Potato CD
+ press -- Press release issues
+ project -- Problems related to project administration
+ qa.debian.org -- The Quality Assurance group
+ security.debian.org -- The Debian Security Team
+ tech-ctte -- The Debian Technical Committee (see the Constitution)
+ upgrade-reports -- Reports of upgrade problems for stable & testing
+ wnpp -- Work-Needing and Prospective Packages list
+ www.debian.org -- Problems with the WWW site")))
 
 (defun debian-bug-help-email ()
   "Display help about various bug report emails to use."
-  (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (princ debian-bug-help-email-text)))
+    (princ "Info from http://www.debian.org/Bugs/Reporting
+Aug 10th 2001
 
-(defun debian-bug-help-control ()
-  "Display help about control interface."
-  (interactive)
-  (with-output-to-temp-buffer "*Help*"
-    (princ debian-bug-help-control-text)))
+ If a bug report is minor, for example, a documentation typo or a
+ trivial build problem, please adjust the severity appropriately and
+ send it to maintonly@bugs instead of submit@bugs. maintonly will
+ forward the report to the package maintainer only, it won't forward it
+ to the BTS mailing lists.
 
-(defvar debian-bug-minor-mode nil)
-(defvar debian-bug-minor-mode-map nil
-  "Keymap for `debian-bug' minor mode.")
-(if debian-bug-minor-mode-map
-    nil
-  (setq debian-bug-minor-mode-map (make-sparse-keymap)))
+ If you wish to report a bug to the bug tracking system that's already been
+ sent to the maintainer, you can use quiet@bugs. Bugs sent to quiet@bugs
+ will not be forwarded anywhere, only filed.
+
+ Bugs sent to maintonly@bugs or to quiet@bugs are *still* posted to
+ the Debian Bug Tracking System web site (--psg).")))
+
 
 (easy-menu-define debian-bug-menu debian-bug-minor-mode-map
   "Debian Bug Mode Menu"
