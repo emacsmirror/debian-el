@@ -1,7 +1,7 @@
 ;;; deb-view.el --- view Debian package files with tar-mode
 
 ;; Copyright (C) 1998 Rick Macdonald <rickmacd@shaw.ca>
-;; Copyright (C) 2003 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2003, 2004 Peter S Galbraith <psg@debian.org>
 
 ;; Author:     Rick Macdonald <rickmacd@shaw.ca>
 ;; Maintainer: Peter S. Galbraith <psg@debian.org>
@@ -201,6 +201,11 @@
 ;;  - checkdoc edits.
 ;;  - made defvars into defcustoms.
 
+;; 1.11 2004-01-16  Peter S. Galbraith <psg@debian.org>
+;;  - Resize top (control) window to fit number of lines since it
+;;    doesn't really need to be 1/2 the screen.  Thanks to Dan
+;;    Jacobson for suggesting this change (Closes: #224950).
+
 
 ;;; Code:
 
@@ -345,26 +350,27 @@ at the prompt."
                 t))))
     (kill-buffer file-buffer)
     (set-buffer info-buffer)
-    (if new-archive-format
-        ;; New deb format (archive)
-        (progn
-          (call-process shell-file-name nil t nil shell-command-switch
-                        (concat "ar -p " debfile
-                                " control.tar.gz | gzip -cd"))
-          (goto-char 1)
-          (setq buffer-file-name (concat deb-view-file-name "-INFO"))
-          (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
-          (debview-mode)
-          ;; Turn off view-mode in this buffer:
-          (make-variable-buffer-local 'view-mode-hook)
-          (add-hook
-           'view-mode-hook
-           (function (lambda ()
-                       (view-mode -1)
-                       (setq view-exit-action 'deb-view-dired-view-cleanup))))
-          (message "deb-view processing deb file %s..." deb-view-buffer-name)
-          (tar-next-line 1)
-          (switch-to-buffer info-buffer t))
+    (cond
+     (new-archive-format
+      ;; New deb format (archive)
+      (call-process shell-file-name nil t nil shell-command-switch
+                    (concat "ar -p " debfile
+                            " control.tar.gz | gzip -cd"))
+      (goto-char 1)
+      (setq buffer-file-name (concat deb-view-file-name "-INFO"))
+      (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
+      (debview-mode)
+      ;; Turn off view-mode in this buffer:
+      (make-variable-buffer-local 'view-mode-hook)
+      (add-hook
+       'view-mode-hook
+       (function (lambda ()
+                   (view-mode -1)
+                   (setq view-exit-action 'deb-view-dired-view-cleanup))))
+      (message "deb-view processing deb file %s..." deb-view-buffer-name)
+      (tar-next-line 1)
+      (switch-to-buffer info-buffer t))
+     (t
       ;; Old deb format
       (message "deb-view old dpkg binary format")
       (call-process shell-file-name nil t nil shell-command-switch
@@ -373,7 +379,7 @@ at the prompt."
       (set-buffer-modified-p nil)
       (goto-char 1)
       (switch-to-buffer info-buffer t)
-      (view-mode-enter return-buffer 'deb-view-dired-view-cleanup))
+      (view-mode-enter return-buffer 'deb-view-dired-view-cleanup)))
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
     (setq deb-view-dired-view-return-buffer return-buffer)
@@ -395,10 +401,10 @@ at the prompt."
     (setq buffer-read-only t)
     (switch-to-buffer-other-window data-buffer)
     (if new-archive-format (other-window 1))
-    (if deb-view-tempfile
-        (progn
-        (message "deb-view deleting tempfile: %s" debfile)
-        (delete-file debfile)))
+    (shrink-window-if-larger-than-buffer)
+    (when deb-view-tempfile
+      (message "deb-view deleting tempfile: %s" debfile)
+      (delete-file debfile))
     (message "deb-view: ? for help. q to quit.")))
 
 ;;;###autoload
