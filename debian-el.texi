@@ -158,7 +158,7 @@ package @code{wget} is installed, you may download the list of bugs
 for the affected package at that time, and download the text of a
 specific bug number as well.  
 
-@noindent The debian-bug facility depends on either the the reportbug package.
+@noindent The debian-bug facility depends on the reportbug package.
 
 @node gnus-BTS,  , debian-bug, Top
 @chapter gnus-BTS - access the Debian Bug Tracking System from Gnus
