@@ -180,6 +180,7 @@
 ;;    <romain@orebokech.com>.  Closes: #189605
 ;;  - New actions in Bugs list menu: can now read bug reports as file or Email!
 ;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>. Thanks!
+;;  - Byte-compilation cleanup.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -526,6 +527,16 @@ Aug 10th 2001
  the Debian Bug Trcaking System web site (--psg).")
 
 ;;; Functions:
+(autoload 'reporter-compose-outgoing "reporter")
+(autoload 'mail-header-end "sendmail")
+(autoload 'match-string-no-properties "poe") ;XEmacs
+(autoload 'debian-changelog-suggest-package-name "debian-changelog-mode")
+(autoload 'debian-changelog-close-bug "debian-changelog-mode")
+(autoload 'mh-find-path "mh-utils")
+(autoload 'mh-expand-file-name "mh-utils")
+(autoload 'mh-visit-folder "mh-e")
+(autoload 'mh-exec-cmd-quiet "mh-utils")
+(autoload 'mh-inc-folder "mh-e")
 
 (defun debian-bug-intern (pair)
   (set (intern (car pair) debian-bug-packages-obarray) (cdr pair)))
@@ -642,7 +653,7 @@ Optional argument PACKAGE can be provided in programs."
                                        debian-bug-severity-alist
                                        nil t nil nil "normal"))
             (subject (read-string "(Very) brief summary of problem: ")))
-	(require 'reporter)
+;;	(require 'reporter)
 	(reporter-compose-outgoing)
         (if (and (equal mail-user-agent 'gnus-user-agent)
                  (string-equal " *nntpd*" (buffer-name)))
@@ -1273,8 +1284,7 @@ In a program, mouse location is in EVENT."
   (let ((pkg-name (or debian-bug-package-name
                       (and (fboundp 'debian-changelog-suggest-package-name)
                            (debian-changelog-suggest-package-name))
-		      (read-string "Package name: ")))
-        (archiv))
+		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
         (message "No package name to look up")
       (if (not (member (list archive) debian-bug-archive-alist))
@@ -1431,6 +1441,8 @@ If SUBMENU is t, then check for current sexp submenu only."
     (let ((filename (debian-bug-wget-mbox bug-number)))
       (rmail filename)))))
 
+(defvar debian-changelog-menu)
+
 (defun debian-bug-menu-action (bugnumber)
   "Do something with BUGNUMBER based on variable `debian-bug-menu-action'."
   (cond
@@ -1442,6 +1454,8 @@ If SUBMENU is t, then check for current sexp submenu only."
     (debian-bug-get-bug-as-email bugnumber))
    ((equal debian-bug-menu-action 'close)
     (debian-changelog-close-bug bugnumber))))
+
+(defvar debian-changelog-mode-map)
 
 (defun debian-bug-build-bug-menu (package)
   "Build a menu listing the bugs for this PACKAGE."
@@ -1487,7 +1501,7 @@ If SUBMENU is t, then check for current sexp submenu only."
              "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">#\\(.+\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
-                (URL (match-string 4))
+              ;;(URL (match-string 4))
                 (bugnumber (match-string 5))
                 (description (match-string 6)))
             (cond
