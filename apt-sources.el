@@ -1,7 +1,7 @@
 ;;; apt-sources.el --- Mode for editing apt source.list file
 ;;
-;; Time-stamp: "2002-07-16 18:18:08 drs"
-;; Version: 0.9.5
+;; Time-stamp: "2002-07-18 18:21:02 drs"
+;; Version: 0.9.6
 ;; $Revision:
 ;; $Id:
 ;; $Source:
@@ -28,9 +28,25 @@
 
 ;; This mode is for editing '/etc/apt/sources.list', the APT (Advanced
 ;; Package Tool) configuration file found on Debian systems starting
-;; with Debian 2.0 'slink'. This mode font-locks the file and add some
-;; things including new source lines and modifying existing source
-;; lines.
+;; with Debian 2.0 'slink'.
+
+;; APT is a package retrieval tool for Debian (a GNU distribution, see
+;; http://www.debian.org); for example you could install Emacs with
+;; the command:
+;;
+;;   apt-get install emacs21
+;;
+;; and APT will then retrieve the package and install it for you. The
+;; sources.list file tells APT where to look for packages. Mine looks
+;; like this:
+;;
+;;   deb http://http.us.debian.org/debian unstable main contrib
+;;   deb http://non-us.debian.org/debian-non-US unstable/non-US main
+;;
+;;   deb ftp://ftp.de.debian.org/debian ../project/experimental main
+;;
+;; This mode font-locks the file and add some things including new
+;; source lines and modifying existing source lines.
 ;;
 ;; This mode can be costumized in diferent parts. You can (interactively)
 ;; change if you want blank lines around a new source line and comment
@@ -55,6 +71,8 @@
 
 ;;; History:
 
+;; 0.9.6 -- Added a better description to what is APT and file 'sources.list'.
+;;          (Ole Laursen <olau@hardworking.dk>)
 ;; 0.9.5 -- Fixed typo in docstring of function `apt-sources-around-lines'.
 ;;       -- Rewrite function `apt-sources-around-lines' with a better algorithm.
 ;;          (John Paul Wallington <jpw@shootybangbang.com>)
