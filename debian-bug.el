@@ -175,6 +175,7 @@
 ;;    maintonly is for mass filings.
 ;;  - New buffer-local variable `debian-bug-open-alist' for open bugs.
 ;;    This will be used for completion in debian-changelog-mode.el
+;;  - debian-bug: always build package list.  Closes: #186338 
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -484,7 +485,7 @@ Aug 10th 2001
   (set (intern (car pair) debian-bug-packages-obarray) (cdr pair)))
 
 (defun debian-bug-fill-packages-obarray ()
-  "Build `debian-bug-packages-obarray' and return it.
+  "Build `debian-bug-packages-obarray'.
 The obarray associates each package with the installed version of the package."
   (if (not (and (vectorp debian-bug-packages-obarray)
 		(equal debian-bug-packages-date
@@ -514,8 +515,7 @@ The obarray associates each package with the installed version of the package."
 	      (nth 5 (file-attributes debian-bug-status-file)))
 	(mapcar 'debian-bug-intern (mapcar 'list debian-bug-pseudo-packages))
 	(mapcar 'debian-bug-intern real-pkgs)
-	(message "Building list of installed packages...  Done.")))
-  debian-bug-packages-obarray)
+	(message "Building list of installed packages...  Done."))))
 
 (defun debian-bug-helper-program-init ()
   (or debian-bug-helper-program
@@ -574,9 +574,10 @@ The obarray associates each package with the installed version of the package."
 
 (defun debian-bug (&optional package)
   "Submit a Debian bug report."
+  (debian-bug-fill-packages-obarray)
   (interactive (list (completing-read
                       "Package name: "
-                      (debian-bug-fill-packages-obarray)
+                      debian-bug-packages-obarray
                       nil nil nil nil (current-word))))
     (if (string= package "wnpp")
 	(debian-bug-wnpp)
