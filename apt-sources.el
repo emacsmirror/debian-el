@@ -1,7 +1,7 @@
 ;;; apt-sources.el --- Mode for editing apt source.list file
 ;;
-;; Time-stamp: "03/05/12 00:06:03 drs"
-;; Version: 0.9.7
+;; Time-stamp: "2003-10-18 19:50:43 drs"
+;; Version: 0.9.8
 ;; $Revision:
 ;; $Id:
 ;; $Source:
@@ -73,52 +73,54 @@
 
 ;;; History:
 
+;; 0.9.8 -- Remove dependancy to autoinsert, because it's no longer required.
+;;           (suggested by Peter S. Galbraith <psg@debian.org>)
 ;; 0.9.7 -- Converted relevant defvar statements to defcustom, and added
-;;          `auto-mode-alist' entry. (Peter S. Galbraith <psg@debian.org>)
+;;           `auto-mode-alist' entry. (Peter S. Galbraith <psg@debian.org>)
 ;;       -- Add completion to some of the fields in `apt-sources-new-source'
-;;          and the functions that change parameters. (suggested by
-;;          Peter S. Galbraith <psg@debian.org>)
+;;           and the functions that change parameters. (suggested by
+;;           Peter S. Galbraith <psg@debian.org>)
 ;;       -- Add menu support. (suggested by Peter S. Galbraith <psg@debian.org>)
 ;;       -- Change name from `apt-sources-insert-source' to
 ;;          `apt-sources-new-source'. (suggested by Peter S. Galbraith
-;;          <psg@debian.org>)
+;;           <psg@debian.org>)
 ;;       -- Change name from `apt-sources-insert-local-var' to
 ;;          `apt-sources-insert-local-vars'. (suggested by Peter S. Galbraith
-;;          <psg@debian.org>)
+;;           <psg@debian.org>)
 ;;       -- Change `apt-sources-change-components' to handle absence of
-;;          components. (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           components. (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;;       -- Change the web page address form where you can find the latest version.
-;;	   (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;	     (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.6 -- Added a better description to what is APT and file 'sources.list'.
-;;          (Ole Laursen <olau@hardworking.dk>)
+;;           (Ole Laursen <olau@hardworking.dk>)
 ;; 0.9.5 -- Fixed typo in docstring of function `apt-sources-around-lines'.
 ;;       -- Rewrite function `apt-sources-around-lines' with a better algorithm.
-;;          (John Paul Wallington <jpw@shootybangbang.com>)
+;;           (John Paul Wallington <jpw@shootybangbang.com>)
 ;;       -- Added a description to apt and sources.list
 ;;           (David Combs <dkcombs@panix.com>)
 ;;       -- Added name and email from contributors. :)
-;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.4 -- Added a missing option in function `apt-sources-insert-source' to
-;;              select 'ftp' type.
+;;           select 'ftp' type.
 ;;       -- Added URI-type 'https'.
 ;;       -- Fix some function's documentation mistakes.
-;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;; 0.9.3 -- Fix a recently introduced bug that prevents keybindings work under
-;;              Xemacs.
-;;          (John Paul Wallington <jpw@shootybangbang.com>)
+;;           Xemacs.
+;;           (John Paul Wallington <jpw@shootybangbang.com>)
 ;; 0.9.2 -- Fix a bug with a keybinding that called a function with another name.
 ;;       -- Make variable `comment-start' buffer-local.
 ;;       -- Change the keybinding zone to be more compact and portable.
-;;          (John Paul Wallington <jpw@shootybangbang.com>)
+;;           (John Paul Wallington <jpw@shootybangbang.com>)
 ;;       -- Change some keybindings.
-;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 ;;
 ;; 0.9.1 -- Corrected a bug in the 'cond' clauses that prevented to byte-compile.
-;;          (Perkens-Golomb, Burkhard <burkhard.perkens-golomb@sdm.de>)'
+;;           (Perkens-Golomb, Burkhard <burkhard.perkens-golomb@sdm.de>)'
 ;;       -- Make variable `comment-start-skip' buffer-local.
-;;          (Stefan Monnier <monnier+gnu.emacs.sources/news/@flint.cs.yale.edu>)
+;;           (Stefan Monnier <monnier+gnu.emacs.sources/news/@flint.cs.yale.edu>)
 ;; 0.9   -- first release.
-;;          (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
 
 ;;; Code:
 
