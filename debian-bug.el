@@ -27,6 +27,7 @@
 ;; Useful commands provided by this mode:
 ;;
 ;; debian-bug         - submit a bug report concerning a Debian package
+;; debian-bug-filename - submit a bug report for a given filename's package
 ;; debian-bug-web-bug - view a bug report on a web browser (via browse-url)
 ;; debian-bug-wnpp    - submit a Work Needed on Prospective Package bug report
 ;; debian-bug-request-for-package
@@ -170,8 +171,10 @@
 ;;  - Switch priority of reportbug and bug, preferring reportbug. 
 ;;  - send to maintonly if priority wishlist or minor.  Closes: #176429.
 ;; V1.38 14Apr2003 Peter S Galbraith <psg@debian.org>
-;;    Revert `send to maintonly if priority wishlist or minor' change.
+;;  - Revert `send to maintonly if priority wishlist or minor' change.
 ;;    maintonly is for mass filings.
+;;  - New buffer-local variable `debian-bug-open-alist' for open bugs.
+;;    This will be used for completion in debian-changelog-mode.el
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1297,13 +1300,19 @@ If SUBMENU is t, then check for current sexp submenu only."
 (defvar debian-bug-alist nil
   "Buffer local alist of bug numbers (and description) for this package")
 (make-variable-buffer-local 'debian-bug-alist)
+(defvar debian-bug-open-alist nil
+  "Buffer local alist of open bug numbers (and description) for this package")
+(make-variable-buffer-local 'debian-bug-open-alist)
 
 (defun debian-bug-build-bug-menu (package)
   "Build a menu listing the bugs for this package"
-  (setq debian-bug-alist nil)
+  (setq debian-bug-alist nil
+        debian-bug-open-alist nil)
   (let ((debian-bug-tmp-buffer 
          (get-buffer-create "*debian-bug-tmp-buffer*"))
         (bug-alist)
+        (bug-open-alist)
+        (bugs-are-open-flag t)
         (debian-bug-menu-var))
     (save-excursion
       (set-buffer debian-bug-tmp-buffer)
@@ -1317,7 +1326,7 @@ If SUBMENU is t, then check for current sexp submenu only."
 	(goto-char (point-min))
         (while 
             (re-search-forward
-             "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">#\\(.+\\)</a>\\)"
+             "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">#[0-9]+: \\(.+\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
                 (URL (match-string 4))
@@ -1325,11 +1334,15 @@ If SUBMENU is t, then check for current sexp submenu only."
                 (description (match-string 6)))
             (cond
              (type
+              (setq bugs-are-open-flag (not (string-match "resolved" type)))
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert "\"" type "\"\n")))
              (t
               (setq bug-alist (cons (list bugnumber description) bug-alist))
+              (if bugs-are-open-flag
+                  (setq bug-open-alist
+                        (cons (list bugnumber description) bug-open-alist)))
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert 
@@ -1371,6 +1384,7 @@ If SUBMENU is t, then check for current sexp submenu only."
       (kill-buffer nil)
       )
     (setq debian-bug-alist bug-alist)
+    (setq debian-bug-open-alist bug-open-alist)
     (cond
      ((equal major-mode 'debian-changelog-mode)
       (easy-menu-define
