@@ -3,7 +3,7 @@
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003 Peter S Galbraith <psg@debian.org>
 
-;; Help texts from 
+;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
 ;;  http://www.debian.org/Bugs/Developer#tags
 ;;  http://www.debian.org/Bugs/pseudo-packages
@@ -244,6 +244,9 @@
 ;;    list of pseudo-packages can be scrolled. (Closes: #222332)
 ;;  - debian-bug-package: Let M-<next> and M-<prev> scroll the pseudo-package
 ;;    list window by making _it_ the other window. (Closes: #222333)
+;; V1.53 27Nov2003 Peter S Galbraith <psg@debian.org>
+;;  - Add menu entry for "Archived Bugs for this package" and for
+;;    "Developer Page for This Package".  Create debian-bug-web-developer-page.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -586,8 +589,9 @@ Reportbug may have sent an empty report!")))
 	(when debian-bug-display-help
 	  (debian-bug-help-pseudo-packages)
           ;; This lets M-<next> and M-<prev> scroll the pseudo-package list
-          ;; window by making _it_ the other window.          
-	  (select-window (get-buffer-window "*Help*")))
+          ;; window by making _it_ the other window.
+          (if (get-buffer-window "*Help*")
+              (select-window (get-buffer-window "*Help*"))))
         (setq package (completing-read
                        "Package name: "
                        (debian-bug-fill-packages-obarray)
@@ -938,7 +942,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
      (t
       (forward-line 6)
       (insert "\nTags: " tag "\n")))))
-	
+
 (defun debian-bug--toggle-tags (tag)
   "Toggle TAG."
   (interactive (list (completing-read "Tag: " debian-bug-tags-alist
@@ -1108,7 +1112,7 @@ Feb 8th 2002, checked Apr 22 2003.")))
  sarge-ignore
       This release-critical bug is to be ignored for the purposes of releasing
       sarge. This tag should only be used by the release manager; do not set
-      it yourself without explicit authorization from him. 
+      it yourself without explicit authorization from him.
  sid
       This bug particularly applies to an architecture that is currently
       unreleased (that is, in the sid distribution).
@@ -1229,6 +1233,7 @@ Aug 10th 2001
      )
     ("Web View"
      ["Bugs for This Package" (debian-bug-web-bugs) t]
+     ["Archived Bugs for This Package" (debian-bug-web-bugs t) t]
      ["Bug Number..." (debian-bug-web-bug) t]
      ["Package Info" (debian-bug-web-packages) t]
 ;;   ("Info for This Package"
@@ -1328,8 +1333,35 @@ argument turn sit off."
 ;;  by Peter Galbraith, Feb 23 2001
 
 ;;;###autoload
-(defun debian-bug-web-bugs ()
-  "Browse the BTS for this package via `browse-url'."
+(defun debian-bug-web-bugs (&optional archived)
+  "Browse the BTS for this package via `browse-url'.
+With optional argument prefix ARCHIVED, display archived bugs."
+  (interactive "P")
+  (if (not (featurep 'browse-url))
+      (progn
+        (load "browse-url" nil t)
+        (if (not (featurep 'browse-url))
+            (error "This function requires the browse-url elisp package"))))
+  (let ((pkg-name (or debian-bug-package-name
+                      (and (featurep 'debian-changelog-mode)
+                           (debian-changelog-suggest-package-name))
+		      (read-string "Package name: "))))
+    (if (string-equal "" pkg-name)
+        (message "No package name to look up")
+      (if archived
+          (browse-url
+           (concat "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
+                   pkg-name "&archive=yes"))
+        (browse-url (concat "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
+                            pkg-name)))
+      (message "Looking up bugs for source package %s via browse-url"
+               pkg-name))))
+
+;;;FIXME - This might not be a source package name, and then the page
+;;;        doesn't exist.
+;;;###autoload
+(defun debian-bug-web-developer-page ()
+  "Browse the web for this package's developer page."
   (interactive)
   (if (not (featurep 'browse-url))
       (progn
@@ -1342,9 +1374,11 @@ argument turn sit off."
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
         (message "No package name to look up")
-      (browse-url (concat "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
-                          pkg-name))
-      (message "Looking up bugs for source package %s via browse-url"
+      (or (string-match "^lib[a-zA-Z]" pkg-name)
+          (string-match "^[a-zA-Z]" pkg-name))
+      (browse-url (concat "http://packages.qa.debian.org/"
+                          (match-string 0 pkg-name) "/" pkg-name ".html"))
+      (message "Looking up developer web page for package %s via browse-url"
                pkg-name))))
 
 ;;;###autoload
