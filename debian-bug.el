@@ -233,6 +233,12 @@
 ;;  - Add tags "sarge-ignore" and "fixed-uptsream".
 ;; V1.50 09Oct2003 Peter S Galbraith <psg@debian.org>
 ;;  - Add debian-bug-rfc2047-decode-string.
+;; V1.51 28Oct2003 Peter S Galbraith <psg@debian.org>
+;;  - Send to maintonly if priority minor.  Closes: #214242.
+;;    See http://www.debian.org/Bugs/Reporting.en.html:
+;;    "if a bug report is minor, for example, a documentation typo or a
+;;     trivial build problem, please adjust the severity appropriately and
+;;     send it to maintonly@bugs"
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -605,6 +611,8 @@ Reportbug may have sent an empty report!")))
         (insert " " debian-bug-mail-address))
        (t
         (insert "To: " debian-bug-mail-address)))
+      (if (string-equal severity "minor")
+          (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
       (goto-char (point-min))
       (cond
        ((re-search-forward "Subject: " nil t)
