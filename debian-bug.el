@@ -1676,7 +1676,7 @@ If SUBMENU is t, then check for current sexp submenu only."
               (end-of-line)))
           ))
       (eval-buffer debian-bug-tmp-buffer)
-;;      (kill-buffer nil)
+      (kill-buffer nil)
       )
     (setq debian-bug-alist bug-alist)
     (setq debian-bug-open-alist bug-open-alist)
