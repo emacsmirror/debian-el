@@ -231,6 +231,8 @@
 ;;  - Make debian-bug accept P or F without a carriage return.
 ;; V1.49 05Oct2003 Peter S Galbraith <psg@debian.org>
 ;;  - Add tags "sarge-ignore" and "fixed-uptsream".
+;; V1.50 09Oct2003 Peter S Galbraith <psg@debian.org>
+;;  - Add debian-bug-rfc2047-decode-string.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1587,6 +1589,14 @@ If SUBMENU is t, then check for current sexp submenu only."
 
 (defvar debian-changelog-mode-map)
 
+(load "rfc2047" t t)
+(defun debian-bug-rfc2047-decode-string (string)
+  "Decode the quoted-printable-encoded STRING and return the results.
+Only decodes if `rfc2047-decode-string' is available."
+  (if (fboundp 'rfc2047-decode-string)
+      (rfc2047-decode-string string)
+    string))
+
 (defun debian-bug-build-bug-menu (package)
   "Build a menu listing the bugs for PACKAGE."
   (setq debian-bug-alist nil
@@ -1650,7 +1660,9 @@ If SUBMENU is t, then check for current sexp submenu only."
                                (looking-at "\\(.*\\) &lt;")))
                   (setq shortdescription
                         (concat "Bug fix: \"" shortdescription
-                                "\", thanks to " (match-string 1)
+                                "\", thanks to "
+                                (debian-bug-rfc2047-decode-string
+                                 (match-string 1))
                                 " (Closes: #" bugnumber ").")))
                 (setq bug-open-alist
                       (cons
