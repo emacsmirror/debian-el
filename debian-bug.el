@@ -209,6 +209,9 @@
 ;;  - debian-bug-filename: Added File: in informational block.
 ;;  - debian-bug-search-file: Added message about system call to dpkg.
 ;;  - debian-bug-font-lock-keywords: added File:
+;;  - debian-bug: make it a front-end to `debian-bug-package' (the old
+;;    `debian-bug') and `debian-bug-filename' and make those non-interactive,
+;;    reducing the number of interactive commands.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -711,16 +714,16 @@ Reportbug may have sent an empty report!")))
     (call-process "uname" nil '(t t) nil "-a")
     (forward-line -5))))
 
-(defun debian-bug (&optional package)
-  "Submit a Debian bug report.
-Optional argument PACKAGE can be provided in programs."
-  (interactive (list (save-window-excursion
-                        (if debian-bug-display-help
-                            (debian-bug-help-pseudo-packages))
-                        (completing-read
-                         "Package name: "
-                         (debian-bug-fill-packages-obarray)
-                         nil nil nil nil (current-word)))))
+(defun debian-bug-package (&optional package)
+  "Submit a Debian bug report about PACKAGE."
+  (if (or (not package) (string= "" package))
+      (save-window-excursion
+        (if debian-bug-display-help
+            (debian-bug-help-pseudo-packages))
+        (setq package (completing-read
+                       "Package name: "
+                       (debian-bug-fill-packages-obarray)
+                       nil nil nil nil (current-word)))))
   (if (string= package "wnpp")
       (debian-bug-wnpp)
     (debian-bug-fill-packages-obarray)
@@ -1751,7 +1754,6 @@ Call this function from the mode setup with MINOR-MODE-MAP."
 
 (defun debian-bug-filename ()
   "Submit a Debian bug report for a given filename's package."
-  (interactive)
   (let ((filename (read-file-name "Filename: " "/" nil t nil)))
     (cond
      ((string-equal "" filename)
@@ -1762,10 +1764,24 @@ Call this function from the mode setup with MINOR-MODE-MAP."
             (let ((answer (y-or-n-p (format "File is in package %s; continue? "
                                             package))))
               (when answer
-                (debian-bug package)
+                (debian-bug-package package)
                 (save-excursion
                   (forward-char -1)
                   (insert "File: " filename "\n"))))))))))
+
+(defun debian-bug ()
+  "Submit a Debian bug report."
+  (interactive)
+  (let ((type (read-string
+               "Report a bug for a [P]ackage or [F]ile: (default P) ")))
+    (cond
+     ((or (string-equal "" type)
+          (string-match "^[pP]" type))
+      (debian-bug-package))
+     ((string-match "^[fF]" type)
+      (debian-bug-filename))
+     (t
+      (message "Sorry, try that again")))))
 
 (provide 'debian-bug)
 
