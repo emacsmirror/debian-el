@@ -182,6 +182,12 @@
 ;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>. Thanks!
 ;;  - Byte-compilation cleanup.
 ;;  - Added debian-bug-menu-preload-flag.
+;; V1.39 22Apr2003 Peter S Galbraith <psg@debian.org>
+;;  - debian-bug-alltags-alist: new variable for complete Tags list.
+;;  - debian-bug-help-control: new command for menu help for d-b-control
+;;  - Minor doc string fixes.
+;;  - renamed X-Debbugs-CC commands to simple CC, specifying the field to
+;;    use as an new argument.  So it can be used in d-b-control.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -342,6 +348,12 @@ when the shell commands \"bug\" and \"reportbug\" are not available")
   "Alist of valid Tags aimed at Debian users.
 The complete list of valid tags is longer, but the others are for use by
 Debian maintainers.")
+
+(defvar debian-bug-alltags-alist
+  '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
+    ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid")
+    ("experimental"))
+  "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "boot-floppy" "bugs.debian.org" "cdimage.debian.org" "cdrom"
@@ -537,12 +549,12 @@ Aug 10th 2001
  forward the report to the package maintainer only, it won't forward it
  to the BTS mailing lists.
 
- If wish to report a bug to the bug tracking system that's already been
- sent to the maintainer, you can use quiet@bugs. Bugs sent to
- quiet@bugs will not be forwarded anywhere, only filed.
+ If you wish to report a bug to the bug tracking system that's already been
+ sent to the maintainer, you can use quiet@bugs. Bugs sent to quiet@bugs
+ will not be forwarded anywhere, only filed.
 
  Bugs sent to maintonly@bugs or to quiet@bugs are *still* posted to
- the Debian Bug Trcaking System web site (--psg).")
+ the Debian Bug Tracking System web site (--psg).")
 
 ;;; Functions:
 (autoload 'reporter-compose-outgoing "reporter")
@@ -701,7 +713,7 @@ Optional argument PACKAGE can be provided in programs."
 	(if debian-bug-use-From-address
             (debian-bug--set-custom-From))
 	(if debian-bug-always-CC-myself
-            (debian-bug--set-X-Debbugs-CC debian-bug-From-address))
+            (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
 	(set-window-start (selected-window) (point-min) t)
 	(setq debian-bug-package-name package)
 	(debian-bug-minor-mode 1)
@@ -767,13 +779,14 @@ Optional argument ACTION can be provided in programs."
       (if debian-bug-use-From-address
           (debian-bug--set-custom-From))
       (if debian-bug-always-CC-myself
-          (debian-bug--set-X-Debbugs-CC debian-bug-From-address))
+          (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
       (if (re-search-forward "Subject: " nil t)
           (insert (format "%s: %s -- %s" tag package description))
         (re-search-forward "Subject:" nil t)
         (insert (format " %s: %s -- %s" tag package description)))
       (if CC-devel
-          (debian-bug--set-X-Debbugs-CC "debian-devel@lists.debian.org")))
+          (debian-bug--set-CC "debian-devel@lists.debian.org"
+                              "X-Debbugs-CC:")))
     (insert "Package: wnpp\n"
 	    (format "Severity: %s\n\n" severity))
     (when (or (string-equal tag "ITP")
@@ -862,62 +875,69 @@ Optional argument ACTION can be provided in programs."
       (debian-bug--unset-custom-From)
     (debian-bug--set-custom-From)))
 
-(defun debian-bug--is-X-Debbugs-CC (address)
+(defun debian-bug--is-CC (address field)
   (save-excursion
     (goto-char (point-min))
-    (re-search-forward
-     (concat "^X-Debbugs-CC:.*" (regexp-quote address)) nil t)))
+    (let ((case-fold-search t))
+      (re-search-forward
+       (concat "^" field ".*" (regexp-quote address)) nil t))))
 
-(defun debian-bug--remove-X-Debbugs-CC (address &optional nocleanup)
-  "Remove ADDRESS.
+(defun debian-bug--remove-CC (address field &optional nocleanup)
+  "Remove ADDRESS from FIELD.
 Non-nil optional argument NOCLEANUP means remove empty field."
   (save-excursion
     (goto-char (point-min))
-    (if (or (re-search-forward (concat "^X-Debbugs-CC:.*\\("
+    (if (or (re-search-forward (concat "^" field ".*\\("
 				       (regexp-quote address) ", \\)") nil t)
-	    (re-search-forward (concat "^X-Debbugs-CC:.*\\(, "
+	    (re-search-forward (concat "^" field ".*\\(, "
 				       (regexp-quote address) "\\)") nil t)
-	    (re-search-forward (concat "^X-Debbugs-CC:.*\\("
+	    (re-search-forward (concat "^" field ".*\\("
 				       (regexp-quote address) "\\)") nil t))
 	(delete-region (match-beginning 1)(match-end 1)))
     (goto-char (point-min))
     (if (and (not nocleanup)
-	     (re-search-forward "^ *X-Debbugs-CC: *\n" nil t))
+	     (re-search-forward (concat "^ *" field " *\n") nil t))
 	(delete-region (match-beginning 0)(match-end 0)))))
 
-(defun debian-bug--set-X-Debbugs-CC (address)
-  "Add ADDRESS to X-Debbugs-CC."
-  (debian-bug--remove-X-Debbugs-CC address t)
+(defun debian-bug--set-CC (address field)
+  "Add ADDRESS to FIELD"
+  (debian-bug--remove-CC address field t)
   (save-excursion
     (goto-char (point-min))
     (cond
-     ((re-search-forward "^X-Debbugs-CC: *$" nil t) ; Empty  X-Debbugs-CC:
+     ((re-search-forward (concat "^" field " +$") nil t) ;Empty X-Debbugs-CC:
       (insert address))
-     ((re-search-forward "^X-Debbugs-CC:.*$" nil t) ; Existing X-Debbugs-CC:
+     ((re-search-forward (concat "^" field "$") nil t) ;Empty X-Debbugs-CC:
+      (insert " " address))
+     ((re-search-forward (concat "^" field ".*$") nil t) ;Existing X-Debbugs-CC
       (insert ", " address))
      ((re-search-forward "^Subject:.*\n" nil t)
-      (insert "X-Debbugs-CC: " address "\n"))
+      (insert field " " address "\n"))
      ((re-search-forward "^To: .*\n" nil t)
-      (insert "X-Debbugs-CC: " address "\n"))
+      (insert field " " address "\n"))
      (t
-      (insert "X-Debbugs-CC: " address "\n")))))
+      (insert field " " address "\n")))))
 
-(defun debian-bug--toggle-X-Debbugs-CC (address)
-  "Remove X-Debbugs-CC field if it exists\; otherwise add ADDRESS to it."
-  (if (debian-bug--is-X-Debbugs-CC address)
-      (debian-bug--remove-X-Debbugs-CC address)
-    (debian-bug--set-X-Debbugs-CC address)))
+(defun debian-bug--toggle-CC (address field)
+  "Add ADDRESS to FIELD or remove it if present."
+  (if (debian-bug--is-CC address field)
+      (debian-bug--remove-CC address field)
+    (debian-bug--set-CC address field)))
 
 (defun debian-bug--toggle-CC-myself ()
-  "Toggle X-Debbugs-CC: line for myself in the mail header."
+  "Toggle X-Debbugs-CC: or Cc: line for myself in the mail header."
   (interactive)
-  (if debian-bug-From-address
-    (debian-bug--toggle-X-Debbugs-CC debian-bug-From-address)))
+  (when debian-bug-From-address
+    (if debian-bug-minor-mode
+        (debian-bug--toggle-CC debian-bug-From-address "X-Debbugs-CC:")
+      (debian-bug--toggle-CC debian-bug-From-address "cc:"))))
 
 (defun debian-bug--toggle-CC-devel ()
-  "Toggle X-Debbugs-CC: line for myself in the mail header."
+  "Toggle X-Debbugs-CC: or CC: line for debian-devel in the mail header."
   (interactive)
-  (debian-bug--toggle-X-Debbugs-CC "debian-devel@lists.debian.org"))
+  (if debian-bug-minor-mode
+      (debian-bug--toggle-CC "debian-devel@lists.debian.org" "X-Debbugs-CC:")
+    (debian-bug--toggle-CC "debian-devel@lists.debian.org" "cc:")))
 
 (defun debian-bug--is-severity (severity)
   (save-excursion
@@ -1049,6 +1069,11 @@ Non-nil optional argument NOCLEANUP means remove empty field."
   (with-output-to-temp-buffer "*Help*"
     (princ debian-bug-help-email-text)))
 
+(defun debian-bug-help-control ()
+  (interactive)
+  (with-output-to-temp-buffer "*Help*"
+    (princ debian-bug-help-control-text)))
+
 (defvar debian-bug-minor-mode nil)
 (defvar debian-bug-minor-mode-map nil
   "Keymap for `debian-bug' minor mode.")
@@ -1079,10 +1104,11 @@ Non-nil optional argument NOCLEANUP means remove empty field."
      "--"
      ["CC debian-devel" (debian-bug--toggle-CC-devel)
       :style toggle
-      :selected (debian-bug--is-X-Debbugs-CC "debian-devel@lists.debian.org")]
+      :selected (debian-bug--is-CC
+                 "debian-devel@lists.debian.org" "X-Debbugs-CC:")]
      ["CC me" (debian-bug--toggle-CC-myself)
       :style toggle :active debian-bug-From-address
-      :selected (debian-bug--is-X-Debbugs-CC debian-bug-From-address)]
+      :selected (debian-bug--is-CC debian-bug-From-address "X-Debbugs-CC:")]
      )
     ("Severity"
      ["critical" (debian-bug--set-severity "critical")
@@ -1169,10 +1195,11 @@ argument turn sit off."
      :selected (debian-bug--is-custom-From)]
     ["CC to debian-devel header line" (debian-bug--toggle-CC-devel)
      :style radio
-     :selected (debian-bug--is-X-Debbugs-CC "debian-devel@lists.debian.org")]
+     :selected (debian-bug--is-CC "debian-devel@lists.debian.org"
+                                  "X-Debbugs-CC:")]
     ["CC to myself header line" (debian-bug--toggle-CC-myself)
      :style radio :active debian-bug-From-address
-     :selected (debian-bug--is-X-Debbugs-CC debian-bug-From-address)]
+     :selected (debian-bug--is-CC debian-bug-From-address "X-Debbugs-CC:")]
     ["Customize debian-bug"
      (customize-group "debian-bug") (fboundp 'customize-group)]
     ))
