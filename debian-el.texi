@@ -133,22 +133,43 @@ group @code{apt-utils}.
 
 @table @samp
 @item debian-bug
-Submit a bug report concerning a Debian package.
-@item debian-bug-wnpp
-Submit a Work Needed on Prospective Package bug report.
-@item debian-bug-request-for-package
-A shortcut for a WNPP bug type RFP.
-@item debian-bug-ITP
-A shortcut for a WNPP bug type ITP.
-@item debian-bug-web-bug
-View a bug report on a web browser (via browse-url).
-@item debian-bug-get-bug-as-email
-Read bug report number via Email interface.
-@item debian-bug-get-bug-as-file
-Read bug report number as a regular file.
-@end table
+Submit a Debian bug report against a package or file.
 
-and others.
+@item debian-bug-wnpp
+Submit a WNPP bug report to Debian.
+
+@item debian-bug-request-for-package
+Shortcut for @code{debian-bug-wnpp} with RFP action.
+
+@item debian-bug-intent-to-package
+Shortcut for @code{debian-bug-wnpp} with ITP action (for Debian developers).
+
+@item debian-bug-web-bugs
+Browse the BTS for this package via @code{browse-url}."
+
+@item debian-bug-web-bug
+Browse the BTS for BUG-NUMBER via @code{browse-url}
+
+@item debian-bug-web-this-bug
+Browse the BTS via @code{browse-url} for the bug report number under point.
+
+@item debian-bug-web-this-bug-under-mouse
+Browse the BTS via @code{browse-url} for the bug report number under mouse.
+(Normally bound to mouse-2 in some modes)
+
+@item debian-bug-web-packages
+Search Debian web page for this package via @code{browse-url}.
+
+@item debian-bug-web-package
+Search Debian web page in ARCHIVE for this package via @code{browse-url}.
+
+@item debian-bug-get-bug-as-file
+Read bug report #BUG-NUMBER as a regular file.
+
+@item debian-bug-get-bug-as-email
+Read bug report #BUG-NUMBER via Email interface.
+
+@end table
 
 @noindent The command @command{M-x debian-bug} prompts for required
 information to start filling in the mail draft buffer.  It then allows
