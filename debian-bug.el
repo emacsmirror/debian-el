@@ -191,6 +191,8 @@
 ;; V1.40 12May2003 Peter S Galbraith <psg@debian.org>
 ;;  - check if `debian-changelog-mode' is available as a feature, and not
 ;;    simply the if the autoloaded are fboundp (which is always true).
+;; V1.41 15May2003 Peter S Galbraith <psg@debian.org>
+;;  - Add `confirmed' tag.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -470,12 +472,6 @@ Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
       exception for bugs fixed by non-maintainer uploads. Note: the \"fixed\"
       tag should be used instead.
 
- confirmed
-      for bugs that you've looked at, understand, and basically agree with,
-      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
-      generally can't be \"confirmed\", bugs marked \"help\" could be depending
-      on what sort of help you're asking for.
-
 Certain severities are considered release-critical, meaning the bug will
 have an impact on releasing the package with the stable release of
 Debian.  Currently, these are critical, grave and serious.")
@@ -518,7 +514,12 @@ Feb 8th 2002
       The maintainer is requesting help with dealing with this bug.
  pending
       The problem described in the bug is being actively worked on, i.e.
-      a solution is pending.
+      a solution is pending.  It is marked in the BTS as \"pending upload\".
+ confirmed
+      for bugs that you've looked at, understand, and basically agree with,
+      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
+      generally can't be \"confirmed\", bugs marked \"help\" could be depending
+      on what sort of help you're asking for.
  fixed
       This bug is fixed or worked around (by a non-maintainer upload, for
       example), but there's still an issue that needs to be resolved. This
