@@ -145,14 +145,17 @@
   "Whether or not APT package lists are built.")
 
 (defvar apt-utils-current-packages nil
-  "Packages associated with the *APT package info* buffer.")
+  "Packages associated with `apt-utils-mode' buffer.")
+(make-variable-buffer-local 'apt-utils-current-packages)
 
 (defvar apt-utils-current-links nil
-  "Package links associated with the *APT package info* buffer.")
+  "Package links associated with the `apt-utils-mode' buffer.")
+(make-variable-buffer-local 'apt-utils-current-links)
 
 (defvar apt-utils-buffer-positions nil
   "Cache of positions associated with current packages.
 These are stored in a hash table.")
+(make-variable-buffer-local 'apt-utils-buffer-positions)
 
 (defvar apt-utils-dired-buffer nil
   "Keep track of dired buffer.")
@@ -167,12 +170,12 @@ These are stored in a hash table.")
 ;; Commands and functions
 
 ;;;###autoload
-(defun apt-utils-show-package (&optional arg)
+(defun apt-utils-show-package (&optional arg new-session)
   "Present Debian package information in a dedicated buffer.
-With ARG, choose that package, otherwise prompt for one."
+With ARG, choose that package, otherwise prompt for one. If
+NEW-SESSION is non-nil, generate a new `apt-utils-mode' buffer."
   (interactive)
-  (let ((buffer "*APT package info*")
-        package type)
+  (let (package type)
     ;; If ARG is provided, the car is the package name and the cdr the
     ;; package type
     (cond ((and (not (null arg)) (listp arg))
@@ -186,13 +189,18 @@ With ARG, choose that package, otherwise prompt for one."
     (unless type
       (setq type (apt-utils-package-type package)))
     ;; Set up the buffer
-    (if (get-buffer buffer)
-        (set-buffer buffer)
-      (set-buffer (get-buffer-create buffer))
-      (apt-utils-mode)
-      (setq truncate-lines nil))
+    (cond
+     (new-session
+      (set-buffer (generate-new-buffer "*APT package info*"))
+      (apt-utils-mode))
+     ((eq major-mode 'apt-utils-mode)
+      ;; do nothing
+      )
+     (t
+      (set-buffer (get-buffer-create "*APT package info*"))
+      (apt-utils-mode)))
     ;; If called interactively, initialize apt-utils-current-packages
-    (when (interactive-p)
+    (when (or (interactive-p) new-session)
       (setq apt-utils-current-packages (cons (cons package type) nil))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
@@ -231,14 +239,11 @@ With ARG, choose that package, otherwise prompt for one."
                                 (mapconcat 'identity (cdr package) " "))))
         (apply 'call-process apt-utils-grep-dctrl-program nil t nil package)
         (apt-utils-add-package-links))))
-
-    ;; Need these for interactive calls, or when following links
-    (set-window-start (selected-window) (point-min))
-    (goto-char (point-min))
-
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
-    (display-buffer buffer)))
+    ;; apt-utils-buffer-positions sometimes overrides the following
+    (goto-char (point-min))
+    (set-window-start (display-buffer (current-buffer)) (point-min))))
 
 (defun apt-utils-list-package-files ()
   "List the files associated with the current package.
@@ -297,17 +302,18 @@ To search for multiple patterns use a string like \"foo&&bar\"."
 (defun apt-utils-search-internal (&optional names-only)
   "Search Debian packages for regular expression.
 With NAMES-ONLY, match names only."
-  (let ((buffer "*APT package info*")
-        (regexp (read-from-minibuffer "Search packages for regexp: ")))
+  (let ((regexp (read-from-minibuffer "Search packages for regexp: ")))
     ;; Set up the buffer
-    (if (get-buffer buffer)
-        (set-buffer buffer)
-      (set-buffer (get-buffer-create buffer))
-      (apt-utils-mode)
-      (setq truncate-lines nil))
+    (cond
+     ((eq major-mode 'apt-utils-mode)
+      ;; do nothing
+      )
+     (t
+      (set-buffer (get-buffer-create "*APT package info*"))
+      (apt-utils-mode)))
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (insert (format "Debian package search%s for %s\n\n" 
+      (insert (format "Debian package search%s for %s\n\n"
                       (if names-only " (names only)" "") regexp))
       (cond
        (names-only
@@ -325,13 +331,12 @@ With NAMES-ONLY, match names only."
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
-      (display-buffer buffer))))
+      (display-buffer (current-buffer)))))
 
 (defun apt-utils-search-grep-dctrl ()
   "Search Debian packages for regular expression using grep-dctrl."
   (interactive)
   (let (args
-        (buffer "*APT package info*")
         (fields (apt-utils-read-fields "Search package fields: "))
         (show (apt-utils-read-fields "Show package fields: "))
         (regexp (read-from-minibuffer "Search regexp: ")))
@@ -343,15 +348,15 @@ With NAMES-ONLY, match names only."
       (error "No fields selected for show"))
      ((equal (length regexp) 0)
       (error "No regexp selected")))
-
     (setq fields (concat "-F" fields))
     (setq show (concat "-s" show))
-
-    (if (get-buffer buffer)
-        (set-buffer buffer)
-      (set-buffer (get-buffer-create buffer))
-      (apt-utils-mode)
-      (setq truncate-lines nil))
+    (cond
+     ((eq major-mode 'apt-utils-mode)
+      ;; do nothing
+      )
+     (t
+      (set-buffer (get-buffer-create "*APT package info*"))
+      (apt-utils-mode)))
     (let ((inhibit-read-only t))
       (erase-buffer)
       ;; Construct argument list (need to keep this)
@@ -374,7 +379,7 @@ With NAMES-ONLY, match names only."
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
-      (display-buffer buffer))))
+      (display-buffer (current-buffer)))))
 
 (defun apt-utils-read-fields (prompt)
   "Read fields for `apt-utils-search-grep-dctrl'.
@@ -640,15 +645,16 @@ SUFFIXES."
 
 ;; Follow hyperlinks
 
-(defun apt-utils-follow-link ()
-  "Follow hyperlink at point."
-  (interactive)
+(defun apt-utils-follow-link (new-session)
+  "Follow hyperlink at point.
+With non-nil NEW-SESSION, follow link in a new buffer."
+  (interactive "P")
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
   (let ((package
          (cadr
           (member 'apt-package (text-properties-at (point))))))
-    (apt-utils-follow-link-internal package)))
+    (apt-utils-follow-link-internal package new-session)))
 
 (defun apt-utils-mouse-follow-link (event)
   "Follow hyperlink at mouse click.
@@ -676,17 +682,19 @@ Argument EVENT is a mouse event."
           (cadr
            (member 'apt-package (text-properties-at
                                  posn))))
-    (apt-utils-follow-link-internal package)))
+    (apt-utils-follow-link-internal package nil)))
 
-(defun apt-utils-follow-link-internal (package)
-  "Follow hyperlink for PACKAGE."
+(defun apt-utils-follow-link-internal (package new-session)
+  "Follow hyperlink for PACKAGE.
+With non-nil NEW-SESSION, follow link in a new buffer."
   (cond
    ((equal package 'broken)
     (message "Package name is broken somehow."))
    (package
-    (progn
-      (apt-utils-update-buffer-positions 'forward)
-      (apt-utils-show-package package)
+    (unless new-session
+      (apt-utils-update-buffer-positions 'forward))
+    (apt-utils-show-package package new-session)
+    (unless new-session
       (setq apt-utils-current-packages
             (cons (cons package (apt-utils-package-type package))
                   apt-utils-current-packages))))
@@ -770,9 +778,15 @@ ARG may be negative to move forward."
 
 ;; Choose a package from the known links
 
-(defun apt-utils-choose-package-link ()
-  "Choose a Debian package from the list of known links."
-  (interactive)
+(defun apt-utils-choose-package-link (new-session)
+  "Choose a Debian package from a list of links.
+With non-nil NEW-SESSION, follow link in a new buffer."
+  (interactive "P")
+  (apt-utils-choose-package-link-internal new-session))
+
+(defun apt-utils-choose-package-link-internal (new-session)
+  "Choose a Debian package from a list of links.
+With non-nil NEW-SESSION, follow link in a new buffer."
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
   (let ((package
@@ -781,11 +795,13 @@ ARG may be negative to move forward."
                                     (cons elt elt))
                                   apt-utils-current-links) nil t)))
     (when (> (length package) 0)
-      (apt-utils-update-buffer-positions 'forward)
-      (apt-utils-show-package package)
-      (setq apt-utils-current-packages
-            (cons (cons package (apt-utils-package-type package))
-                  apt-utils-current-packages)))))
+      (unless new-session
+        (apt-utils-update-buffer-positions 'forward))
+      (apt-utils-show-package package new-session)
+      (unless new-session
+        (setq apt-utils-current-packages
+              (cons (cons package (apt-utils-package-type package))
+                    apt-utils-current-packages))))))
 
 (defun apt-utils-package-list ()
   "Return list of known Debian packages."
@@ -1072,13 +1088,20 @@ packages."
                    package)))))))
 
 (defun apt-utils-quit ()
-  "Quit the *APT package info* buffer."
+  "Quit this `apt-utils-mode' buffer."
   (interactive)
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
   (if (fboundp 'quit-window)
       (quit-window)
     (bury-buffer)))
+
+(defun apt-utils-kill-buffer ()
+  "Kill this `apt-utils-mode' buffer."
+  (interactive)
+  (unless (equal major-mode 'apt-utils-mode)
+    (error "Not in APT utils buffer"))
+  (kill-buffer (current-buffer)))
 
 ;; Track positions
 
@@ -1201,6 +1224,7 @@ TYPE can be forward, backward, or toggle."
     (define-key map (kbd "DEL")           'scroll-down)
     (define-key map (kbd "M-TAB")         'apt-utils-previous-package)
     (define-key map (kbd "N")             'apt-utils-view-debian-news)
+    (define-key map (kbd "Q")             'apt-utils-kill-buffer)
     (define-key map (kbd "R")             'apt-utils-view-debian-readme)
     (define-key map (kbd "RET")           'apt-utils-follow-link)
     (define-key map (kbd "S")             'apt-utils-search)
@@ -1234,36 +1258,37 @@ TYPE can be forward, backward, or toggle."
   (easy-menu-define apt-utils-menu apt-utils-mode-map "Apt Utils Menu"
     '("Apt Utils"
       "---"
-      ["Show Package"          apt-utils-show-package t]
-      ["Toggle Package Info"   apt-utils-toggle-package-info t]
-      ["View Previous Package" apt-utils-view-previous-package t]
-      ["Choose Package Link"   apt-utils-choose-package-link t]
-      ["Next Package"          apt-utils-next-package t]
-      ["Previous Package"      apt-utils-previous-package t]
-      ["Follow Link"           apt-utils-follow-link t]
-      ["List Package Files"    apt-utils-list-package-files t]
+      ["Show Package"              apt-utils-show-package t]
+      ["Toggle Package Info"       apt-utils-toggle-package-info t]
+      ["View Previous Package"     apt-utils-view-previous-package t]
+      ["Choose Package Link"       apt-utils-choose-package-link t]
+      ["Next Package"              apt-utils-next-package t]
+      ["Previous Package"          apt-utils-previous-package t]
+      ["Follow Link"               apt-utils-follow-link t]
+      ["List Package Files"        apt-utils-list-package-files t]
       "---"
-      ["Search"                apt-utils-search t]
-      ["Search (names only)"   apt-utils-search-names-only t]
-      ["Search (grep-dctrl)"   apt-utils-search-grep-dctrl t]
+      ["Search"                    apt-utils-search t]
+      ["Search (names only)"       apt-utils-search-names-only t]
+      ["Search (grep-dctrl)"       apt-utils-search-grep-dctrl t]
       "---"
-      ["View ChangeLog"        apt-utils-view-changelog t]
-      ["View Debian ChangeLog" apt-utils-view-debian-changelog t]
-      ["View README"           apt-utils-view-readme t]
-      ["View Debian README"    apt-utils-view-debian-readme t]
-      ["View NEWS"             apt-utils-view-news t]
-      ["View Debian NEWS"      apt-utils-view-debian-news t]
-      ["View copyright"        apt-utils-view-copyright t]
+      ["View ChangeLog"            apt-utils-view-changelog t]
+      ["View Debian ChangeLog"     apt-utils-view-debian-changelog t]
+      ["View README"               apt-utils-view-readme t]
+      ["View Debian README"        apt-utils-view-debian-readme t]
+      ["View NEWS"                 apt-utils-view-news t]
+      ["View Debian NEWS"          apt-utils-view-debian-news t]
+      ["View copyright"            apt-utils-view-copyright t]
       "---"
-      ["Rebuild Package Lists" apt-utils-rebuild-package-lists t]
+      ["Rebuild Package Lists"     apt-utils-rebuild-package-lists t]
       "---"
-      ["Quit"                  apt-utils-quit t])))
+      ["Quit"                      apt-utils-quit t]
+      ["Kill Buffer"               apt-utils-kill-buffer t])))
 
 (defun apt-utils-mode ()
   "Major mode to interface Emacs with APT (Debian package management).
 
 Start things off using e.g.:
-    
+
     M-x apt-utils-show-package RET emacs21 RET
 
 Other packages (dependencies, conflicts etc) can be navigated
@@ -1285,6 +1310,7 @@ Reverse Depends.
   (setq major-mode 'apt-utils-mode)
   (setq mode-name "APT utils")
   (setq buffer-undo-list t)
+  (setq truncate-lines t)
   ;; XEmacs
   (when (and (fboundp 'easy-menu-add)
              apt-utils-menu)
