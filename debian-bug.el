@@ -1498,7 +1498,7 @@ If SUBMENU is t, then check for current sexp submenu only."
           (error "`wget' failed"))))))
 
 (defun debian-bug-get-bug-as-file (&optional bug-number)
-  "Browse the BTS for BUG-NUMBER via `browse-url'."
+  "Read bug report #BUG-NUMBER as a regular file."
   (interactive (list (completing-read "Bug number to fetch: "
                                       debian-bug-alist nil nil)))
   (let ((filename (debian-bug-wget-mbox bug-number)))
