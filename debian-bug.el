@@ -220,6 +220,11 @@
 ;;    `debian-bug') and `debian-bug-filename' and make those non-interactive,
 ;;    reducing the number of interactive commands. (Closes: #167214)
 ;;  - checkdoc fixes.
+;; V1.46 17Sep2003 Peter S Galbraith <psg@debian.org>
+;;  - I think V1.43 added the # character before bug numbers in the menu
+;;    and broke the splitting-up of large bug categories.  Fixed.
+;;  - bugs.debian.org added HTML "name" tags which I need to exclude from
+;;    titles.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1452,12 +1457,12 @@ If SUBMENU is t, then check for current sexp submenu only."
         (while (< (point) (point-max))
           (forward-line lines)
           (beginning-of-line)
-          (looking-at "^\\[\"\\([0-9]+\\):")
+          (looking-at "^\\[\"\\(#?[0-9]+\\):")
           (setq bugn-end (match-string 1))
           (end-of-line)
           (insert ")")
           (goto-char start)
-          (looking-at "^\\[\"\\([0-9]+\\):")
+          (looking-at "^\\[\"\\(#?[0-9]+\\):")
           (setq bugn-beg (match-string 1))
           (insert (format "(\"%s-%s\"\n" bugn-beg bugn-end))
           (forward-line -1)
@@ -1600,7 +1605,7 @@ If SUBMENU is t, then check for current sexp submenu only."
 	(goto-char (point-min))
         (while
             (re-search-forward
-             "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
+             "\\(<H2><a name.*</a>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
@@ -1671,7 +1676,7 @@ If SUBMENU is t, then check for current sexp submenu only."
               (end-of-line)))
           ))
       (eval-buffer debian-bug-tmp-buffer)
-      (kill-buffer nil)
+;;      (kill-buffer nil)
       )
     (setq debian-bug-alist bug-alist)
     (setq debian-bug-open-alist bug-open-alist)
