@@ -45,6 +45,11 @@
 
 ;; Customizable variables
 
+(defgroup apt-utils nil
+  "Emacs interface to APT (Debian package management)"
+  :group 'tools
+  :link '(url-link "http://www.tc.bham.ac.uk/~matt/AptUtilsEl.html"))
+
 (defcustom apt-utils-fill-packages t
   "*Fill APT package names if t."
   :group 'apt-utils
@@ -233,24 +238,29 @@ With ARG, choose that package, otherwise prompt for one."
   "List the files associated with the current package.
 Only works for installed packages; uses `apt-utils-dpkg-program'."
   (interactive)
-  (let ((package (caar apt-utils-current-packages)) files)
+  (let ((package (caar apt-utils-current-packages))
+        files posn)
     (with-temp-buffer
       (insert "(setq files '(\n")
+      (setq posn (point))
       (call-process apt-utils-dpkg-program nil t nil "-L" package)
+      (goto-char posn)
+      (while (re-search-forward "^\\(.+\\)$" nil t)
+        (replace-match "\"\\1\""))
       (insert "))")
       ;; Check for files
       (cond
        ((or (search-backward "does not contain any files" nil t)
             (search-backward "is not installed" nil t))
-        (message "Package does not contain any files/is not installed"))
+        (message "Package does not contain any files/is not installed."))
        (t
         (eval-buffer)
         (setq files
               (delq nil
                     (mapcar (lambda (elt)
-                              (if (or (file-regular-p (symbol-name elt))
-                                      (string-equal "/." (symbol-name elt)))
-                                  (symbol-name elt)
+                              (if (or (file-regular-p elt)
+                                      (string-equal "/." elt))
+                                  elt
                                 nil))
                             files)))
         ;; Some versions of Emacs won't update dired for the same
@@ -422,9 +432,9 @@ Use PROMPT for `completing-read'."
   (interactive)
   (cond
    ((not (equal major-mode 'apt-utils-mode))
-    (message "Not in APT utils buffer"))
+    (message "Not in APT utils buffer."))
    ((not (equal (cdar apt-utils-current-packages) 'normal))
-    (message "Not a normal package"))
+    (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-changelog-file package)))))
@@ -446,9 +456,9 @@ Use PROMPT for `completing-read'."
   (interactive)
   (cond
    ((not (equal major-mode 'apt-utils-mode))
-    (message "Not in APT utils buffer"))
+    (message "Not in APT utils buffer."))
    ((not (equal (cdar apt-utils-current-packages) 'normal))
-    (message "Not a normal package"))
+    (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-debian-changelog-file package)))))
@@ -470,9 +480,9 @@ Use PROMPT for `completing-read'."
   (interactive)
   (cond
    ((not (equal major-mode 'apt-utils-mode))
-    (message "Not in APT utils buffer"))
+    (message "Not in APT utils buffer."))
    ((not (equal (cdar apt-utils-current-packages) 'normal))
-    (message "Not a normal package"))
+    (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-readme-file package)))))
@@ -494,9 +504,9 @@ Use PROMPT for `completing-read'."
   (interactive)
   (cond
    ((not (equal major-mode 'apt-utils-mode))
-    (message "Not in APT utils buffer"))
+    (message "Not in APT utils buffer."))
    ((not (equal (cdar apt-utils-current-packages) 'normal))
-    (message "Not a normal package"))
+    (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-debian-readme-file package)))))
@@ -575,7 +585,7 @@ Argument EVENT is a mouse event."
   "Follow hyperlink for PACKAGE."
   (cond
    ((equal package 'broken)
-    (message "Package name is broken somehow"))
+    (message "Package name is broken somehow."))
    (package
     (progn
       (apt-utils-update-buffer-positions 'forward)
@@ -767,31 +777,30 @@ are defined."
 
 (defun apt-utils-add-package-links ()
   "Add hyperlinks to related Debian packages."
-  (let ((keywords '("Conflicts" "Depends" "Pre-Depends" "Package"
-                    "Provides" "Recommends" "Replaces" "Suggests"))
+  (let ((keywords '("Conflicts" "Depends" "Enhances" "Package"
+                    "Pre-Depends" "Provides" "Recommends" "Replaces"
+                    "Suggests"))
         match)
     (setq apt-utils-current-links nil)
     (goto-char (point-min))
-    (while (re-search-forward "^\\([^ \n:]+\\): " (point-max) t)
+    (while (re-search-forward "^\\([^ \n:]+\\):\\( \\|$\\)"
+                              (point-max) t)
       (setq match (match-string 1))
-      (add-text-properties (1- (point))
+      (add-text-properties (if (looking-at "$")
+                               (point) ;; Conffiles (also see below)
+                             (1- (point)))
                            (save-excursion
                              (beginning-of-line)
                              (point))
                            '(face apt-utils-field-keyword-face))
       (cond
        ((member match keywords)
+        ;; Remove newline characters in field
+        (let ((end (apt-field-end-position)))
+          (subst-char-in-region (point) end ?\n ?\  )
+          (canonically-space-region (point) end))
         ;; Find packages
-        (let ((packages
-               ;; Packages split by commas, or alternatives by
-               ;; vertical bars
-               (split-string (buffer-substring
-                              (point)
-                              ;; (line-end-position))
-                              (save-excursion
-                                (end-of-line)
-                                (point)))
-                             " ?[,|] ?"))
+        (let ((packages (apt-utils-current-field-packages))
               (inhibit-read-only t)
               face
               length length-no-version
@@ -843,7 +852,7 @@ are defined."
               (setq apt-utils-current-links
                     (cons package apt-utils-current-links)))
             (forward-char length)
-            (skip-chars-forward ", |")
+            (skip-chars-forward ", |\n")
             (setq packages (cdr packages)))))
        ((equal match "Description")
         (add-text-properties (point)
@@ -854,6 +863,9 @@ are defined."
                                   (end-of-buffer)
                                   (point))))
                              '(face apt-utils-description-face)))
+       ;; Conffiles doesn't have trailing space
+       ((looking-at "$")
+        nil)
        (t
         (add-text-properties (1- (point))
                              (save-excursion
@@ -940,7 +952,7 @@ packages."
        (t
         (error
          (substitute-command-keys
-          "Package name is broken: rebuilding package lists using \\[apt-utils-rebuild-package-lists] may help")
+          "Package name is broken: rebuild package lists using \\[apt-utils-rebuild-package-lists] may help")
          package)))))
 
 (defun apt-utils-package-at ()
@@ -952,7 +964,7 @@ packages."
   (let ((package (apt-utils-package-at)))
     (cond
      ((equal package 'broken)
-      (message "Package name is broken somehow"))
+      (message "Package name is broken somehow."))
      (package
       (with-temp-buffer
         (call-process apt-utils-apt-cache-program nil t nil "show" package)
@@ -1035,6 +1047,49 @@ TYPE can be forward, backward, or toggle."
         )))
     posns))
 
+(defun apt-utils-current-field-packages ()
+  "Return a list of the packages on the current line."
+  (let ((keywords '("Conflicts" "Depends" "Enhances" "Package"
+                    "Pre-Depends" "Provides" "Recommends" "Replaces"
+                    "Suggests"))
+        eol match packages posn string)
+    (save-excursion
+      (end-of-line)
+      (setq eol (point))
+      (beginning-of-line)
+      (cond
+       ((eobp)
+        (message "Not on package field line.")
+        nil)
+       ((and (re-search-forward "^\\([^ \n:]+\\): " eol t)
+             (setq match (match-string 1))
+             (set-text-properties 0 (length match) nil match)
+             (member match keywords))
+        (setq posn (point))
+        (goto-char (apt-field-end-position))
+        (setq string (buffer-substring-no-properties posn (point)))
+        (with-temp-buffer
+          (insert string)
+          (goto-char (point-min))
+          (while (re-search-forward "\n *" nil t)
+            (replace-match " "))
+          (setq packages
+                ;; Packages split by commas, or alternatives by vertical
+                ;; bars; for Enhances, multiple lines my be spanned
+                (split-string (buffer-substring (point-min) (point-max))
+                              " ?[,|] ?"))))
+       (t
+        (message "Not on package field line.")
+        nil)))))
+
+(defun apt-field-end-position ()
+  "Move to end of current field."
+  (save-excursion
+    (re-search-forward "\\(^[^: ]+:\\|^$\\)")
+    (beginning-of-line)
+    (backward-char)
+    (point)))
+
 ;; Mode settings
 
 (defvar apt-utils-mode-map
@@ -1046,6 +1101,7 @@ TYPE can be forward, backward, or toggle."
     (define-key map (kbd ">")             'apt-utils-choose-package-link)
     (define-key map (kbd "c")             'apt-utils-view-changelog)
     (define-key map (kbd "C")             'apt-utils-view-debian-changelog)
+    (define-key map (kbd "g")             'apt-utils-search-grep-dctrl)
     (define-key map (kbd "q")             'apt-utils-quit)
     (define-key map (kbd "l")             'apt-utils-list-package-files)
     (define-key map (kbd "n")             'apt-utils-search-names-only)
@@ -1078,22 +1134,24 @@ TYPE can be forward, backward, or toggle."
     '("Apt Utils"
       "---"
       ["Show Package"          apt-utils-show-package t]
+      ["Toggle Package Info"   apt-utils-toggle-package-info t]
       ["View Previous Package" apt-utils-view-previous-package t]
       ["Choose Package Link"   apt-utils-choose-package-link t]
       ["Next Package"          apt-utils-next-package t]
       ["Previous Package"      apt-utils-previous-package t]
       ["Follow Link"           apt-utils-follow-link t]
+      ["List Package Files"    apt-utils-list-package-files t]
+      "---"
       ["Search"                apt-utils-search t]
       ["Search (names only)"   apt-utils-search-names-only t]
-      ["Rebuild Package Lists" apt-utils-rebuild-package-lists t]
+      ["Search (grep-dctrl)"   apt-utils-search-grep-dctrl t]
       "---"
       ["View ChangeLog"        apt-utils-view-changelog t]
       ["View Debian ChangeLog" apt-utils-view-debian-changelog t]
       ["View README"           apt-utils-view-readme t]
       ["View Debian README"    apt-utils-view-debian-readme t]
       "---"
-      ["List Package Files"    apt-utils-list-package-files t]
-      ["Toggle Package Info"   apt-utils-toggle-package-info t]
+      ["Rebuild Package Lists" apt-utils-rebuild-package-lists t]
       "---"
       ["Quit"                  apt-utils-quit t])))
 
