@@ -196,6 +196,8 @@
 ;; V1.42 23May2003 Matt Swift <swift@alum.mit.edu>
 ;;    debian-bug-prefill-report: announce error if reportbug gives empty
 ;;    template.
+;; V1.42 31May2003 Peter S Galbraith <psg@debian.org>
+;;    Add `d-i', `ipv6' and `lfs' tags.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -360,7 +362,7 @@ Debian maintainers.")
 (defvar debian-bug-alltags-alist
   '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
     ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid")
-    ("experimental") ("confirmed"))
+    ("experimental") ("confirmed") ("d-i") ("ipv6") ("lfs"))
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
@@ -481,7 +483,7 @@ Debian.  Currently, these are critical, grave and serious.")
 
 (defvar debian-bug-help-tags-text
  "Info from http://www.debian.org/Bugs/Developer#tags
-Feb 8th 2002
+May 31st 2003
 
  Tags for bug reports
 
@@ -536,6 +538,16 @@ Feb 8th 2002
       severity.
  upstream
       This bug applies to the upstream part of the package.
+ d-i
+
+      This bug is relevant to the development of debian-installer. It is
+      expected that this will be used when the bug affects installer
+      development but is not filed against a package that forms a direct
+      part of the installer itself.
+ ipv6
+      This bug affects support for Internet Protocol version 6. 
+ lfs
+      This bug affects support for large files (over 2 gigabytes). 
  potato
       This bug particularly applies to the potato release of Debian.
  woody
@@ -548,7 +560,7 @@ Feb 8th 2002
  experimental
     This bug particularly applies to the experimental distribution. 
 
- The latter three tags are intended to be used mainly for release critical
+ The latter five tags are intended to be used mainly for release critical
  bugs, for which it's important to know which distributions are affected to
  make sure fixes (or removals) happen in the right place.")
 
