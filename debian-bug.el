@@ -470,6 +470,12 @@ Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
       exception for bugs fixed by non-maintainer uploads. Note: the \"fixed\"
       tag should be used instead.
 
+ confirmed
+      for bugs that you've looked at, understand, and basically agree with,
+      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
+      generally can't be \"confirmed\", bugs marked \"help\" could be depending
+      on what sort of help you're asking for.
+
 Certain severities are considered release-critical, meaning the bug will
 have an impact on releasing the package with the stable release of
 Debian.  Currently, these are critical, grave and serious.")
