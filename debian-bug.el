@@ -34,7 +34,6 @@
 ;; Useful commands provided by this mode:
 ;;
 ;; debian-bug         - submit a bug report concerning a Debian package
-;; debian-bug-filename - submit a bug report for a given filename's package
 ;; debian-bug-web-bug - view a bug report on a web browser (via browse-url)
 ;; debian-bug-wnpp    - submit a Work Needed on Prospective Package bug report
 ;; debian-bug-request-for-package
@@ -238,8 +237,6 @@
 ;;   validated.
 ;; - Help texts need a top-level general one (say where to look them up,
 ;;   and how to search by package, bug submitter, maintainer, etc)
-;; - debian-bug-control command/minor-mode to send messages to control@bugs,
-;;   with a menubar of it's own with all possible commands.
 ;; - debian-bug-wnpp accepts empty package name!
 ;; - debian-bug-wnpp doesn't get a Bugs menu or web lookup.
 ;;   -> should lookup specified package to [O] and [ITO] ?
@@ -640,6 +637,7 @@ Reportbug may have sent an empty report!")))
     ("RFP" . "wishlist"))
   "Bug severeties for each WNPP bug type.")
 
+;;;###autoload
 (defun debian-bug-wnpp (&optional action)
   "Submit a WNPP bug report to Debian.
 Optional argument ACTION can be provided in programs."
@@ -709,12 +707,14 @@ Optional argument ACTION can be provided in programs."
     (debian-bug-wnpp-minor-mode 1)
     (set-buffer-modified-p nil)))
 
+;;;###autoload
 (defun debian-bug-request-for-package ()
   "Shortcut for `debian-bug-wnpp' with RFP action."
   (interactive)
   (debian-bug-wnpp "Request For Package [RFP]"))
 (defalias 'debian-bug-RFP 'debian-bug-request-for-package)
 
+;;;###autoload
 (defun debian-bug-intent-to-package ()
   "Shortcut for `debian-bug-wnpp' with ITP action (for Debian developers)."
   (interactive)
@@ -1297,6 +1297,7 @@ argument turn sit off."
 ;;; browse-url interfaces from debian-changelog-mode.el
 ;;  by Peter Galbraith, Feb 23 2001
 
+;;;###autoload
 (defun debian-bug-web-bugs ()
   "Browse the BTS for this package via `browse-url'."
   (interactive)
@@ -1316,6 +1317,7 @@ argument turn sit off."
       (message "Looking up bugs for source package %s via browse-url"
                pkg-name))))
 
+;;;###autoload
 (defun debian-bug-web-bug (&optional bug-number)
   "Browse the BTS for BUG-NUMBER via `browse-url'."
   (interactive (list (completing-read "Bug number to lookup: "
@@ -1335,6 +1337,7 @@ argument turn sit off."
              bug-number))
     (message "Looking up bug number %s via browse-url" bug-number)))
 
+;;;###autoload
 (defun debian-bug-web-this-bug ()
   "Browse the BTS via `browse-url' for the bug report number under point."
   (interactive)
@@ -1346,6 +1349,7 @@ argument turn sit off."
         (let ((bug-number (match-string 0)))
           (debian-bug-web-bug bug-number)))))
 
+;;;###autoload
 (defun debian-bug-web-this-bug-under-mouse (EVENT)
   "Browse the BTS via `browse-url' for the bug report number under mouse.
 In a program, mouse location is in EVENT."
@@ -1353,6 +1357,7 @@ In a program, mouse location is in EVENT."
   (mouse-set-point EVENT)
   (debian-bug-web-this-bug))
 
+;;;###autoload
 (defun debian-bug-web-packages ()
   "Search Debian web page for this package via `browse-url'."
   (interactive)
@@ -1383,6 +1388,7 @@ In a program, mouse location is in EVENT."
   '("stable" "testing" "unstable")
   "List of valid Debian archives.")
 
+;;;###autoload
 (defun debian-bug-web-package (archive)
   "Search Debian web page in ARCHIVE for this package via `browse-url'."
   (interactive "P")
@@ -1507,6 +1513,7 @@ If SUBMENU is t, then check for current sexp submenu only."
             filename
           (error "`wget' failed"))))))
 
+;;;###autoload
 (defun debian-bug-get-bug-as-file (&optional bug-number)
   "Read bug report #BUG-NUMBER as a regular file."
   (interactive (list (completing-read "Bug number to fetch: "
@@ -1515,6 +1522,7 @@ If SUBMENU is t, then check for current sexp submenu only."
     (find-file filename)
     (text-mode)))
 
+;;;###autoload
 (defun debian-bug-get-bug-as-email (&optional bug-number)
   "Read bug report #BUG-NUMBER via Email interface."
   (interactive (list (completing-read "Bug number to fetch: "
@@ -1793,6 +1801,7 @@ Call this function from the mode setup with MINOR-MODE-MAP."
                   (forward-char -1)
                   (insert "File: " filename "\n"))))))))))
 
+;;;###autoload
 (defun debian-bug ()
   "Submit a Debian bug report."
   (interactive)
