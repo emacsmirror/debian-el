@@ -1,7 +1,7 @@
 ;; debian-bug.el --- report a bug to Debian's bug tracking system
 
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
-;; Copyright (C) 2001, 2002, 2003 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -252,6 +252,9 @@
 ;; V1.54 11Nov2004 Camm Maguire <camm@enhanced.com>
 ;;  - debian-bug:  Add "--list-cc=none" to call to reportbug after changes
 ;;    in new version of reportbug. (Closes: #280780)
+;; V1.55 05Jan2005 Kevin Ryde <user42@zip.com.au>
+;;  - adds gnus support to debian-bug-get-bug-as-email, bringing the bug
+;;   messages up in a gnus group. (Closes: #288469)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1597,8 +1600,15 @@ If SUBMENU is t, then check for current sexp submenu only."
 ;;;###autoload
 (defun debian-bug-get-bug-as-email (&optional bug-number)
   "Read bug report #BUG-NUMBER via Email interface."
-  (interactive (list (completing-read "Bug number to fetch: "
-                                      debian-bug-alist nil nil)))
+  (interactive (progn
+                 ;; a second gnus in a second emacs can clobber .newsrc, ask
+                 ;; the user to start gnus where they want it
+                 (if (and (eq mail-user-agent 'gnus-user-agent)
+                          (not (and (fboundp 'gnus-alive-p)
+                                    (gnus-alive-p))))
+                     (error "Please start `gnus' (or `gnus-slave') first"))
+                 (list (completing-read "Bug number to fetch: "
+                                        debian-bug-alist nil nil))))
   (cond
    ((and (eq mail-user-agent 'mh-e-user-agent)
          (featurep 'mh-inc))
@@ -1626,6 +1636,14 @@ If SUBMENU is t, then check for current sexp submenu only."
         (let ((filename (debian-bug-wget-mbox bug-number)))
           (mh-inc-folder filename mh-e-folder)
           (delete-file filename)))))
+   ((eq mail-user-agent 'gnus-user-agent)
+    (gnus-group-read-ephemeral-group
+     bug-number `(nndoc "bug"
+                        (nndoc-address ,(debian-bug-wget-mbox bug-number))
+                        (nndoc-article-type mbox))
+     nil
+     ;; restore current window configuration after quitting the summary
+     (cons (current-buffer) (current-window-configuration))))
    (t
     ;; rmail
     (let ((filename (debian-bug-wget-mbox bug-number)))
