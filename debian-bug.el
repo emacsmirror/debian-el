@@ -1404,12 +1404,20 @@ If SUBMENU is t, then check for current sexp submenu only."
          (featurep 'mh-inc))
     ;; MH-E
     (mh-find-path)
-    (let ((mh-e-folder (concat (if debian-bug-mh-folder
-                                   (concat debian-bug-mh-folder "/")
-                                 "+debian-bug-")
-                               (if debian-bug-package-name
-                                   (concat debian-bug-package-name "-"))
-                               bug-number)))
+    (let* ((package-name (cond
+                          (debian-bug-package-name
+                           debian-bug-package-name)
+                          ((fboundp 'debian-changelog-suggest-package-name)
+                           (debian-changelog-suggest-package-name))
+                          (t
+                           (read-string "Package name: "))))
+           (mh-e-folder (concat 
+                         (if debian-bug-mh-folder
+                             (concat debian-bug-mh-folder "/")
+                           "+debian-bug-")
+                         (if package-name
+                             (format "%s-" package-name))
+                         bug-number)))
       (if (and (file-exists-p (mh-expand-file-name mh-e-folder))
                (not (y-or-n-p "Bug folder already exists.  Download again? ")))
           (mh-visit-folder mh-e-folder)
