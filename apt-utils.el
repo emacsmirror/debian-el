@@ -36,12 +36,14 @@
 
 ;;; Code:
 
-(require 'cl)                           ; for set-difference
-
-(unless (fboundp 'puthash)
-  (if (fboundp 'cl-puthash)
-      (defalias 'puthash 'cl-puthash)
-    (error "No puthash function known")))
+(cond
+ ((fboundp 'puthash)
+  (defalias 'apt-utils-puthash 'puthash))
+ ((and (require 'cl)
+       (fboundp 'cl-puthash))
+  (defalias 'apt-utils-puthash 'cl-puthash))
+ (t
+  (error "No puthash function known")))
 
 ;; Customizable variables
 
@@ -138,7 +140,10 @@ ask the user about the update. If nil, never update automatically."
 (defvar apt-utils-apt-cache-program "/usr/bin/apt-cache"
   "Location of the apt-cache program.")
 
-(defvar apt-utils-dpkg-program "/usr/bin/dpkg"
+(defvar apt-utils-dpkg-program
+  (if (file-executable-p "/usr/bin/dlocate")
+      "/usr/bin/dlocate"
+    "/usr/bin/dpkg")
   "Location of the dpkg program.")
 
 (defvar apt-utils-grep-dctrl-program "/usr/bin/grep-dctrl"
@@ -148,11 +153,10 @@ ask the user about the update. If nil, never update automatically."
   (directory-files "/var/lib/apt/lists" t "_Packages")
   "List of files searched by `apt-utils-search-grep-dctrl'.")
 
-(defvar apt-utils-package-list nil
-  "List of packages known to APT.")
-
-(defvar apt-utils-virtual-package-list nil
-  "List of virtual packages known to APT.")
+(defvar apt-utils-completion-table nil
+   "List of packages known to APT; used by `completing-read'.
+Only generated if `apt-utils-completing-read-hashtable-p' is
+nil.")
 
 (defvar apt-utils-package-hashtable nil
   "Hash table containing APT packages types.")
@@ -192,7 +196,41 @@ These are stored in a hash table.")
       (string-match "XEmacs\\|Lucid" (emacs-version)))
   "True if we are using apt-utils under XEmacs.")
 
-;; Other configuration
+(if apt-utils-xemacs-p
+    (progn
+      (defalias 'apt-utils-line-end-position 'point-at-eol))
+  (defalias 'apt-utils-line-end-position 'line-end-position))
+
+;; Other version-dependent configuration
+
+(defconst apt-utils-completing-read-hashtable-p
+  (and (not apt-utils-xemacs-p)
+       (or
+        ;; Next released version after 21.3 will support this
+        (and
+         (>= emacs-major-version 21)
+         (>= emacs-minor-version 4))
+        (>= emacs-major-version 22)
+        ;; As will the current pretest
+        (string-match "\\..*\\..*\\." emacs-version)))
+  "Non-nil if `completing-read' supports hash table as input.")
+
+(defconst apt-utils-face-property
+  (cond
+   ((and (not apt-utils-xemacs-p)
+	 (or
+	  ;; Next released version after 21.3 will support this
+	  (and
+	   (>= emacs-major-version 21)
+	   (>= emacs-minor-version 4))
+	  (>= emacs-major-version 22)
+	  ;; As will the current pretest
+	  (string-match "\\..*\\..*\\." emacs-version)))
+    'font-lock-face)
+   (t
+    'face))
+  "Use font-lock-face if `add-text-properties' supports it.
+Otherwise, just use face.")
 
 (cond
  ;; Emacs 21
@@ -253,7 +291,7 @@ NEW-SESSION is non-nil, generate a new `apt-utils-mode' buffer."
       (erase-buffer)
       (cond
        ((equal type 'normal)
-        (call-process apt-utils-apt-cache-program nil t nil "show" package)
+        (call-process apt-utils-apt-cache-program nil '(t nil) nil "show" package)
         ;; Remove old versions if not wanted
         (unless apt-utils-show-all-versions
           (goto-char (point-min))
@@ -263,20 +301,27 @@ NEW-SESSION is non-nil, generate a new `apt-utils-mode' buffer."
         (apt-utils-add-package-links))
        ;; Virtual package or normal package w/ showpkg
        ((or (equal type 'virtual) (equal type 'normal-showpkg))
-        (call-process apt-utils-apt-cache-program nil t nil "showpkg" package)
+        (call-process apt-utils-apt-cache-program nil '(t nil) nil "showpkg" package)
         (apt-utils-add-showpkg-links))
        ;; Normal search
        ((equal type 'search)
         (insert (format "Debian package search for %s\n\n" package))
-        (apply 'call-process apt-utils-apt-cache-program nil t nil
+        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
                "search" "--" (split-string package "&&"))
-        (apt-utils-add-search-links))
+        (apt-utils-add-search-links 'search))
        ;; Search for names only
        ((equal type 'search-names-only)
         (insert (format "Debian package search (names only) for %s\n\n" package))
-        (apply 'call-process apt-utils-apt-cache-program nil t nil
+        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
                "search" "--names-only" "--" (split-string package "&&"))
-        (apt-utils-add-search-links))
+        (apt-utils-add-search-links 'search-names-only))
+       ;; Search for file names
+       ((equal type 'search-file-names)
+        (insert (format "Debian package search (file names) for %s\n\n" package))
+        (apply 'call-process apt-utils-dpkg-program nil t nil
+               "-S" (list package))
+        (apt-utils-add-search-links 'search-file-names))
+       ;; grep-dctrl search
        ((equal type 'search-grep-dctrl)
         (insert (format "grep-dctrl search for %s\n\n"
                         (concat (format "\"%s\" " (car package))
@@ -322,7 +367,7 @@ expression."
       ;; Check for files
       (cond
        ((or (search-backward "does not contain any files" nil t)
-            (search-backward "is not installed" nil t)))
+            (search-backward "not installed" nil t)))
        (t
         (goto-char (point-min))
         (insert "(setq files '(\n")
@@ -347,19 +392,28 @@ expression."
   "Search Debian packages for regular expression.
 To search for multiple patterns use a string like \"foo&&bar\"."
   (interactive)
-  (apt-utils-search-internal nil))
+  (apt-utils-search-internal 'search))
 
 (defun apt-utils-search-names-only ()
   "Search Debian package names for regular expression.
 To search for multiple patterns use a string like \"foo&&bar\"."
   (interactive)
-  (apt-utils-search-internal t))
+  (apt-utils-search-internal 'search-names-only))
 
-(defun apt-utils-search-internal (&optional names-only)
-  "Search Debian packages for regular expression.
-With NAMES-ONLY, match names only."
+(defun apt-utils-search-file-names ()
+  "Search Debian file names for string."
+  (interactive)
+  (apt-utils-search-internal 'search-file-names))
+
+(defun apt-utils-search-internal (type)
+  "Search Debian packages for regular expression or string.
+The type of search is specified by TYPE."
   (apt-utils-check-package-lists)
-  (let ((regexp (read-from-minibuffer "Search packages for regexp: ")))
+  (let ((regexp (read-from-minibuffer
+                 (cond ((eq type 'search-file-names)
+                        "Search file names for string: ")
+                       (t
+                        "Search packages for regexp: ")))))
     ;; Set up the buffer
     (cond
      ((eq major-mode 'apt-utils-mode)
@@ -370,21 +424,34 @@ With NAMES-ONLY, match names only."
       (apt-utils-mode)))
     (let ((inhibit-read-only t))
       (erase-buffer)
+      ;; Can't search for string starting with "-" because the "--"
+      ;; option isn't understood by dpkg or dlocate
+      (when (and (eq type 'search-file-names)
+                 (string-match "^-" regexp))
+        (setq regexp (apt-utils-replace-regexp-in-string "^-+" "" regexp)))
       (insert (format "Debian package search%s for %s\n\n"
-                      (if names-only " (names only)" "") regexp))
+                      (cond ((eq type 'search-names-only) " (names only)")
+                            ((eq type 'search-file-names) " (file names)")
+                            (t ""))
+                      regexp))
       (cond
-       (names-only
-        (apply 'call-process apt-utils-apt-cache-program nil t nil
+       ((eq type 'search)
+        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
+               "search" "--" (split-string regexp "&&"))
+        (setq apt-utils-current-packages (cons (cons regexp 'search) nil)))
+       ((eq type 'search-names-only)
+        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
                "search" "--names-only" "--" (split-string regexp "&&"))
         (setq apt-utils-current-packages (cons (cons regexp 'search-names-only) nil)))
-       (t
-        (apply 'call-process apt-utils-apt-cache-program nil t nil
-               "search" "--" (split-string regexp "&&"))
-        (setq apt-utils-current-packages (cons (cons regexp 'search) nil))))
+
+       ((eq type 'search-file-names)
+        (apply 'call-process apt-utils-dpkg-program nil t nil
+               "-S" (list regexp))
+        (setq apt-utils-current-packages (cons (cons regexp 'search-file-names) nil))))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
         (setq apt-utils-buffer-positions (make-hash-table :test 'equal)))
-      (apt-utils-add-search-links)
+      (apt-utils-add-search-links type)
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
@@ -444,7 +511,7 @@ With NAMES-ONLY, match names only."
 Use PROMPT for `completing-read'."
   (let ((chosen "foo")
         (completion-ignore-case t)
-        ;; Why can't I use '() for the list?
+        ;; Why can't I use '(...) for the list?
         (keywords (list "Architecture" "Bugs" "Conffiles" "Conflicts"
                         "Depends" "Description" "Enhances" "Essential"
                         "Filename" "Installed-Size" "MD5sum" "Maintainer"
@@ -498,6 +565,7 @@ Use PROMPT for `completing-read'."
       (message "Cannot toggle info for virtual packages."))
      ((or (equal type 'search)
           (equal type 'search-names-only)
+          (equal type 'search-file-names)
           (equal type 'search-grep-dctrl))
       (message "Cannot toggle info for searches.")))))
 
@@ -707,7 +775,7 @@ offer a choice."
    (t
     (let ((package (caar apt-utils-current-packages))
           (regexp
-           ".*/man/\\([a-zA-Z_/]+\\)?man[0-9]/\\(.*\\)\\.\\([0-9a-z]+\\)\\.gz")
+           "^.*/man/\\([a-zA-Z_/]+\\)?man[0-9]/\\(.*\\)\\.\\([0-9a-z]+\\)\\.gz")
           choice chosen files table)
       (setq files (apt-utils-get-package-files package
                                                "/man/.*\\.gz$"))
@@ -720,12 +788,11 @@ offer a choice."
         (setq table (mapcar
                      (lambda (file)
                        (setq choice
-                             (cond ((eq (symbol-function 'apt-utils-replace-regexp-in-string)
-                                        'replace-regexp-in-string)
-                                    (apt-utils-replace-regexp-in-string
-                                     regexp "\\2 (\\1\\3)" file))
-                                   (t
-                                    file)))
+                             (with-temp-buffer
+                               (insert file)
+                               (re-search-backward regexp nil t)
+                               (replace-match "\\2 (\\1\\3)" nil nil)
+                               (buffer-string)))
                        (cons choice file))
                      files))
         (setq chosen
@@ -754,7 +821,7 @@ SUFFIXES."
     nil))                               ; Return nil, if no file found
 
 (defun apt-utils-view-file (file)
-  "View file FILE in `view-mode'."
+  "View file FILE in function `view-mode'."
   (cond ((string-match "\\.gz$" file)
          (if (fboundp 'with-auto-compression-mode)
              (with-auto-compression-mode
@@ -913,59 +980,38 @@ With non-nil NEW-SESSION, follow link in a new buffer."
   "Build list of Debian packages known to APT.
 With optional argument FORCE, rebuild the packages lists even if they
 are defined."
-  (when (or force (null apt-utils-package-list))
+  (when (or force (null apt-utils-package-lists-built))
     (unwind-protect
         (progn
           (setq apt-utils-package-lists-built nil
                 apt-utils-package-list-update-time nil
-                apt-utils-automatic-update-asked nil)
+                apt-utils-automatic-update-asked nil
+                apt-utils-completion-table nil)
           (message "Building Debian package lists...")
-          ;; All packages except virtual ones
-          (with-temp-buffer
-            (insert "(setq apt-utils-package-list '(\n")
-            (call-process apt-utils-apt-cache-program nil t nil "pkgnames"
-                          ;; Don't get virtual packages
-                          "-o" "APT::Cache::AllNames=0")
-            (insert "))")
-            (eval-buffer))
-          ;; Virtual packages (difference between all, and all minus
-          ;; virtual unfortunately)
-          (with-temp-buffer
-            (insert "(setq apt-utils-virtual-package-list '(\n")
-            (call-process apt-utils-apt-cache-program nil t nil "pkgnames")
-            (insert "))")
-            (eval-buffer))
-          ;; Find the difference
-          (setq apt-utils-virtual-package-list
-                (set-difference apt-utils-virtual-package-list
-                                apt-utils-package-list))
-          ;; Massage (for use with completing read)
-          (setq apt-utils-package-list
-                (mapcar (lambda (elt)
-                          (cons (symbol-name elt) nil))
-                        apt-utils-package-list))
-          (setq apt-utils-virtual-package-list
-                (mapcar (lambda (elt)
-                          (cons (symbol-name elt) nil))
-                        apt-utils-virtual-package-list))
           ;; Hash table listing package types
           (if (hash-table-p apt-utils-package-hashtable)
-              (clrhash apt-utils-package-hashtable))
-          (setq apt-utils-package-hashtable (make-hash-table :test 'equal))
-          (mapcar (lambda (elt)
-                    (puthash (car elt) 'normal apt-utils-package-hashtable))
-                  apt-utils-package-list)
-          (mapcar (lambda (elt)
-                    (puthash (car elt) 'virtual apt-utils-package-hashtable))
-                  apt-utils-virtual-package-list)
+              (clrhash apt-utils-package-hashtable)
+            (setq apt-utils-package-hashtable (make-hash-table :test 'equal)))
+          ;; All packages except virtual ones
+          (with-temp-buffer
+            ;; Virtual and normal packages
+            (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames")
+            (mapcar (lambda (elt)
+                      (apt-utils-puthash elt 'virtual apt-utils-package-hashtable))
+                    (split-string (buffer-string)))
+            ;; Normal packages
+            (erase-buffer)
+            (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames"
+                          "-o" "APT::Cache::AllNames=0")
+            (mapcar (lambda (elt)
+                      (apt-utils-puthash elt 'normal apt-utils-package-hashtable))
+                    (split-string (buffer-string))))
           (message "Building Debian package lists...done.")
           (setq apt-utils-package-lists-built t
                 apt-utils-package-list-update-time
                 (nth 5 (file-attributes apt-utils-timestamped-file))))
       (unless apt-utils-package-lists-built
         (message "Building Debian package lists...interrupted.")
-        (setq apt-utils-package-list nil
-              apt-utils-virtual-package-list nil)
         (if (hash-table-p apt-utils-package-hashtable)
             (clrhash apt-utils-package-hashtable))))))
 
@@ -975,15 +1021,31 @@ are defined."
   (apt-utils-build-package-lists t))
 
 (defun apt-utils-choose-package ()
-  "Choose a Debian package from list."
+  "Choose a Debian package name."
   (let ((package
          (and (eq major-mode 'apt-utils-mode)
               (cadr (member 'apt-package
                             (text-properties-at (point)))))))
     (completing-read "Choose Debian package: "
-                     (append apt-utils-package-list
-                             apt-utils-virtual-package-list)
+                     (cond
+                      (apt-utils-completing-read-hashtable-p
+                       apt-utils-package-hashtable)
+                      (t
+                       (or apt-utils-completion-table
+                           (apt-utils-build-completion-table))))
                      nil t package)))
+
+(defun apt-utils-build-completion-table ()
+  "Build completion table for packages.
+See `apt-utils-completion-table'."
+  (with-temp-buffer
+    (maphash (lambda (key value)
+               (insert key "\n"))
+             apt-utils-package-hashtable)
+    (setq apt-utils-completion-table
+          (mapcar (lambda (elt)
+                    (list elt))
+                  (split-string (buffer-string))))))
 
 ;; Add hyperlinks
 
@@ -1004,7 +1066,7 @@ are defined."
                            (save-excursion
                              (beginning-of-line)
                              (point))
-                           '(face apt-utils-field-keyword-face))
+                           `(,apt-utils-face-property apt-utils-field-keyword-face))
       (cond
        ((member match keywords)
         ;; Remove newline characters in field
@@ -1035,14 +1097,14 @@ are defined."
               (setq package 'broken)))
             ;; Add text properties
             (add-text-properties (point) (+ (point) length-no-version)
-                                 `(face ,face
+                                 `(,apt-utils-face-property ,face
                                         mouse-face highlight
                                         apt-package ,package))
             ;; Version?
             (when (> length length-no-version)
               (add-text-properties (+ (point) length-no-version 1)
                                    (+ (point) length)
-                                   '(face apt-utils-version-face)))
+                                   `(,apt-utils-face-property apt-utils-version-face)))
             ;; Fill package names
             (when (and apt-utils-fill-packages
                        (> (current-column) (+ 2 (length match)))
@@ -1063,7 +1125,7 @@ are defined."
                                (or
                                 (re-search-forward "^[^ ]" (point-max) t)
                                 (point-max)))
-                             '(face apt-utils-description-face)))
+                             `(,apt-utils-face-property apt-utils-description-face)))
        ;; Conffiles doesn't have trailing space
        ((looking-at "$")
         nil)
@@ -1072,7 +1134,7 @@ are defined."
                              (save-excursion
                                (end-of-line)
                                (point))
-                             '(face apt-utils-field-contents-face)))))))
+                             `(,apt-utils-face-property apt-utils-field-contents-face)))))))
 
 (defun apt-utils-add-showpkg-links ()
   "Add hyperlinks to related Debian packages."
@@ -1108,20 +1170,30 @@ are defined."
                 (setq face 'apt-utils-broken-face)
                 (setq link 'broken)))
               (add-text-properties (match-beginning 1) (match-end 1)
-                                   `(face ,face
+                                   `(,apt-utils-face-property ,face
                                           mouse-face highlight
                                           apt-package ,link)))
           (forward-line))))
       (setq keywords (cdr keywords)))))
 
-(defun apt-utils-add-search-links ()
-  "Add hyperlinks to related Debian packages."
+(defun apt-utils-add-search-links (type)
+  "Add hyperlinks to related Debian packages.
+The type of search is specified by TYPE."
   (let ((inhibit-read-only t)
-        face link)
+        face link regexp)
     (setq apt-utils-current-links nil)
     (goto-char (point-min))
     (forward-line 2)                    ; Move past header
-    (while (re-search-forward "^\\([^ ]+\\) - " (point-max) t)
+    (cond
+     ((eq type 'search-file-names)
+      ;; Reformat diversion information
+      (save-excursion
+        (while (re-search-forward "diversion by \\(.*\\) \\(from\\|to\\): \\(.*\\)" nil t)
+          (replace-match "\\1: \\3 (diversion \\2)" nil nil)))
+      (setq regexp "\\([^:,]+\\)[,:]"))
+     (t
+      (setq regexp"^\\([^ ]+\\) - ")))
+    (while (re-search-forward regexp (point-max) t)
       (setq link (match-string 1))
       ;; Store list of unique package links
       (unless (member link apt-utils-current-links)
@@ -1136,9 +1208,14 @@ are defined."
         (setq face 'apt-utils-broken-face)
         (setq link 'broken)))
       (add-text-properties (match-beginning 1) (match-end 1)
-                           `(face ,face
+                           `(,apt-utils-face-property ,face
                                   mouse-face highlight
-                                  apt-package ,link)))))
+                                  apt-package ,link))
+      ;; Multiple fields separated by commas
+      (when (eq type 'search-file-names)
+        (if (eq (char-before) ?\:)
+            (goto-char (1+ (apt-utils-line-end-position)))
+          (skip-chars-forward ", "))))))
 
 (defun apt-utils-package-type (package &optional no-error)
   "Return what type of package PACKAGE is.
@@ -1182,11 +1259,33 @@ packages."
     (bury-buffer)))
 
 (defun apt-utils-kill-buffer ()
-  "Kill this `apt-utils-mode' buffer."
+  "Kill this `apt-utils-mode' buffer.
+Also clean up `apt-utils-package-hashtable' and
+`apt-utils-completion-table' using `apt-utils-cleanup'."
   (interactive)
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
-  (kill-buffer (current-buffer)))
+  (kill-buffer (current-buffer))
+  (apt-utils-cleanup))
+
+(defun apt-utils-cleanup ()
+  "Clean up lists used by `apt-utils-mode'.
+Specifically, nullify `apt-utils-package-hashtable' and
+`apt-utils-completion-table'. Only do this if there are no
+buffers left in `apt-utils-mode'."
+  (unless (memq 'apt-utils-mode
+                (mapcar (lambda (b)
+                          (with-current-buffer b
+                            major-mode))
+                        (buffer-list)))
+    (clrhash apt-utils-package-hashtable)
+    (setq apt-utils-completion-table nil
+          apt-utils-package-lists-built nil)))
+
+(defun apt-utils-describe-package ()
+  "Describe package at point."
+  (interactive)
+  (apt-utils-package-at-message))
 
 ;; Track positions
 
@@ -1198,7 +1297,7 @@ TYPE can be forward, backward, or toggle."
      ((eq type 'forward)
       ;; Make the key unique; we could visit the same package more
       ;; than once
-      (puthash (format "%s/%s/%d"
+      (apt-utils-puthash (format "%s/%s/%d"
                        (caar apt-utils-current-packages)
                        (cdar apt-utils-current-packages)
                        (length apt-utils-current-packages))
@@ -1236,7 +1335,7 @@ TYPE can be forward, backward, or toggle."
           (setq old 'normal-showpkg
                 new 'normal))
         ;; Set position for old entry
-        (puthash (format "%s/%s/%d"
+        (apt-utils-puthash (format "%s/%s/%d"
                          package
                          old
                          (length apt-utils-current-packages))
@@ -1324,6 +1423,8 @@ TYPE can be forward, backward, or toggle."
     (define-key map (kbd "SPC")           'scroll-up)
     (define-key map (kbd "TAB")           'apt-utils-next-package)
     (define-key map (kbd "c")             'apt-utils-view-changelog)
+    (define-key map (kbd "d")             'apt-utils-describe-package)
+    (define-key map (kbd "f")             'apt-utils-search-file-names)
     (define-key map (kbd "g")             'apt-utils-search-grep-dctrl)
     (define-key map (kbd "i")             'apt-utils-view-copyright)
     (define-key map (kbd "l")             'apt-utils-list-package-files)
@@ -1363,6 +1464,7 @@ TYPE can be forward, backward, or toggle."
       "---"
       ["Search"                    apt-utils-search t]
       ["Search (names only)"       apt-utils-search-names-only t]
+      ["Search (file names)"       apt-utils-search-file-names t]
       ["Search (grep-dctrl)"       apt-utils-search-grep-dctrl t]
       "---"
       ["View ChangeLog"            apt-utils-view-changelog t]
@@ -1409,9 +1511,10 @@ Files associated with installed packages can be accessed using:
 
 Package searchs can be performed using:
 
-    \\[apt-utils-search] search for regular expression in package
-    \\[apt-utils-search-names-only] search for regular expression in package name
-    \\[apt-utils-search-grep-dctrl] search for regular expression in package fields
+    \\[apt-utils-search] search for regular expression in package names and descriptions
+    \\[apt-utils-search-names-only] search for regular expression in package names
+    \\[apt-utils-search-grep-dctrl] search for regular expression in selected package fields
+    \\[apt-utils-search-file-names] search for string in filenames
 
 A history of navigated packages is maintained when package links
 are followed using `apt-utils-choose-package-link' or
@@ -1430,6 +1533,7 @@ Key definitions:
   (when (and (fboundp 'easy-menu-add)
              apt-utils-menu)
     (easy-menu-add apt-utils-menu))
+  (make-local-hook 'kill-buffer-hook)
   (run-hooks 'apt-utils-mode-hook))
 
 (provide 'apt-utils)
