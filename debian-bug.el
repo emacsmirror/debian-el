@@ -242,6 +242,8 @@
 ;; V1.52 27Nov2003 Kalle Olavi Niemitalo <kon@iki.fi>
 ;;  - Contain debian-bug's cursor-in-echo-area to when it's needed so the
 ;;    list of pseudo-packages can be scrolled. (Closes: #222332)
+;;  - debian-bug-package: Let M-<next> and M-<prev> scroll the pseudo-package
+;;    list window by making _it_ the other window. (Closes: #222333)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -581,8 +583,11 @@ Reportbug may have sent an empty report!")))
   "Submit a Debian bug report about PACKAGE."
   (if (or (not package) (string= "" package))
       (save-window-excursion
-        (if debian-bug-display-help
-            (debian-bug-help-pseudo-packages))
+	(when debian-bug-display-help
+	  (debian-bug-help-pseudo-packages)
+          ;; This lets M-<next> and M-<prev> scroll the pseudo-package list
+          ;; window by making _it_ the other window.          
+	  (select-window (get-buffer-window "*Help*")))
         (setq package (completing-read
                        "Package name: "
                        (debian-bug-fill-packages-obarray)
