@@ -239,6 +239,9 @@
 ;;    "if a bug report is minor, for example, a documentation typo or a
 ;;     trivial build problem, please adjust the severity appropriately and
 ;;     send it to maintonly@bugs"
+;; V1.52 27Nov2003 Kalle Olavi Niemitalo <kon@iki.fi>
+;;  - Contain debian-bug's cursor-in-echo-area to when it's needed so the
+;;    list of pseudo-packages can be scrolled. (Closes: #222332)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1837,11 +1840,10 @@ Call this function from the mode setup with MINOR-MODE-MAP."
 (defun debian-bug ()
   "Submit a Debian bug report."
   (interactive)
-  (let* ((cursor-in-echo-area t)
-         (type (capitalize
-                (and (message
-                      "Report a bug for a [P]ackage or [F]ile: (default P) ")
-                     (read-char-exclusive)))))
+  (let ((type (let ((cursor-in-echo-area t))
+                (message
+                 "Report a bug for a [P]ackage or [F]ile: (default P) ")
+                (capitalize (read-char-exclusive)))))
     (cond
      ((or (equal 13 type)               ; <CR>
           (equal ?\r type)              ; <CR>
