@@ -2,7 +2,7 @@
 
 ;;; Copyright (C) 2002, 2003, 2004 Matthew P. Hodges
 
-;; Author: Matthew P. Hodges <matt@tc.bham.ac.uk>
+;; Author: Matthew P. Hodges <MPHodges@member.fsf.org>
 ;;	$Id$
 
 ;; apt-utils.el is free software; you can redistribute it and/or
@@ -192,6 +192,24 @@ These are stored in a hash table.")
       (string-match "XEmacs\\|Lucid" (emacs-version)))
   "True if we are using apt-utils under XEmacs.")
 
+;; Other configuration
+
+(cond
+ ;; Emacs 21
+ ((fboundp 'replace-regexp-in-string)
+  (defalias 'apt-utils-replace-regexp-in-string 'replace-regexp-in-string))
+ ;; Emacs 20
+ ((and (require 'dired)
+       (fboundp 'dired-replace-in-string))
+  (defalias 'apt-utils-replace-regexp-in-string 'dired-replace-in-string))
+ ;; XEmacs
+ ((fboundp 'replace-in-string)
+  (defun apt-utils-replace-regexp-in-string (regexp rep string)
+    (replace-in-string string regexp rep)))
+ ;; Bail out
+ (t
+  (error "No replace in string function found")))
+
 ;; Commands and functions
 
 ;;;###autoload
@@ -273,44 +291,56 @@ NEW-SESSION is non-nil, generate a new `apt-utils-mode' buffer."
 
 (defun apt-utils-list-package-files ()
   "List the files associated with the current package.
-Only works for installed packages; uses `apt-utils-dpkg-program'."
+The list appears in a `dired-mode' buffer. Only works for
+installed packages; uses `apt-utils-dpkg-program'."
   (interactive)
   (let ((package (caar apt-utils-current-packages))
         (type (cdar apt-utils-current-packages))
-        files posn)
+        files)
+    (setq files (apt-utils-get-package-files package))
     (cond
      ((or (equal type 'normal) (equal type 'normal-showpkg))
-      (with-temp-buffer
+      (if files
+          (progn
+            ;; Some versions of Emacs won't update dired for the same
+            ;; directory name if it already exists
+            (if (buffer-live-p apt-utils-dired-buffer)
+                (kill-buffer apt-utils-dired-buffer))
+            (setq apt-utils-dired-buffer (dired-noselect files))
+            (display-buffer apt-utils-dired-buffer))
+        (message "Package does not contain any files/is not installed.")))
+     (t
+      (message "No files associated for type: %s." type)))))
+
+(defun apt-utils-get-package-files (package &optional filter)
+  "Return a list of files belonging to package PACKAGE.
+With optional argument FILTER, return files matching this regular
+expression."
+  (let (files)
+    (with-temp-buffer
+      (call-process apt-utils-dpkg-program nil t nil "-L" package)
+      ;; Check for files
+      (cond
+       ((or (search-backward "does not contain any files" nil t)
+            (search-backward "is not installed" nil t)))
+       (t
+        (goto-char (point-min))
         (insert "(setq files '(\n")
-        (setq posn (point))
-        (call-process apt-utils-dpkg-program nil t nil "-L" package)
-        (goto-char posn)
         (while (re-search-forward "^\\(.+\\)$" nil t)
           (replace-match "\"\\1\""))
         (insert "))")
-        ;; Check for files
-        (cond
-         ((or (search-backward "does not contain any files" nil t)
-              (search-backward "is not installed" nil t))
-          (message "Package does not contain any files/is not installed."))
-         (t
-          (eval-buffer)
-          (setq files
-                (delq nil
-                      (mapcar (lambda (elt)
-                                (if (or (file-regular-p elt)
-                                        (string-equal "/." elt))
-                                    elt
-                                  nil))
-                              files)))
-          ;; Some versions of Emacs won't update dired for the same
-          ;; directory name if it already exists
-          (if (buffer-live-p apt-utils-dired-buffer)
-              (kill-buffer apt-utils-dired-buffer))
-          (setq apt-utils-dired-buffer (dired-noselect files))
-          (display-buffer apt-utils-dired-buffer)))))
-     (t
-      (message "No files associated for type: %s" type)))))
+        (eval-buffer)
+        ;; Keep regular files or top directory (for dired)
+        (setq files
+              (delq nil
+                    (mapcar (lambda (elt)
+                              (if (and (or (file-regular-p elt)
+                                           (string-equal "/." elt))
+                                       (string-match (or filter ".") elt))
+                                  elt
+                                nil))
+                            files))))))
+    files))
 
 ;;;###autoload
 (defun apt-utils-search ()
@@ -664,6 +694,50 @@ Use PROMPT for `completing-read'."
         (apt-utils-view-file file)
       (message "No copyright file found for %s." package))))
 
+(defun apt-utils-view-man-page ()
+  "View man page for the current package.
+If there is more than one man page associated with the package,
+offer a choice."
+  (interactive)
+  (cond
+   ((not (equal major-mode 'apt-utils-mode))
+    (message "Not in APT utils buffer."))
+   ((not (equal (cdar apt-utils-current-packages) 'normal))
+    (message "Not a normal package."))
+   (t
+    (let ((package (caar apt-utils-current-packages))
+          (regexp
+           ".*/man/\\([a-zA-Z_/]+\\)?man[0-9]/\\(.*\\)\\.\\([0-9a-z]+\\)\\.gz")
+          choice chosen files table)
+      (setq files (apt-utils-get-package-files package
+                                               "/man/.*\\.gz$"))
+      (cond
+       ((null files)
+        (message "No man pages found for %s." package))
+       ((not (cdr files))
+        (setq chosen (car files)))
+       (t
+        (setq table (mapcar
+                     (lambda (file)
+                       (setq choice
+                             (cond ((eq (symbol-function 'apt-utils-replace-regexp-in-string)
+                                        'replace-regexp-in-string)
+                                    (apt-utils-replace-regexp-in-string
+                                     regexp "\\2 (\\1\\3)" file))
+                                   (t
+                                    file)))
+                       (cons choice file))
+                     files))
+        (setq chosen
+              (cdr (assoc
+                    (let ((completion-ignore-case t))
+                      (completing-read "Choose man page: " table nil t))
+                    table)))))
+      (when chosen
+        (if (fboundp 'woman-find-file)
+            (woman-find-file chosen)
+          (manual-entry chosen)))))))
+
 ;; File-related utility functions
 
 (defun apt-utils-find-readable-file (dir prefixes suffixes)
@@ -680,7 +754,7 @@ SUFFIXES."
     nil))                               ; Return nil, if no file found
 
 (defun apt-utils-view-file (file)
-  "View ChangeLog or README information in FILE."
+  "View file FILE in `view-mode'."
   (cond ((string-match "\\.gz$" file)
          (if (fboundp 'with-auto-compression-mode)
              (with-auto-compression-mode
@@ -707,29 +781,14 @@ With non-nil NEW-SESSION, follow link in a new buffer."
   "Follow hyperlink at mouse click.
 Argument EVENT is a mouse event."
   (interactive "e")
-  (let (package posn)
-    ;; Mouse may be in a different window, i.e. buffer
-    (setq posn
-          (cond
-           ((fboundp 'posn-point)
-            (posn-point (event-start event)))
-           ((fboundp 'event-point)
-            (event-point event))
-           (t
-            (error "Cannot determine event position"))))
-    (set-buffer (window-buffer
-                 (cond
-                  ((fboundp 'posn-window)
-                   (posn-window (event-start event)))
-                  ((fboundp 'event-window)
-                   (event-window event))
-                  (t
-                   (error "Cannot determine event window")))))
-    (setq package
-          (cadr
-           (member 'apt-package (text-properties-at
-                                 posn))))
-    (apt-utils-follow-link-internal package nil)))
+  (let (package)
+    (save-selected-window
+      (mouse-set-point event)
+      (setq package
+            (cadr
+             (member 'apt-package (text-properties-at
+                                   (point)))))
+      (apt-utils-follow-link-internal package nil))))
 
 (defun apt-utils-follow-link-internal (package new-session)
   "Follow hyperlink for PACKAGE.
@@ -899,12 +958,12 @@ are defined."
           (mapcar (lambda (elt)
                     (puthash (car elt) 'virtual apt-utils-package-hashtable))
                   apt-utils-virtual-package-list)
-          (message "Building Debian package lists...done")
+          (message "Building Debian package lists...done.")
           (setq apt-utils-package-lists-built t
                 apt-utils-package-list-update-time
                 (nth 5 (file-attributes apt-utils-timestamped-file))))
       (unless apt-utils-package-lists-built
-        (message "Building Debian package lists...interrupted")
+        (message "Building Debian package lists...interrupted.")
         (setq apt-utils-package-list nil
               apt-utils-virtual-package-list nil)
         (if (hash-table-p apt-utils-package-hashtable)
@@ -962,17 +1021,8 @@ are defined."
             (setq package (car packages))
             (setq length (length package))
             ;; Remove version info (in parenthesis), and whitespace
-            (setq package
-                  (cond
-                   ((fboundp 'replace-regexp-in-string)
-                    (replace-regexp-in-string "\\((.*)\\|\\s-+\\)" "" package))
-                   ((fboundp 'replace-in-string)
-                    (replace-in-string package "\\((.*)\\|\\s-+\\)" ""))
-                   ((and (require 'dired)
-                         (fboundp 'dired-replace-in-string))
-                    (dired-replace-in-string "\\((.*)\\|\\s-+\\)" "" package))
-                   (t
-                    (error "No replace in string function"))))
+            (setq package (apt-utils-replace-regexp-in-string
+                           "\\((.*)\\|\\s-+\\)" "" package))
             (setq length-no-version (length package))
             ;; Package type
             (cond
@@ -1118,7 +1168,7 @@ packages."
       (with-temp-buffer
         (call-process apt-utils-apt-cache-program nil t nil "show" package)
         (if (re-search-backward "^Description: \\(.*\\)$" (point-min) t)
-            (message "%s: %s" package (match-string 1))
+            (message "%s: %s." package (match-string 1))
           (message "%s: virtual package (no description)."
                    package)))))))
 
@@ -1277,6 +1327,7 @@ TYPE can be forward, backward, or toggle."
     (define-key map (kbd "g")             'apt-utils-search-grep-dctrl)
     (define-key map (kbd "i")             'apt-utils-view-copyright)
     (define-key map (kbd "l")             'apt-utils-list-package-files)
+    (define-key map (kbd "m")             'apt-utils-view-man-page)
     (define-key map (kbd "n")             'apt-utils-view-news)
     (define-key map (kbd "o")             'apt-utils-search-names-only)
     (define-key map (kbd "q")             'apt-utils-quit)
@@ -1321,6 +1372,7 @@ TYPE can be forward, backward, or toggle."
       ["View NEWS"                 apt-utils-view-news t]
       ["View Debian NEWS"          apt-utils-view-debian-news t]
       ["View copyright"            apt-utils-view-copyright t]
+      ["View man page"             apt-utils-view-man-page t]
       "---"
       ["Rebuild Package Lists"     apt-utils-rebuild-package-lists t]
       "---"
@@ -1330,23 +1382,43 @@ TYPE can be forward, backward, or toggle."
 (defun apt-utils-mode ()
   "Major mode to interface Emacs with APT (Debian package management).
 
-Start things off using e.g.:
+Start things off with, for example:
 
     M-x apt-utils-show-package RET emacs21 RET
 
-Other packages (dependencies, conflicts etc) can be navigated
-using `apt-utils-next-package', `apt-utils-previous-package',
-`apt-utils-choose-package-link' or `apt-utils-follow-link'.
-Return to the previous package with
-`apt-utils-view-previous-package'. ChangeLog and README files for
-the current package can easily be accessed with, for example,
-`apt-utils-view-changelog'.
+Other packages (dependencies, conflicts etc) can be navigated using:
 
-For normal (i.e., not virtual) packages, the information can be
-toggled between `package' and `showpkg' displays using
-`apt-utils-toggle-package-info'; the latter is useful for the
-Reverse Depends.
+    \\[apt-utils-next-package] move to next package link
+    \\[apt-utils-previous-package] move to previous package link
+    \\[apt-utils-choose-package-link] choose next package from current links
+    \\[apt-utils-follow-link] show package for the link at point
+    \\[apt-utils-view-previous-package] show the previous package from history
+    \\[apt-utils-toggle-package-info] toggle package and showpkg information
 
+Files associated with installed packages can be accessed using:
+
+    \\[apt-utils-list-package-files] list package files (in a `dired' buffer)
+    \\[apt-utils-view-changelog] view ChangeLog file
+    \\[apt-utils-view-debian-changelog] view Debian ChangeLog file
+    \\[apt-utils-view-readme] view README file
+    \\[apt-utils-view-debian-readme] view Debian ChangeLog file
+    \\[apt-utils-view-news] view NEWS file
+    \\[apt-utils-view-debian-news] view Debian NEWS file
+    \\[apt-utils-view-copyright] view copyright file
+    \\[apt-utils-view-man-page] view man page
+
+Package searchs can be performed using:
+
+    \\[apt-utils-search] search for regular expression in package
+    \\[apt-utils-search-names-only] search for regular expression in package name
+    \\[apt-utils-search-grep-dctrl] search for regular expression in package fields
+
+A history of navigated packages is maintained when package links
+are followed using `apt-utils-choose-package-link' or
+`apt-utils-follow-link'. This history is reset when
+`apt-utils-show-package' or any of the search commands is used.
+
+Key definitions:
 \\{apt-utils-mode-map}"
   (kill-all-local-variables)
   (use-local-map apt-utils-mode-map)
