@@ -227,6 +227,8 @@
 ;; V1.47 20Sep2003 Peter S Galbraith <psg@debian.org>
 ;;  - debian-bug-search-file: Use dlocate if available when filename is
 ;;    given. thanks to Jeff Sheinberg (Closes: #211598).
+;; V1.48 01Oct2003 Peter S Galbraith <psg@debian.org>
+;;  - Make debian-bug accept P or F without a carriage return.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1805,13 +1807,17 @@ Call this function from the mode setup with MINOR-MODE-MAP."
 (defun debian-bug ()
   "Submit a Debian bug report."
   (interactive)
-  (let ((type (read-string
-               "Report a bug for a [P]ackage or [F]ile: (default P) ")))
+  (let* ((cursor-in-echo-area t)
+         (type (capitalize
+                (and (message
+                      "Report a bug for a [P]ackage or [F]ile: (default P) ")
+                     (read-char-exclusive)))))
     (cond
-     ((or (string-equal "" type)
-          (string-match "^[pP]" type))
+     ((or (equal 13 type)               ; <CR>
+          (equal 32 type)               ; <space>
+          (equal ?P type))
       (debian-bug-package))
-     ((string-match "^[fF]" type)
+     ((equal ?F type)
       (debian-bug-filename))
      (t
       (message "Sorry, try that again")))))
