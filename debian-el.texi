@@ -9,8 +9,7 @@
 
 @dircategory Emacs
 @direntry
-* Emacs-Goodies-extra:
-  (debian-el). Debian-specific tools for Emacs
+* Debian-el: (debian-el). Debian-specific tools for Emacs
 @end direntry
 
 @c Version variables.
