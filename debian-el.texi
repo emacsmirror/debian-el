@@ -45,10 +45,11 @@ basis, do:
 @end example
 
 @menu
-* apt-sources::   Mode for editing apt source.list file
-* apt-utils::     Emacs interface to APT
-* debian-bug::    Report a bug to Debian's bug tracking system
-* gnus-BTS::      Access the Debian Bug Tracking System from Gnus
+* apt-sources::  Mode for editing apt source.list file
+* apt-utils::    Emacs interface to APT
+* debian-bug::   Report a bug to Debian's bug tracking system
+* deb-view::     View Debian package archive files with tar-mode
+* gnus-BTS::     Access the Debian Bug Tracking System from Gnus
 @end menu
 
 This work compiles GPL'ed documentation from the files in
@@ -126,7 +127,7 @@ or use the menu.
 You may alter various settings of @code{apt-utils} bu customizing the
 group @code{apt-utils}.
 
-@node debian-bug, gnus-BTS, apt-utils, Top
+@node debian-bug, deb-view, apt-utils, Top
 @chapter debian-bug - report a bug to Debian's bug tracking system
 
 @noindent Useful commands provided by this package:
@@ -181,7 +182,117 @@ specific bug number as well.
 
 @noindent The debian-bug facility depends on the reportbug package.
 
-@node gnus-BTS,  , debian-bug, Top
+@node deb-view, gnus-BTS, debian-bug, Top
+@chapter deb-view - View Debian package archive files with tar-mode
+
+@noindent Author:  Rick Macdonald (rickm@@vsl.com)
+
+deb-view presents the contents of debian package archive files for
+viewing. The viewing is done with the major mode "debview", which
+is derived from emacs tar-mode with a few enhancements for viewing
+compressed files, HTML files and formatted man pages.  The normal
+editing and saving features of tar-mode are not supported by
+deb-view.
+
+deb-view includes a command called @command{deb-find} which requires that you
+have the debian distribution directories on a local or mounted
+filesystem. Give it a string or regular expression and it presents a
+buffer of matching deb file names.  Click with the middle mouse button
+or press @key{RETURN} (or @key{C-c C-c}) and it launches deb-view on the selected
+file. deb-find can be configured to use locate or find, or any other
+external command. The find method passes your search specification to
+egrep, whereas the locate method uses your string directly.
+
+deb-view extracts the control.tar.gz and data.tar.gz files from
+debian package and presents two buffers in a derivitive of
+tar-mode. See tar-mode for info.
+
+@noindent Optionally required programs:
+@table @samp
+@item nroff
+for formatting man pages.
+@item dpkg-deb
+for old-style binary .deb files.
+@item w3-mode
+for viewing HTML pages.
+@end table
+
+For new-style .deb files (2.0), dpkg-deb isn't used.
+
+@menu
+* deb-view configuration::      
+* deb-view usage::              
+@end menu
+
+@node deb-view configuration, deb-view usage, deb-view, deb-view
+@section Configuration
+
+deb-view is mostly unobtrusive, but does bind @key{C-d} in dired to
+@command{deb-view-dired-view}.  The "debview" mode is derived from
+tar-mode.el using derived.el. Compared to tar-mode, debview-mode
+binds @key{q}, @key{N}, @key{W}, and re-binds @key{v}. Also, the normal editing and saving
+features of tar-mode are not supported by debview mode and those
+keys are disabled.
+
+@command{deb-find} has two variables to set. @code{deb-find-method} can be "locate" or
+"find". Any other value will be assumed to be an external script or
+program that you supply. If you set @code{deb-find-method} to "find" then you
+must also set @code{deb-find-directory} to the directory containing the
+debian distribution. The find command starts at this point. I originally
+used the locate option, but contrary to the man page it doesn't seem to
+understand even simple regular expressions. I prefer the find option. It
+uses egrep and therefore understands complex regular expressions.
+You might want to bind @command{deb-find} to a special key. I use @key{C-d} like this:
+
+@verbatim
+  (define-key ctl-x-map "\C-d" 'deb-find)
+@end verbatim
+
+Note that this key is normally the brief @command{list-directory} command, a
+command that I never used anyway.
+
+
+@node deb-view usage,  , deb-view configuration, deb-view
+@section Usage
+
+In dired, press @key{f} or @key{e} on the dired line of the .deb file to view.
+You can also use @key{C-d}, which is actually slightly faster since the
+deb file isn't loaded into a buffer needlessly.
+
+Or, execute: @command{M-x deb-view RETURN}, and enter the .deb file name
+at the prompt.
+
+Or, execute: @command{M-x deb-find RETURN}, and enter any substring of a
+deb file name to search for. A buffer of matches is created.
+Launch @command{deb-view} by selecting a deb file with the middle mouse button,
+or @key{RETURN} or @key{C-c}. Exit this buffer with @key{q}.
+
+You are shown two tar files in debview-mode (see tar-mode for help).
+In the case of old .deb format files, the control info is shown
+but not the other files of control.tar, such as install scripts.
+Note that regular tar-mode commands @key{e}, @key{f} and @key{RETURN} show raw files
+without any special uncompressing or formatting.
+Additional features that deb-view adds to tar-mode:
+
+@table @samp
+@item q
+kill both view buffers (INFO and DATA) and return to the
+dired buffer if that's where you executed deb-mode.
+@item v
+executes deb-view-tar-view instead of tar-view, with the
+additional smarts to uncompress .gz and .Z files for viewing.
+@item N
+Like in dired, formats man pages for viewing, with the
+additional smarts to uncompress .gz and .Z man files for viewing.
+@item W 
+use w3-mode to view an HTML file.
+@end table
+
+To view files not supported by deb-view, such as graphics, use the
+copy command (@key{c}) to copy the file to a temp directory.  You can
+then do what you want to the file.
+
+@node gnus-BTS,  , deb-view, Top
 @chapter gnus-BTS - access the Debian Bug Tracking System from Gnus
 
 Use this if you read a lot of debian lists in GNUS and see references
