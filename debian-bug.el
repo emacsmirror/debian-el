@@ -3,6 +3,13 @@
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003 Peter S Galbraith <psg@debian.org>
 
+;; Help texts from 
+;;  http://www.debian.org/Bugs/Developer#severities
+;;  http://www.debian.org/Bugs/Developer#tags
+;;  http://www.debian.org/Bugs/pseudo-packages
+;; Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+;;  1997 nCipher Corporation Ltd.
+
 ;; Author (Up to version 1.7):           Francesco Potortì <pot@gnu.org>
 ;; Maintainer from version 1.8 onwards:  Peter S Galbraith <psg@debian.org>
 ;; Keywords: debian, bug, reporter
@@ -211,7 +218,7 @@
 ;;  - debian-bug-font-lock-keywords: added File:
 ;;  - debian-bug: make it a front-end to `debian-bug-package' (the old
 ;;    `debian-bug') and `debian-bug-filename' and make those non-interactive,
-;;    reducing the number of interactive commands.
+;;    reducing the number of interactive commands. (Closes: #167214)
 ;;  - checkdoc fixes.
 ;; ----------------------------------------------------------------------------
 
@@ -946,12 +953,7 @@ Non-nil optional argument NOCLEANUP means remove empty field."
 (defun debian-bug-help-severity ()
   "Display severity help."
   (with-output-to-temp-buffer "*Help*"
-    (princ  "Info from http://www.debian.org/Bugs/Developer#severities
-Feb 8th 2002, checked Apr 22 2003.
-Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
- 1997 nCipher Corporation Ltd.
-
- Severity levels
+    (princ  "Severity levels
 
  The bug system records a severity level with each bug report. This is set to
  normal by default, but can be overridden either by supplying a Severity line
@@ -991,16 +993,16 @@ Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
 
 Certain severities are considered release-critical, meaning the bug will
 have an impact on releasing the package with the stable release of
-Debian.  Currently, these are critical, grave and serious.")))
+Debian.  Currently, these are critical, grave and serious.
+
+Info from http://www.debian.org/Bugs/Developer#severities
+Feb 8th 2002, checked Apr 22 2003.")))
 
 (defun debian-bug-help-tags ()
   "Display tags help."
   (with-output-to-temp-buffer "*Help*"
     (princ
-     "Info from http://www.debian.org/Bugs/Developer#tags
-May 31st 2003
-
- Tags for bug reports
+     "Tags for bug reports
 
  Each bug can have zero or more of a set of given tags. These tags are
  displayed in the list of bugs when you look at a package's page, and when
@@ -1077,15 +1079,15 @@ May 31st 2003
 
  The latter five tags are intended to be used mainly for release critical
  bugs, for which it's important to know which distributions are affected to
- make sure fixes (or removals) happen in the right place.")))
+ make sure fixes (or removals) happen in the right place.
+
+Info from http://www.debian.org/Bugs/Developer#tags
+May 31st 2003")))
 
 (defun debian-bug-help-pseudo-packages ()
   "Display pseudo-packages help."
   (with-output-to-temp-buffer "*Help*"
     (princ "List of Debian pseudo packages
-from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
-Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
- 1997 nCipher Corporation Ltd.
 
  base -- Base system (baseX_Y.tgz) general bugs
  boot-floppy -- Installation system
@@ -1110,7 +1112,11 @@ Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
  tech-ctte -- The Debian Technical Committee (see the Constitution)
  upgrade-reports -- Reports of upgrade problems for stable & testing
  wnpp -- Work-Needing and Prospective Packages list
- www.debian.org -- Problems with the WWW site")))
+ www.debian.org -- Problems with the WWW site
+
+from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
+Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
+ 1997 nCipher Corporation Ltd.")))
 
 (defun debian-bug-help-email ()
   "Display help about various bug report emails to use."
