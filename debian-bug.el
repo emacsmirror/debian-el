@@ -200,7 +200,11 @@
 ;;    Add `d-i', `ipv6' and `lfs' tags.
 ;; V1.43 01Sep2003 Peter S Galbraith <psg@debian.org>
 ;;    debian-bug-build-bug-menu: Create closing changlog entries in
-;;    debian-bug-open-alist cdr's.
+;;    debian-bug-open-alist cdr's. (Closes: #207852)
+;; V1.44 03Sep2003 Peter S Galbraith <psg@debian.org>
+;;  - Display help when prompting for package name and bug severity
+;;    (Closes: #200058)
+;;  - debian-bug-display-help: new defcustom.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -226,6 +230,11 @@
 (defgroup debian-bug nil "Debian Bug report helper"
   :group 'tools
   :prefix "debian-bug-")
+
+(defcustom debian-bug-display-help t
+  "Display help text when prompting for package name and bug severity."
+  :group 'debian-bug
+  :type 'boolean)
 
 (defcustom debian-bug-helper-program nil
   "Helper program to use to generate bug report background info.
@@ -701,56 +710,62 @@ Reportbug may have sent an empty report!")))
 (defun debian-bug (&optional package)
   "Submit a Debian bug report.
 Optional argument PACKAGE can be provided in programs."
-  (interactive (list (completing-read
-                      "Package name: "
-                      (debian-bug-fill-packages-obarray)
-                      nil nil nil nil (current-word))))
-    (if (string= package "wnpp")
-	(debian-bug-wnpp)
-      (debian-bug-fill-packages-obarray)
-      (if (and (not (intern-soft package debian-bug-packages-obarray))
-               (not (y-or-n-p
-                     "Package does not appear to be installed. Continue? ")))
-          (error "Quitting"))
-      (let ((severity (completing-read "Severity (default normal): "
+  (interactive (list (save-window-excursion
+                        (if debian-bug-display-help
+                            (debian-bug-help-pseudo-packages))
+                        (completing-read
+                         "Package name: "
+                         (debian-bug-fill-packages-obarray)
+                         nil nil nil nil (current-word)))))
+  (if (string= package "wnpp")
+      (debian-bug-wnpp)
+    (debian-bug-fill-packages-obarray)
+    (if (and (not (intern-soft package debian-bug-packages-obarray))
+             (not (y-or-n-p
+                   "Package does not appear to be installed. Continue? ")))
+        (error "Quitting"))      
+    (let ((severity (save-window-excursion
+                      (if debian-bug-display-help
+                          (debian-bug-help-severity))
+                      (completing-read "Severity (default normal): "
                                        debian-bug-severity-alist
-                                       nil t nil nil "normal"))
-            (subject (read-string "(Very) brief summary of problem: ")))
-;;	(require 'reporter)
-	(reporter-compose-outgoing)
-        (if (and (equal mail-user-agent 'gnus-user-agent)
-                 (string-equal " *nntpd*" (buffer-name)))
-            (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
-        (goto-char (point-min))
-        (cond
-         ((re-search-forward "To: " nil t)
-          (insert debian-bug-mail-address))
-         ((re-search-forward "To:" nil t)
-          (insert " " debian-bug-mail-address))
-         (t
-          (insert "To: " debian-bug-mail-address)))
-        (goto-char (point-min))
-        (cond
-         ((re-search-forward "Subject: " nil t)
-          (insert package ": " subject))
-         ((re-search-forward "Subject:" nil t)
-          (insert " " package ": " subject))
-         (t
-          (insert "Subject: " package ": " subject)))
-        (require 'sendmail)
-        (goto-char (mail-header-end))
-        (forward-line 1)
-        (message "Getting package information from system...")
-	(debian-bug-prefill-report package severity)
-        (message "Getting package information from system...done")
-	(if debian-bug-use-From-address
-            (debian-bug--set-custom-From))
-	(if debian-bug-always-CC-myself
-            (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
-	(set-window-start (selected-window) (point-min) t)
-	(setq debian-bug-package-name package)
-	(debian-bug-minor-mode 1)
-	(set-buffer-modified-p nil))))
+                                       nil t nil nil "normal")))
+          (subject (read-string "(Very) brief summary of problem: ")))
+;;;   (require 'reporter)
+      (reporter-compose-outgoing)
+      (if (and (equal mail-user-agent 'gnus-user-agent)
+               (string-equal " *nntpd*" (buffer-name)))
+          (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
+      (goto-char (point-min))
+      (cond
+       ((re-search-forward "To: " nil t)
+        (insert debian-bug-mail-address))
+       ((re-search-forward "To:" nil t)
+        (insert " " debian-bug-mail-address))
+       (t
+        (insert "To: " debian-bug-mail-address)))
+      (goto-char (point-min))
+      (cond
+       ((re-search-forward "Subject: " nil t)
+        (insert package ": " subject))
+       ((re-search-forward "Subject:" nil t)
+        (insert " " package ": " subject))
+       (t
+        (insert "Subject: " package ": " subject)))
+      (require 'sendmail)
+      (goto-char (mail-header-end))
+      (forward-line 1)
+      (message "Getting package information from system...")
+      (debian-bug-prefill-report package severity)
+      (message "Getting package information from system...done")
+      (if debian-bug-use-From-address
+          (debian-bug--set-custom-From))
+      (if debian-bug-always-CC-myself
+          (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
+      (set-window-start (selected-window) (point-min) t)
+      (setq debian-bug-package-name package)
+      (debian-bug-minor-mode 1)
+      (set-buffer-modified-p nil))))
 
 ;;; ---------
 ;;; WNPP interface by Peter S Galbraith <psg@debian.org>, August 4th 2001
