@@ -249,6 +249,9 @@
 ;;    "Developer Page for This Package".  Create debian-bug-web-developer-page.
 ;; V1.54 02Aug2004 Peter S Galbraith <psg@debian.org>
 ;;  - Add RFH tag to wnpp.
+;; V1.54 11Nov2004 Camm Maguire <camm@enhanced.com>
+;;  - debian-bug:  Add "--list-cc=none" to call to reportbug after changes
+;;    in new version of reportbug. (Closes: #280780)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -551,6 +554,7 @@ This can be removed at some point since `bug' is not released in sarge."
     (save-excursion
       (call-process "reportbug" nil '(t t) nil
 		    "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
+                    "--list-cc=none"
                     "-q" package)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
