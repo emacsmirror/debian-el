@@ -247,6 +247,8 @@
 ;; V1.53 27Nov2003 Peter S Galbraith <psg@debian.org>
 ;;  - Add menu entry for "Archived Bugs for this package" and for
 ;;    "Developer Page for This Package".  Create debian-bug-web-developer-page.
+;; V1.54 02Aug2004 Peter S Galbraith <psg@debian.org>
+;;  - Add RFH tag to wnpp.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -654,14 +656,16 @@ Reportbug may have sent an empty report!")))
   '(("Intent to Package [ITP]" . "ITP")
     ("Orphaned [O]". "O")
     ("Request for Adoption [RFA]" . "RFA")
-    ("Request For Package [RFP]" . "RFP"))
+    ("Request For Package [RFP]" . "RFP")
+    ("Request For Help [RFH]" . "RFH"))
   "Alist of WNPP possible bug reports.")
 
 (defvar debian-bug-wnpp-severities
   '(("ITP" . "wishlist")
     ("O". "normal")
     ("RFA" . "normal")
-    ("RFP" . "wishlist"))
+    ("RFP" . "wishlist")
+    ("RFH" . "normal"))
   "Bug severeties for each WNPP bug type.")
 
 ;;;###autoload
