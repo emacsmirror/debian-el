@@ -225,6 +225,9 @@
 ;;    and broke the splitting-up of large bug categories.  Fixed.
 ;;  - bugs.debian.org added HTML "name" tags which I need to exclude from
 ;;    titles.
+;; V1.47 20Sep2003 Peter S Galbraith <psg@debian.org>
+;;  - debian-bug-search-file: Use dlocate if available when filename is
+;;    given. thanks to Jeff Sheinberg (Closes: #211598).
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1732,28 +1735,45 @@ Call this function from the mode setup with MINOR-MODE-MAP."
 (defun debian-bug-search-file (filename)
   "Search for FILENAME returning which package name it belongs to."
   (save-excursion
-    (let ((tmp-buffer (get-buffer-create " *debian-bug-tmp*")))
+    (let ((tmp-buffer (get-buffer-create " *debian-bug-tmp*"))
+          (expanded-file (expand-file-name filename))
+          (package))
       (set-buffer tmp-buffer)
       (unwind-protect
           (progn
-            (message "Calling dpkg for the search...")
-            (call-process "dpkg" nil '(t nil) nil "-S"
-                          (expand-file-name filename))
-            (message "Calling dpkg for the search...done")
+            (condition-case err
+                (call-process "dlocate" nil '(t nil) nil "-S" expanded-file)
+              (file-error
+               (message "dlocate not installed...")))
             (goto-char (point-min))
-            (cond
-             ((re-search-forward "not found.$" nil t)
-              (message "%s not found in package list" filename)
-              nil)
-             ((re-search-forward "^\\(.*, .*\\): " nil t)
-              (with-output-to-temp-buffer "*Help*"
-                (princ (format "Please refine your search,\nthere is more than one matched package:\n\n%s" (match-string 1))))
-              nil)
-             ((re-search-forward "^\\(.*\\): " nil t)
-              (match-string 1))
-             (t
-              (message "%s not found in package list" filename)
-              nil)))
+            (when (re-search-forward
+                   (concat "^\\(.*\\): " (regexp-quote expanded-file) "$")
+                   nil t)
+              ;; found one at least.  Try for another.
+              (setq package (match-string 1))
+              (when (re-search-forward
+                     (concat "^.*: " (regexp-quote expanded-file) "$") nil t)
+                (setq package nil)))
+            (if package
+                package
+              (message "Calling dpkg for the search...")
+              (call-process "dpkg" nil '(t nil) nil "-S"
+                            (expand-file-name filename))
+              (message "Calling dpkg for the search...done")
+              (goto-char (point-min))
+              (cond
+               ((re-search-forward "not found.$" nil t)
+                (message "%s not found in package list" filename)
+                nil)
+               ((re-search-forward "^\\(.*, .*\\): " nil t)
+                (with-output-to-temp-buffer "*Help*"
+                  (princ (format "Please refine your search,\nthere is more than one matched package:\n\n%s" (match-string 1))))
+                nil)
+               ((re-search-forward "^\\(.*\\): " nil t)
+                (match-string 1))
+               (t
+                (message "%s not found in package list" filename)
+                nil))))
         (kill-buffer tmp-buffer)))))
 
 (defun debian-bug-filename ()
