@@ -193,6 +193,9 @@
 ;;    simply the if the autoloaded are fboundp (which is always true).
 ;; V1.41 15May2003 Peter S Galbraith <psg@debian.org>
 ;;  - Add `confirmed' tag.
+;; V1.42 23May2003 Matt Swift <swift@alum.mit.edu>
+;;    debian-bug-prefill-report: announce error if reportbug gives empty
+;;    template.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -650,7 +653,12 @@ Done by calling `executable-find' or the external \"which\" utility."
                     "-q" package)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
-    (delete-region (point) (search-forward "\n\n" nil t))
+    (delete-region
+     (point)
+     (or (search-forward "\n\n" nil t)
+         ;; Fix from Matt Swift
+         (error "Reportbug did not produce expected output!  Bailing out.
+Reportbug may have sent an empty report!")))
     ;; and skip forward to them
     (search-forward "\n\n" nil t)
     )
