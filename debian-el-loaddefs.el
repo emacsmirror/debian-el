@@ -4,6 +4,18 @@
 
 (provide 'debian-el-loaddefs)
 
+;;;### (autoloads (apt-sources-mode) "apt-sources" "apt-sources.el"
+;;;;;;  (16284 30712))
+;;; Generated autoloads from apt-sources.el
+
+(autoload (quote apt-sources-mode) "apt-sources" "\
+Major mode for editing apt's sources.list file.
+Sets up command `font-lock-mode'.
+
+\\{apt-sources-mode-map}" t nil)
+
+;;;***
+
 ;;;### (autoloads (apt-utils-search apt-utils-show-package) "apt-utils"
 ;;;;;;  "apt-utils.el" (16120 61272))
 ;;; Generated autoloads from apt-utils.el
@@ -18,11 +30,41 @@ To search for multiple patterns use a string like \"foo&&bar\"." t nil)
 
 ;;;***
 
+;;;### (autoloads (deb-find deb-view-mode deb-view deb-view-dired-view)
+;;;;;;  "deb-view" "deb-view.el" (16289 55313))
+;;; Generated autoloads from deb-view.el
+
+(autoload (quote deb-view-dired-view) "deb-view" "\
+View Debian package control and data files.
+Press \"q\" in either window to kill both buffers
+and return to the dired buffer. See deb-view." t nil)
+
+(autoload (quote deb-view) "deb-view" "\
+View Debian package DEBFILE's control and data files.
+Press \"q\" in either window to kill both buffers.
+
+In dired, press ^d on the dired line of the .deb file to view.
+Or, execute: ESCAPE x deb-view RETURN, and enter the .deb file name
+at the prompt." t nil)
+
+(autoload (quote deb-view-mode) "deb-view" "\
+View mode for Debian Archive Files." t nil)
+
+(autoload (quote deb-find) "deb-view" "\
+Search for deb files.
+Use the method specified by the variable deb-find-method, and collect
+output in a buffer.  See also the variable deb-find-directory.
+
+This command uses a special history list, so you can
+easily repeat a `deb-find' command." t nil)
+
+;;;***
+
 ;;;### (autoloads (debian-bug debian-bug-get-bug-as-email debian-bug-get-bug-as-file
 ;;;;;;  debian-bug-web-package debian-bug-web-packages debian-bug-web-this-bug-under-mouse
 ;;;;;;  debian-bug-web-this-bug debian-bug-web-bug debian-bug-web-bugs
 ;;;;;;  debian-bug-intent-to-package debian-bug-request-for-package
-;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (16248 63225))
+;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (16262 3361))
 ;;; Generated autoloads from debian-bug.el
 
 (autoload (quote debian-bug-wnpp) "debian-bug" "\

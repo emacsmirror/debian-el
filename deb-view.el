@@ -1,9 +1,11 @@
-;;; deb-view.el: View Debian package archive files with tar-mode.
+;;; deb-view.el --- view Debian package files with tar-mode
 
-;; Author:  Rick Macdonald <rickmacd@shaw.ca>
-;; Version: 1.9
-;; Latest version: http://www.cuug.ab.ca/~macdonal/deb-view.el
-;; Latest version: http://www.cuug.ab.ca/~macdonal/deb-view.el.gz
+;; Copyright (C) 1998 Rick Macdonald <rickmacd@shaw.ca>
+;; Copyright (C) 2003 Peter S Galbraith <psg@debian.org>
+
+;; Author:     Rick Macdonald <rickmacd@shaw.ca>
+;; Maintainer: Peter S. Galbraith <psg@debian.org>
+;; Version: 1.10
 
 ;; This file is not part of GNU Emacs.
 
@@ -92,7 +94,7 @@
 ;;(autoload 'deb-view            "deb-view" "Debian Archive File Viewer" t)
 ;;(autoload 'deb-view-dired-view "deb-view" "Debian Archive File Viewer" t)
 ;;(setq auto-mode-alist (append '(("\\.deb$" . deb-view-mode)) auto-mode-alist))
-;;(define-key dired-mode-map     "\C-d"     'deb-view-dired-view) 
+;;(define-key dired-mode-map     "\C-d"     'deb-view-dired-view)
 
 ;; If you're not very familiar with emacs customization, here is a simpler
 ;; approach. Add this line to your ~/.emacs file (or create ~/.emacs if you
@@ -159,7 +161,8 @@
 ;; then do what you want to the file.
 
 
-;;; Changelog:
+;;; History:
+;; 
 
 ;; 1.3  - modified logic that determines old or new style Debian packages.
 ;;        On systems where the file command recognizes debian files, it
@@ -193,26 +196,40 @@
 ;;      - reworked to use derived.el instead of messing with tar-mode
 ;;        directly. (Thanks to era eriksson <era@iki.fi>)
 
-
-;; User variables:
+;; 1.10 2003-10-30
+;;  - New maintainer: Peter S. Galbraith <psg@debian.org>
+;;  - checkdoc edits.
+;;  - made defvars into defcustoms.
 
-(defvar deb-view-tar-uncompress-program "gzip -cd"
-  "*Program to use for uncompression of .gz and .Z files in deb-view.")
+
+;;; Code:
+
+(defgroup deb-view nil
+  "View Debian package files with tar-mode"
+  :group 'tools
+  :prefix "deb-view")
+
+(defcustom deb-view-tar-uncompress-program "gzip -cd"
+  "*Program to use for uncompression of .gz and .Z files in `deb-view'."
+  :group 'deb-view
+  :type 'string)
 
 ;; Note the following useful variable from tar-mode:
 ;;(defvar tar-mode-show-date nil
 ;; "*Non-nil means Tar mode should show the date/time of each subfile.
 ;;This information is useful, but it takes screen space away from file names.")
 
-(defvar deb-find-method "find"
-  "Internal deb-find methods supported: locate or find.
+(defcustom deb-find-method "find"
+  "Internal `deb-find' methods supported: locate or find.
 Any other entry is assumed to be an external command.
-See also the variable deb-find-directory.")
+See also the variable deb-find-directory."
+  :group 'deb-view
+  :type '(radio (const "find") (const "locate")))
 
-(defvar deb-find-directory "/usr/local/src/debian"
-  "Directory to run find in when deb-find-method is \"find\".")
-
-;;; Code:
+(defcustom deb-find-directory "/usr/local/src/debian"
+  "Directory to run find in when deb-find-method is \"find\"."
+  :group 'deb-view
+  :type 'directory)
 
 (define-derived-mode debview-mode tar-mode "debview"
   "Major mode for debview.\n\n\\{debview-mode-map}")
@@ -249,7 +266,7 @@ See also the variable deb-find-directory.")
   "Flag saying if the deb file is temporary (ange-ftp) and needs deleting.")
 
 (defvar deb-view-file-name ""
-  "The file name being processed by deb-view.")
+  "The file name being processed by `deb-view'.")
 
 ;; You might not like the key bindings that I chose:
 (if (featurep 'dired)
@@ -259,6 +276,7 @@ See also the variable deb-find-directory.")
    (function (lambda ()
                (define-key dired-mode-map "\C-d" 'deb-view-dired-view)))))
 
+;;;###autoload
 (defun deb-view-dired-view ()
   "View Debian package control and data files.
 Press \"q\" in either window to kill both buffers
@@ -266,8 +284,9 @@ and return to the dired buffer. See deb-view."
   (interactive)
   (deb-view (dired-get-filename)))
 
+;;;###autoload
 (defun deb-view (debfile)
-  "View Debian package control and data files.
+  "View Debian package DEBFILE's control and data files.
 Press \"q\" in either window to kill both buffers.
 
 In dired, press ^d on the dired line of the .deb file to view.
@@ -294,7 +313,7 @@ at the prompt."
     (deb-view-process debfile)))
 
 (defun deb-view-process (debfile)
-  "View Debian Archive Files."
+  "View Debian Archive Files for package DEBFILE."
   (let* ((deb-view-buffer-name (file-name-nondirectory deb-view-file-name))
          (info-buffer-name (concat deb-view-buffer-name "-INFO"))
          (data-buffer-name (concat deb-view-buffer-name "-DATA"))
@@ -382,6 +401,7 @@ at the prompt."
         (delete-file debfile)))
     (message "deb-view: ? for help. q to quit.")))
 
+;;;###autoload
 (defun deb-view-mode ()
   "View mode for Debian Archive Files."
   (interactive)
@@ -402,13 +422,14 @@ at the prompt."
     (kill-buffer curbuf)
     (deb-view-process debfile)))
 
+;;;###autoload
 (defun deb-find ()
-  "Search for deb files using the method specified by the variable
-deb-find-method, and collect output in a buffer.
-See also the variable deb-find-directory.
+  "Search for deb files.
+Use the method specified by the variable deb-find-method, and collect
+output in a buffer.  See also the variable deb-find-directory.
 
 This command uses a special history list, so you can
-easily repeat a deb-find command."
+easily repeat a `deb-find' command."
   (interactive)
   (require 'compile)
   (let* ((deb-file-string (read-from-minibuffer "deb file to find: "
@@ -445,10 +466,10 @@ easily repeat a deb-find command."
 ;;; Internal functions:
 
 (defvar deb-view-version "1.9"
-  "The version of deb-view.")
+  "The version of `deb-view'.")
 
 (defun deb-view-version ()
-  "Return string describing the version of deb-view.
+  "Return string describing the version of `deb-view'.
 When called interactively, displays the version."
   (interactive)
   (if (interactive-p)
@@ -477,7 +498,7 @@ When called interactively, displays the version."
          (switch-to-buffer ddir-buffer))))
 
 (defun deb-find-help ()
-  "Show help information for deb-find."
+  "Show help information for `deb-find'."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ (format "deb-find mode:    version %s" (deb-view-version)))
@@ -493,7 +514,7 @@ q - quit deb-find.")
     (print-help-return-message)))
 
 (defun deb-view-help ()
-  "Show help information for deb-view."
+  "Show help information for `deb-view'."
   (interactive)
   (with-output-to-temp-buffer "*Help*"
     (princ (format "deb-view mode:    version %s" (deb-view-version)))
@@ -578,10 +599,10 @@ It then selects a major mode from the uncompressed file name and contents.
         (rename-buffer (concat " " (buffer-name)))
         (w3-preview-this-buffer)
         (define-key w3-mode-map "q"	'deb-view-tar-w3-quit))
-    (error "Sorry, you don't seem to have w3 loaded.")))
+    (error "Sorry, you don't seem to have w3 loaded")))
 
 (defun deb-view-tar-w3-quit ()
-  "Quit WWW mode in a buffer from deb-view."
+  "Quit WWW mode in a buffer from `deb-view'."
   (interactive)
   (let ((x w3-current-last-buffer))
     (and (fboundp 'w3-mpeg-kill-processes) (w3-mpeg-kill-processes))
@@ -591,20 +612,22 @@ It then selects a major mode from the uncompressed file name and contents.
   (view-exit))
 
 (defvar deb-find-history nil
-  "History list for deb-find commands.")
+  "History list for `deb-find' commands.")
 
 (defvar deb-find-regexp "^/.*\.deb$"
-  "Regexp for deb file names in the deb-find buffer.")
+  "Regexp for deb file names in the `deb-find' buffer.")
 
 (defun deb-find-deb-view ()
+  "Run `deb-view' in package under point."
   (interactive)
   (let ((deb-file (thing-at-point 'filename)))
     (if (and deb-file
              (string-match deb-find-regexp deb-file))
         (deb-view (thing-at-point 'filename))
-      (error "No deb file on this line."))))
+      (error "No deb file on this line"))))
 
 (defun deb-find-mouse-deb-view (event)
+  "Run `deb-view' in package under mouse EVENT."
   (interactive "e")
   (pop-to-buffer (window-buffer (posn-window (event-end event))))
   (goto-char (posn-point (event-end event)))
@@ -612,7 +635,7 @@ It then selects a major mode from the uncompressed file name and contents.
     (if (and deb-file
              (string-match deb-find-regexp deb-file))
         (deb-view (thing-at-point 'filename))
-      (error "No deb file on this line."))))
+      (error "No deb file on this line"))))
 
 (provide 'deb-view)
 

@@ -48,16 +48,18 @@
   :group 'debian-el)
 
 ;; deb-view.el
-(autoload 'deb-find            "deb-view" "Debian Archive File Finder" t)
-(autoload 'deb-view-mode       "deb-view" "Debian Archive File Mode" t)
-(autoload 'deb-view            "deb-view" "Debian Archive File Viewer" t)
-(autoload 'deb-view-dired-view "deb-view" "Debian Archive File Viewer" t)
 (setq auto-mode-alist (append '(("\\.deb$" . deb-view-mode)) auto-mode-alist))
+(defgroup deb-view nil
+  "View Debian package files with tar-mode"
+  :group 'tools
+  :prefix "deb-view"
+  :link '(custom-manual "(debian-el)deb-view")
+  :load 'deb-view
+  :group 'debian-el)
 (add-hook
  'dired-load-hook
  (function (lambda ()
 	     (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
-
 
 (provide 'debian-el)
 
