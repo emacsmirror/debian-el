@@ -1,0 +1,176 @@
+@c -*- mode: texinfo -*-
+\input texinfo
+
+@c $Id$
+@c %**start of header
+@setfilename info/debian-el
+@settitle debian-el
+@c %**end of header
+
+@dircategory Emacs
+@direntry
+* Emacs-Goodies-extra:
+  (debian-el). Debian-specific tools for Emacs
+@end direntry
+
+@c Version variables.
+@set EDITION 1.0
+@set UPDATED 23 Sept 2003
+
+@ifinfo
+This is Edition @value{EDITION}, last updated @value{UPDATED}, of
+@cite{debian-el}.
+@end ifinfo
+
+@titlepage
+@title debian-el: Debian-specific tools for Emacs
+@subtitle A manual for what's in this package.
+@author Peter S. Galbraith
+@end titlepage
+
+@node Top, apt-sources, (dir), (dir)
+@top The debian-el Package Setup
+
+This manual describes the debian-el package and its
+setup.  A quick descriptions of elisp files contained in this package
+can be found in the file
+@file{/usr/share/doc/debian-el/README.Debian}.
+
+All packaged files are installed, setup and ready to use (they don't
+override standard Emacs commands, modes, or settings).
+
+To customize setup of all customizable packages on a finer-grain
+basis, do:
+@example
+@kbd{M-x} customize-group @key{RET} debian-el @key{RET}
+@end example
+
+@menu
+* apt-sources::   Mode for editing apt source.list file
+* apt-utils::     Emacs interface to APT
+* debian-bug::    Report a bug to Debian's bug tracking system
+* gnus-BTS::      Access the Debian Bug Tracking System from Gnus
+@end menu
+
+This work compiles GPL'ed documentation from the files in
+/usr/share/emacs/site-lisp/debian-el/.  As a derived work from GPL'ed
+works, this text is also licensed under the GPL V2 (See
+/usr/share/common-licenses/GPL-2) and is edited by Peter S. Galbraith
+@email{psg@@debian.org}.
+
+@node apt-sources, apt-utils, Top, Top
+@chapter apt-sources - Mode for editing apt source.list file.
+
+This mode is for editing @file{/etc/apt/sources.list}, the APT
+(Advanced Package Tool) configuration file found on Debian systems.
+
+APT is a package retrieval tool for Debian; for example you could
+install Emacs with the command:
+
+@example
+  apt-get install emacs21
+@end example
+
+and APT will then retrieve the package and install it for you. The
+sources.list file tells APT where to look for packages. Mine looks
+like this:
+
+@example
+  deb http://http.us.debian.org/debian unstable main contrib
+  deb http://non-us.debian.org/debian-non-US unstable/non-US main
+
+  deb ftp://ftp.de.debian.org/debian ../project/experimental main
+@end example
+
+This mode font-locks the file and add some things including new
+source lines and modifying existing source lines.
+
+This mode can be customized in diferent parts. You can (interactively)
+change if you want blank lines around a new source line and comment
+with @code{apt-sources-around-lines}. Also you can change the way that
+this mode names each source line with the variable
+@code{apt-sources-source-name}; if no name is entered, no comment name
+will be inserted.
+
+You can modify existing parts of the source line; check the mode
+documentation for more details. Another thing that this mode can do is
+to replicate an existing line (@kbd{C-c C-r}) that will be changed to
+the 'deb' or 'deb-src' corresponding line. If it replicates a 'deb'
+line, an identical 'deb-src' source line will be created.
+
+@node apt-utils, debian-bug, apt-sources, Top
+@chapter apt-utils - Emacs interface to APT
+
+Start things off using e.g.:
+@example
+@kbd{M-x} apt-utils-show-package @key{RET} emacs21 @key{RET}
+@end example
+
+Other packages (dependencies, conflicts etc) can be navigated using
+@command{apt-utils-next-package} (@key{TAB}),
+@command{apt-utils-prev-package} (@key{M-TAB}),
+@command{apt-utils-choose-package-link} (@key{>}) or
+@command{apt-utils-follow-link} (@key{RET}). Return to the previous
+package with @command{apt-utils-view-previous-package} (@key{<}).
+
+ChangeLog and README files for the current package can easily be
+accessed with, for example, @command{apt-utils-view-changelog} (@key{C}).
+
+For normal (i.e., not virtual) packages, the information can be toggled
+between `package' and `showpkg' displays using
+@command{apt-utils-toggle-package-info} (@key{t}); the latter is useful
+for the "Reverse Depends".
+
+View the key bindings with describe-mode (bound to ? by default)
+or use the menu.
+
+You may alter various settings of @code{apt-utils} bu customizing the
+group @code{apt-utils}.
+
+@node debian-bug, gnus-BTS, apt-utils, Top
+@chapter debian-bug - report a bug to Debian's bug tracking system
+
+@noindent Useful commands provided by this package:
+
+@table @samp
+@item debian-bug
+Submit a bug report concerning a Debian package.
+@item debian-bug-wnpp
+Submit a Work Needed on Prospective Package bug report.
+@item debian-bug-request-for-package
+A shortcut for a WNPP bug type RFP.
+@item debian-bug-ITP
+A shortcut for a WNPP bug type ITP.
+@item debian-bug-web-bug
+View a bug report on a web browser (via browse-url).
+@item debian-bug-get-bug-as-email
+Read bug report number via Email interface.
+@item debian-bug-get-bug-as-file
+Read bug report number as a regular file.
+@end table
+
+and others.
+
+@noindent The command @command{M-x debian-bug} prompts for required
+information to start filling in the mail draft buffer.  It then allows
+you to edit these fields in the mail draft buffer with a useful
+menu-bar and view help text about your various options.  If the Debian
+package @code{wget} is installed, you may download the list of bugs
+for the affected package at that time, and download the text of a
+specific bug number as well.  
+
+@noindent The debian-bug facility depends on either the the reportbug package.
+
+@node gnus-BTS,  , debian-bug, Top
+@chapter gnus-BTS - access the Debian Bug Tracking System from Gnus
+
+Use this if you read a lot of debian lists in GNUS and see references
+to the Bug Tracking system in them. It expects to see Bug references
+in the form of (for example): "#48273", "closes: 238742" or similar
+and will make them clickable.
+
+To enable this, add the following to your @file{~/.emacs} file:
+
+@example
+(require 'gnus-BTS)
+@end example
