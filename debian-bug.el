@@ -166,6 +166,9 @@
 ;;     that reportbug doesn't fail.
 ;;    debian-bug: Check if empty Subject field has trailing space.  Should
 ;;     fix bug #173040 and part of #177259.
+;; V1.37 10Apr2003 Peter S Galbraith <psg@debian.org>
+;;  - Switch priority of reportbug and bug, preferring reportbug. 
+;;  - send to maintonly if priority wishlist or minor.  Closes: #176429.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -512,10 +515,10 @@ The obarray associates each package with the installed version of the package."
   (or debian-bug-helper-program
       (setq debian-bug-helper-program
 	    (cond
-	     ((zerop (call-process "which" nil nil nil "bug"))
-	      'bug)
 	     ((zerop (call-process "which" nil nil nil "reportbug"))
 	      'reportbug)
+	     ((zerop (call-process "which" nil nil nil "bug"))
+	      'bug)
 	     (t
 	      'none)))))
 
@@ -592,6 +595,9 @@ The obarray associates each package with the installed version of the package."
           (insert " " debian-bug-mail-address))
          (t
           (insert "To: " debian-bug-mail-address)))
+        (if (or (string-equal severity "wishlist")
+                (string-equal severity "minor"))
+            (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
         (goto-char (point-min))
         (cond
          ((re-search-forward "Subject: " nil t)
@@ -852,6 +858,7 @@ The obarray associates each package with the installed version of the package."
        (t
 	(forward-line 6)
 	(insert "\nSeverity: " severity "\n"))))))
+
 
 (defun debian-bug--is-tags (tag)
   (save-excursion
