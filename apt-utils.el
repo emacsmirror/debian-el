@@ -59,10 +59,10 @@
 
 (defface apt-utils-normal-package-face
   '((((class color) (background light))
-     (:foreground "purple"))
+     (:foreground "blue"))
     (((class color) (background dark))
      (:foreground "yellow")))
-  "Face used for APT hyperlinks."
+  "Face used for APT normal package hyperlinks."
   :group 'apt-utils)
 
 (defface apt-utils-virtual-package-face
@@ -70,7 +70,41 @@
      (:foreground "green4"))
     (((class color) (background dark))
      (:foreground "green")))
-  "Face used for APT hyperlinks."
+  "Face used for APT virtual package hyperlinks."
+  :group 'apt-utils)
+
+(defface apt-utils-field-keyword-face
+  '((((class color) (background light))
+     (:foreground "purple" :bold t))
+    (((class color) (background dark))
+     (:foreground "purple" :bold t)))
+  "Face used for APT field keywords."
+  :group 'apt-utils)
+
+(defface apt-utils-field-contents-face
+  '((((class color) (background light))
+     (:foreground "orchid"))
+    (((class color) (background dark))
+     (:foreground "orange")))
+  "Face used for APT field contents."
+  :group 'apt-utils)
+
+(defface apt-utils-description-face
+  '((((class color))
+     (:foreground "cadet blue")))
+  "Face used for APT package description."
+  :group 'apt-utils)
+
+(defface apt-utils-version-face
+  '((((class color))
+     (:italic t)))
+  "Face used for APT package versions."
+  :group 'apt-utils)
+
+(defface apt-utils-broken-face
+  '((((class color))
+     (:foreground "red")))
+  "Face used for unknown APT package."
   :group 'apt-utils)
 
 ;; Other variables
@@ -102,16 +136,13 @@
 
 (defvar apt-utils-current-packages nil
   "Packages associated with the *APT package info* buffer.")
-(make-variable-buffer-local 'apt-utils-current-packages)
 
 (defvar apt-utils-current-links nil
   "Package links associated with the *APT package info* buffer.")
-(make-variable-buffer-local 'apt-utils-current-links)
 
 (defvar apt-utils-buffer-positions nil
   "Cache of positions associated with current packages.
 These are stored in a hash table.")
-(make-variable-buffer-local 'apt-utils-buffer-positions)
 
 (defvar apt-utils-dired-buffer nil
   "Keep track of dired buffer.")
@@ -147,7 +178,7 @@ With ARG, choose that package, otherwise prompt for one."
     ;; Set up the buffer
     (if (get-buffer buffer)
         (set-buffer buffer)
-      (set-buffer (get-buffer-create "*APT package info*"))
+      (set-buffer (get-buffer-create buffer))
       (apt-utils-mode)
       (setq truncate-lines nil))
     ;; If called interactively, initialize apt-utils-current-packages
@@ -174,13 +205,14 @@ With ARG, choose that package, otherwise prompt for one."
        ;; Normal search
        ((equal type 'search)
         (insert (format "Debian package search for %s\n\n" package))
-        (call-process apt-utils-apt-cache-program nil t nil "search" package)
+        (apply 'call-process apt-utils-apt-cache-program nil t nil
+               "search" (split-string package "&&"))
         (apt-utils-add-search-links))
        ;; Search for names only
        ((equal type 'search-names-only)
         (insert (format "Debian package search (names only) for %s\n\n" package))
-        (call-process apt-utils-apt-cache-program nil t nil
-                      "search" "--names-only" package)
+        (apply 'call-process apt-utils-apt-cache-program nil t nil
+                      "search" "--names-only" (split-string package "&&"))
         (apt-utils-add-search-links))
        ((equal type 'search-grep-dctrl)
         (insert (format "grep-dctrl search for %s\n\n"
@@ -188,7 +220,11 @@ With ARG, choose that package, otherwise prompt for one."
                                 (mapconcat 'identity (cdr package) " "))))
         (apply 'call-process apt-utils-grep-dctrl-program nil t nil package)
         (apt-utils-add-package-links))))
+
+    ;; Need these for interactive calls, or when following links
+    (set-window-start (selected-window) (point-min))
     (goto-char (point-min))
+
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
     (display-buffer buffer)))
@@ -224,28 +260,41 @@ Only works for installed packages; uses `apt-utils-dpkg-program'."
         (setq apt-utils-dired-buffer (dired-noselect files))
         (display-buffer apt-utils-dired-buffer))))))
 
-(defun apt-utils-search (&optional arg)
+(defun apt-utils-search ()
   "Search Debian packages for regular expression.
-With ARG, match names only."
-  (interactive "p")
+To search for multiple patterns use a string like \"foo&&bar\"."
+  (interactive)
+  (apt-utils-search-internal nil))
+
+(defun apt-utils-search-names-only ()
+  "Search Debian package names for regular expression.
+To search for multiple patterns use a string like \"foo&&bar\"."
+  (interactive)
+  (apt-utils-search-internal t))
+
+(defun apt-utils-search-internal (&optional names-only)
+  "Search Debian packages for regular expression.
+With NAMES-ONLY, match names only."
   (let ((buffer "*APT package info*")
         (regexp (read-from-minibuffer "Search packages for regexp: ")))
     ;; Set up the buffer
     (if (get-buffer buffer)
         (set-buffer buffer)
-      (set-buffer (get-buffer-create "*APT package info*"))
+      (set-buffer (get-buffer-create buffer))
       (apt-utils-mode)
       (setq truncate-lines nil))
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (insert (format "Debian package search for %s\n\n" regexp))
+      (insert (format "Debian package search%sfor %s\n\n" 
+                      (if names-only " (names only)" " ") regexp))
       (cond
-       (current-prefix-arg
-        (call-process apt-utils-apt-cache-program nil t nil
-                      "search" regexp "--names-only")
+       (names-only
+        (apply 'call-process apt-utils-apt-cache-program nil t nil
+               "search" "--names-only" (split-string regexp "&&"))
         (setq apt-utils-current-packages (cons (cons regexp 'search-names-only) nil)))
        (t
-        (call-process apt-utils-apt-cache-program nil t nil "search" regexp)
+        (apply 'call-process apt-utils-apt-cache-program nil t nil "search"
+               (split-string regexp "&&"))
         (setq apt-utils-current-packages (cons (cons regexp 'search) nil))))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
@@ -261,12 +310,24 @@ With ARG, match names only."
   (interactive)
   (let (args
         (buffer "*APT package info*")
-        (fields (read-from-minibuffer "Search package fields: "))
-        (show (read-from-minibuffer "Show package fields: "))
+        (fields (apt-utils-read-fields "Search package fields: "))
+        (show (apt-utils-read-fields "Show package fields: "))
         (regexp (read-from-minibuffer "Search regexp: ")))
+    ;; Check args
+    (cond
+     ((equal (length fields) 0)
+      (error "No fields selected for search"))
+     ((equal (length show) 0)
+      (error "No fields selected for show"))
+     ((equal (length regexp) 0)
+      (error "No regexp selected")))
+
+    (setq fields (concat "-F" fields))
+    (setq show (concat "-s" show))
+
     (if (get-buffer buffer)
         (set-buffer buffer)
-      (set-buffer (get-buffer-create "*APT package info*"))
+      (set-buffer (get-buffer-create buffer))
       (apt-utils-mode)
       (setq truncate-lines nil))
     (let ((inhibit-read-only t))
@@ -275,7 +336,7 @@ With ARG, match names only."
       (setq args (append (list regexp fields show)
                          apt-utils-grep-dctrl-file-list))
       (insert (format "grep-dctrl search for %s\n\n"
-                      (mapconcat 
+                      (mapconcat
                        (lambda (elt)
                          (if (string-equal regexp elt)
                              (format "\"%s\"" regexp)
@@ -293,6 +354,35 @@ With ARG, match names only."
       (setq buffer-read-only t)
       (display-buffer buffer))))
 
+(defun apt-utils-read-fields (prompt)
+  "Read fields for `apt-utils-search-grep-dctrl'.
+Use PROMPT for `completing-read'."
+  (let ((chosen "foo")
+        (completion-ignore-case t)
+        ;; Why can't I use '() for the list?
+        (keywords (list "Architecture" "Bugs" "Conffiles" "Conflicts"
+                        "Depends" "Description" "Enhances" "Essential"
+                        "Filename" "Installed-Size" "MD5sum" "Maintainer"
+                        "Origin" "Package" "Pre-Depends" "Priority"
+                        "Provides" "Recommends" "Replaces" "Section"
+                        "Size" "Source" "Suggests" "Task" "Version" "url"))
+        fields)
+    (while (> (length chosen) 0)
+        (setq chosen
+              (completing-read prompt
+                               (mapcar (lambda (elt)
+                                         (list elt elt))
+                                       keywords)
+                               nil
+                               t))
+      (setq keywords (delete chosen keywords))
+      (if (stringp fields)
+          (progn
+            (when (> (length chosen) 0)
+              (setq fields (concat fields "," chosen))))
+        (setq fields chosen)))
+    fields))
+
 (defun apt-utils-toggle-package-info ()
   "Toggle between package and showpkg info for normal packages."
   (interactive)
@@ -300,22 +390,24 @@ With ARG, match names only."
     (error "Not in APT utils buffer"))
   (let ((package (caar apt-utils-current-packages))
         (type (cdar apt-utils-current-packages))
-        posn)
+        posns)
     (cond
      ((equal type 'normal)
-      (setq posn (apt-utils-update-buffer-positions 'toggle))
+      (setq posns (apt-utils-update-buffer-positions 'toggle))
       (setq apt-utils-current-packages
             (cons (cons package 'normal-showpkg)
                   (cdr apt-utils-current-packages)))
       (apt-utils-show-package (car apt-utils-current-packages))
-      (goto-char posn))
+      (goto-char (car posns))
+      (set-window-start (selected-window) (cadr posns)))
      ((equal type 'normal-showpkg)
-      (setq posn (apt-utils-update-buffer-positions 'toggle))
+      (setq posns (apt-utils-update-buffer-positions 'toggle))
       (setq apt-utils-current-packages
             (cons (cons package 'normal)
                   (cdr apt-utils-current-packages)))
       (apt-utils-show-package (car apt-utils-current-packages))
-      (goto-char posn))
+      (goto-char (car posns))
+      (set-window-start (selected-window) (cadr posns)))
      ((equal type 'virtual)
       (message "Cannot toggle info for virtual packages."))
      ((or (equal type 'search)
@@ -336,7 +428,7 @@ With ARG, match names only."
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-changelog-file package)))))
-    
+
 (defun apt-utils-view-changelog-file (package)
   "Find ChangeLog file for PACKAGE."
   (let ((file
@@ -360,7 +452,7 @@ With ARG, match names only."
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-debian-changelog-file package)))))
-    
+
 (defun apt-utils-view-debian-changelog-file (package)
   "Find Debian ChangeLog file for PACKAGE."
   (let ((file
@@ -384,7 +476,7 @@ With ARG, match names only."
    (t
     (let ((package (caar apt-utils-current-packages)))
       (apt-utils-view-readme-file package)))))
-    
+
 (defun apt-utils-view-readme-file (package)
   "Find README file for PACKAGE."
   (let ((file
@@ -481,14 +573,18 @@ Argument EVENT is a mouse event."
 
 (defun apt-utils-follow-link-internal (package)
   "Follow hyperlink for PACKAGE."
-  (if package
-      (progn
-        (apt-utils-update-buffer-positions 'forward)
-        (apt-utils-show-package package)
-        (setq apt-utils-current-packages
-              (cons (cons package (apt-utils-package-type package))
-                    apt-utils-current-packages)))
-    (message "No known package at point.")))
+  (cond
+   ((equal package 'broken)
+    (message "Package name is broken somehow"))
+   (package
+    (progn
+      (apt-utils-update-buffer-positions 'forward)
+      (apt-utils-show-package package)
+      (setq apt-utils-current-packages
+            (cons (cons package (apt-utils-package-type package))
+                  apt-utils-current-packages))))
+   (t
+    (message "No known package at point."))))
 
 ;; Go to previous package in list
 
@@ -499,9 +595,10 @@ Argument EVENT is a mouse event."
     (error "Not in APT utils buffer"))
   (if (cdr apt-utils-current-packages)
       (progn
-        (let ((posn (apt-utils-update-buffer-positions 'backward)))
+        (let ((posns (apt-utils-update-buffer-positions 'backward)))
           (apt-utils-show-package (cadr apt-utils-current-packages))
-          (goto-char posn))
+          (goto-char (car posns))
+          (set-window-start (selected-window) (cadr posns)))
         (setq apt-utils-current-packages (cdr apt-utils-current-packages)))
     (message "No previous packages.")))
 
@@ -600,7 +697,8 @@ ARG may be negative to move forward."
 
 (defun apt-utils-build-package-lists (&optional force)
   "Build list of Debian packages known to APT.
-With optional argument FORCE, rebuild list even if it is non-nil."
+With optional argument FORCE, rebuild the packages lists even if they
+are defined."
   (when (or force (null apt-utils-package-list))
     (unwind-protect
         (progn
@@ -628,21 +726,21 @@ With optional argument FORCE, rebuild list even if it is non-nil."
           ;; Massage (for use with completing read)
           (setq apt-utils-package-list
                 (mapcar (lambda (elt)
-                          (cons (downcase (symbol-name elt)) nil))
+                          (cons (symbol-name elt) nil))
                         apt-utils-package-list))
           (setq apt-utils-virtual-package-list
                 (mapcar (lambda (elt)
-                          (cons (downcase (symbol-name elt)) nil))
+                          (cons (symbol-name elt) nil))
                         apt-utils-virtual-package-list))
           ;; Hash table listing package types
           (if (hash-table-p apt-utils-package-hashtable)
               (clrhash apt-utils-package-hashtable))
           (setq apt-utils-package-hashtable (make-hash-table :test 'equal))
           (mapcar (lambda (elt)
-                    (puthash (downcase (car elt)) 'normal apt-utils-package-hashtable))
+                    (puthash (car elt) 'normal apt-utils-package-hashtable))
                   apt-utils-package-list)
           (mapcar (lambda (elt)
-                    (puthash (downcase (car elt)) 'virtual apt-utils-package-hashtable))
+                    (puthash (car elt) 'virtual apt-utils-package-hashtable))
                   apt-utils-virtual-package-list)
           (message "Building Debian package lists...done")
           (setq apt-utils-package-lists-built t))
@@ -652,6 +750,11 @@ With optional argument FORCE, rebuild list even if it is non-nil."
               apt-utils-virtual-package-list nil)
         (if (hash-table-p apt-utils-package-hashtable)
             (clrhash apt-utils-package-hashtable))))))
+
+(defun apt-utils-rebuild-package-lists ()
+  "Rebuild the APT package lists."
+  (interactive)
+  (apt-utils-build-package-lists t))
 
 (defun apt-utils-choose-package ()
   "Choose a Debian package from list."
@@ -666,28 +769,18 @@ With optional argument FORCE, rebuild list even if it is non-nil."
   "Add hyperlinks to related Debian packages."
   (let ((keywords '("Conflicts" "Depends" "Pre-Depends" "Package"
                     "Provides" "Recommends" "Replaces" "Suggests"))
-        keywords-maxlen regexp)
-    (when apt-utils-fill-packages
-      (setq keywords-maxlen
-            (car
-             (sort
-              (mapcar
-               (lambda (elt)
-                 ;; Search for header
-                 (goto-char (point-min))
-                 (if (re-search-forward (concat "^" elt ": ") nil t)
-                     (length elt)
-                   0)
-                 ) keywords) #'>))))
+        match)
     (setq apt-utils-current-links nil)
-    (while keywords
-      (setq regexp (concat "^" (car keywords) ": "))
-      (goto-char (point-min))
-      (while (re-search-forward regexp (point-max) t)
-        ;; Padding
-        (when apt-utils-fill-packages
-          (insert
-           (make-string (- keywords-maxlen (length (car keywords))) ? )))
+    (goto-char (point-min))
+    (while (re-search-forward "^\\([^ \n:]+\\): " (point-max) t)
+      (setq match (match-string 1))
+      (add-text-properties (1- (point))
+                           (save-excursion
+                             (beginning-of-line)
+                             (point))
+                           '(face apt-utils-field-keyword-face))
+      (cond
+       ((member match keywords)
         ;; Find packages
         (let ((packages
                ;; Packages split by commas, or alternatives by
@@ -721,28 +814,52 @@ With optional argument FORCE, rebuild list even if it is non-nil."
             (setq length-no-version (length package))
             ;; Package type
             (cond
-             ((equal (apt-utils-package-type package) 'normal)
+             ((equal (apt-utils-package-type package t) 'normal)
               (setq face 'apt-utils-normal-package-face))
-             ((equal (apt-utils-package-type package) 'virtual)
-              (setq face 'apt-utils-virtual-package-face)))
+             ((equal (apt-utils-package-type package t) 'virtual)
+              (setq face 'apt-utils-virtual-package-face))
+             (t
+              (setq face 'apt-utils-broken-face)
+              (setq package 'broken)))
             ;; Add text properties
             (add-text-properties (point) (+ (point) length-no-version)
                                  `(face ,face
                                         mouse-face highlight
                                         apt-package ,package))
+            ;; Version?
+            (when (> length length-no-version)
+              (add-text-properties (+ (point) length-no-version 1)
+                                   (+ (point) length)
+                                   '(face apt-utils-version-face)))
             ;; Fill package names
-            (and apt-utils-fill-packages
-                 (> (current-column) (+ 2 keywords-maxlen))
-                 (> (+ (current-column) length) fill-column)
-                 (insert "\n" (make-string (+ 2 keywords-maxlen) ? )))
+            (when (and apt-utils-fill-packages
+                       (> (current-column) (+ 2 (length match)))
+                       (> (+ (current-column) length) fill-column))
+              (when (equal (char-before) ?\ )
+                (delete-char -1))          ; trailing whitespace
+              (insert "\n" (make-string (+ 2 (length match)) ? )))
             ;; Store list of unique package links
             (unless (member package apt-utils-current-links)
               (setq apt-utils-current-links
-                      (cons package apt-utils-current-links)))
+                    (cons package apt-utils-current-links)))
             (forward-char length)
             (skip-chars-forward ", |")
             (setq packages (cdr packages)))))
-      (setq keywords (cdr keywords)))))
+       ((equal match "Description")
+        (add-text-properties (point)
+                             (save-excursion
+                               (or
+                                (re-search-forward "^[^ ]" (point-max) t)
+                                (progn
+                                  (end-of-buffer)
+                                  (point))))
+                             '(face apt-utils-description-face)))
+       (t
+        (add-text-properties (1- (point))
+                             (save-excursion
+                               (end-of-line)
+                               (point))
+                             '(face apt-utils-field-contents-face)))))))
 
 (defun apt-utils-add-showpkg-links ()
   "Add hyperlinks to related Debian packages."
@@ -769,15 +886,18 @@ With optional argument FORCE, rebuild list even if it is non-nil."
               (setq apt-utils-current-links
                     (cons link apt-utils-current-links))
               (cond
-               ((equal (apt-utils-package-type link) 'normal)
+               ((equal (apt-utils-package-type link t) 'normal)
                 (setq face 'apt-utils-normal-package-face))
-               ((equal (apt-utils-package-type link) 'virtual)
-                (setq face 'apt-utils-virtual-package-face)))
+               ((equal (apt-utils-package-type link t) 'virtual)
+                (setq face 'apt-utils-virtual-package-face))
+               (t
+                (setq face 'apt-utils-broken-face)
+                (setq link 'broken)))
               (add-text-properties (match-beginning 1) (match-end 1)
                                    `(face ,face
                                           mouse-face highlight
                                           apt-package ,link)))
-            (forward-line))))
+          (forward-line))))
       (setq keywords (cdr keywords)))))
 
 (defun apt-utils-add-search-links ()
@@ -795,21 +915,33 @@ With optional argument FORCE, rebuild list even if it is non-nil."
         (setq apt-utils-current-links
               (cons link apt-utils-current-links)))
       (cond
-       ((equal (apt-utils-package-type link) 'normal)
+       ((equal (apt-utils-package-type link t) 'normal)
         (setq face 'apt-utils-normal-package-face))
-       ((equal (apt-utils-package-type link) 'virtual)
-        (setq face 'apt-utils-virtual-package-face)))
+       ((equal (apt-utils-package-type link t) 'virtual)
+        (setq face 'apt-utils-virtual-package-face))
+       (t
+        (setq face 'apt-utils-broken-face)
+        (setq link 'broken)))
       (add-text-properties (match-beginning 1) (match-end 1)
                            `(face ,face
                                   mouse-face highlight
                                   apt-package ,link)))))
 
-(defun apt-utils-package-type (package)
-  "Return what type of package PACKAGE is."
+(defun apt-utils-package-type (package &optional no-error)
+  "Return what type of package PACKAGE is.
+With optional argument NO-ERROR, don't flag an error for unknown
+packages."
   (unless apt-utils-package-lists-built
     (apt-utils-build-package-lists))
   (or (gethash package apt-utils-package-hashtable)
-      (error "Unknown type for package \"%s\"" package)))
+      (cond
+       (no-error
+        nil)
+       (t
+        (error
+         (substitute-command-keys
+          "Package name is broken: rebuilding package lists using \\[apt-utils-rebuild-package-lists] may help")
+         package)))))
 
 (defun apt-utils-package-at ()
   "Get package at point."
@@ -818,13 +950,16 @@ With optional argument FORCE, rebuild list even if it is non-nil."
 (defun apt-utils-package-at-message ()
   "Emit message describing package at point."
   (let ((package (apt-utils-package-at)))
-    (if package
-        (with-temp-buffer
-          (call-process apt-utils-apt-cache-program nil t nil "show" package)
-          (if (re-search-backward "^Description: \\(.*\\)$" (point-min) t)
-              (message "%s: %s" package (match-string 1))
-            (message "%s: virtual package (no description)."
-                     package))))))
+    (cond
+     ((equal package 'broken)
+      (message "Package name is broken somehow"))
+     (package
+      (with-temp-buffer
+        (call-process apt-utils-apt-cache-program nil t nil "show" package)
+        (if (re-search-backward "^Description: \\(.*\\)$" (point-min) t)
+            (message "%s: %s" package (match-string 1))
+          (message "%s: virtual package (no description)."
+                   package)))))))
 
 (defun apt-utils-quit ()
   "Quit the *APT package info* buffer."
@@ -840,7 +975,7 @@ With optional argument FORCE, rebuild list even if it is non-nil."
 (defun apt-utils-update-buffer-positions (type)
   "Update `apt-utils-buffer-positions'.
 TYPE can be forward, backward, or toggle."
-  (let (posn)
+  (let (posns)
     (cond
      ((eq type 'forward)
       ;; Make the key unique; we could visit the same package more
@@ -849,7 +984,7 @@ TYPE can be forward, backward, or toggle."
                        (caar apt-utils-current-packages)
                        (cdar apt-utils-current-packages)
                        (length apt-utils-current-packages))
-               (point)
+               (list (point) (window-start (selected-window)))
                apt-utils-buffer-positions))
      ((eq type 'backward)
       ;; Remove old values
@@ -866,7 +1001,7 @@ TYPE can be forward, backward, or toggle."
                        (length apt-utils-current-packages))
                apt-utils-buffer-positions)
       ;; Get position for previous package
-      (setq posn
+      (setq posns
             (gethash (format "%s/%s/%d"
                              (caadr apt-utils-current-packages)
                              (cdadr apt-utils-current-packages)
@@ -887,41 +1022,45 @@ TYPE can be forward, backward, or toggle."
                          package
                          old
                          (length apt-utils-current-packages))
-                 (point)
+                 (list (point) (window-start (selected-window)))
                  apt-utils-buffer-positions)
         ;; Get position for new entry
-        (setq posn
+        (setq posns
               (gethash (format "%s/%s/%d"
                                package
                                new
                                (length apt-utils-current-packages))
                        apt-utils-buffer-positions
-                       1))              ; default value
+                       (list 1 1)))     ; default value
         )))
-    posn))
+    posns))
 
 ;; Mode settings
 
 (defvar apt-utils-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "1")         'delete-other-windows)
-    (define-key map (kbd "?")         'describe-mode)
-    (define-key map (kbd "<")         'apt-utils-view-previous-package)
-    (define-key map (kbd ">")         'apt-utils-choose-package-link)
-    (define-key map (kbd "c")         'apt-utils-view-changelog)
-    (define-key map (kbd "C")         'apt-utils-view-debian-changelog)
-    (define-key map (kbd "q")         'apt-utils-quit)
-    (define-key map (kbd "l")         'apt-utils-list-package-files)
-    (define-key map (kbd "r")         'apt-utils-view-readme)
-    (define-key map (kbd "R")         'apt-utils-view-debian-readme)
-    (define-key map (kbd "s")         'apt-utils-show-package)
-    (define-key map (kbd "S")         'apt-utils-search)
-    (define-key map (kbd "t")         'apt-utils-toggle-package-info)
-    (define-key map (kbd "SPC")       'scroll-up)
-    (define-key map (kbd "DEL")       'scroll-down)
-    (define-key map (kbd "RET")       'apt-utils-follow-link)
-    (define-key map (kbd "TAB")       'apt-utils-next-package)
-    (define-key map (kbd "M-TAB")     'apt-utils-previous-package)
+    (define-key map (kbd "#")             'apt-utils-rebuild-package-lists)
+    (define-key map (kbd "1")             'delete-other-windows)
+    (define-key map (kbd "?")             'describe-mode)
+    (define-key map (kbd "<")             'apt-utils-view-previous-package)
+    (define-key map (kbd ">")             'apt-utils-choose-package-link)
+    (define-key map (kbd "c")             'apt-utils-view-changelog)
+    (define-key map (kbd "C")             'apt-utils-view-debian-changelog)
+    (define-key map (kbd "q")             'apt-utils-quit)
+    (define-key map (kbd "l")             'apt-utils-list-package-files)
+    (define-key map (kbd "n")             'apt-utils-search-names-only)
+    (define-key map (kbd "r")             'apt-utils-view-readme)
+    (define-key map (kbd "R")             'apt-utils-view-debian-readme)
+    (define-key map (kbd "s")             'apt-utils-show-package)
+    (define-key map (kbd "S")             'apt-utils-search)
+    (define-key map (kbd "t")             'apt-utils-toggle-package-info)
+    (define-key map (kbd "SPC")           'scroll-up)
+    (define-key map (kbd "DEL")           'scroll-down)
+    (define-key map (kbd "RET")           'apt-utils-follow-link)
+    (define-key map (kbd "TAB")           'apt-utils-next-package)
+    (define-key map (kbd "M-TAB")         'apt-utils-previous-package)
+    (define-key map [(shift tab)]         'apt-utils-previous-package)
+    (define-key map [(shift iso-lefttab)] 'apt-utils-previous-package)
     (if apt-utils-xemacs-p
         (define-key map '(button2) 'apt-utils-mouse-follow-link)
       (define-key map (kbd "<mouse-2>") 'apt-utils-mouse-follow-link))
@@ -945,6 +1084,8 @@ TYPE can be forward, backward, or toggle."
       ["Previous Package"      apt-utils-previous-package t]
       ["Follow Link"           apt-utils-follow-link t]
       ["Search"                apt-utils-search t]
+      ["Search (names only)"   apt-utils-search-names-only t]
+      ["Rebuild Package Lists" apt-utils-rebuild-package-lists t]
       "---"
       ["View ChangeLog"        apt-utils-view-changelog t]
       ["View Debian ChangeLog" apt-utils-view-debian-changelog t]
