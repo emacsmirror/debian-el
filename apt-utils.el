@@ -60,6 +60,11 @@
   :group 'apt-utils
   :type 'boolean)
 
+(defcustom apt-utils-show-all-versions nil
+  "*Show APT descriptions for multiple package versions if t."
+  :group 'apt-utils
+  :type 'boolean)
+
 ;; Faces
 
 (defface apt-utils-normal-package-face
@@ -163,7 +168,7 @@ These are stored in a hash table.")
 
 ;;;###autoload
 (defun apt-utils-show-package (&optional arg)
-  "Write APT package information to buffer.
+  "Present Debian package information in a dedicated buffer.
 With ARG, choose that package, otherwise prompt for one."
   (interactive)
   (let ((buffer "*APT package info*")
@@ -197,11 +202,12 @@ With ARG, choose that package, otherwise prompt for one."
       (cond
        ((equal type 'normal)
         (call-process apt-utils-apt-cache-program nil t nil "show" package)
-        ;; Remove old versions
-        (goto-char (point-min))
-        (re-search-forward "^$")
-        (unless (eobp)
-          (delete-region (point) (point-max)))
+        ;; Remove old versions if not wanted
+        (unless apt-utils-show-all-versions
+          (goto-char (point-min))
+          (re-search-forward "^$")
+          (unless (eobp)
+            (delete-region (point) (point-max))))
         (apt-utils-add-package-links))
        ;; Virtual package or normal package w/ showpkg
        ((or (equal type 'virtual) (equal type 'normal-showpkg))
@@ -211,13 +217,13 @@ With ARG, choose that package, otherwise prompt for one."
        ((equal type 'search)
         (insert (format "Debian package search for %s\n\n" package))
         (apply 'call-process apt-utils-apt-cache-program nil t nil
-               "search" (split-string package "&&"))
+               "search" "--" (split-string package "&&"))
         (apt-utils-add-search-links))
        ;; Search for names only
        ((equal type 'search-names-only)
         (insert (format "Debian package search (names only) for %s\n\n" package))
         (apply 'call-process apt-utils-apt-cache-program nil t nil
-                      "search" "--names-only" (split-string package "&&"))
+               "search" "--names-only" "--" (split-string package "&&"))
         (apt-utils-add-search-links))
        ((equal type 'search-grep-dctrl)
         (insert (format "grep-dctrl search for %s\n\n"
@@ -239,36 +245,41 @@ With ARG, choose that package, otherwise prompt for one."
 Only works for installed packages; uses `apt-utils-dpkg-program'."
   (interactive)
   (let ((package (caar apt-utils-current-packages))
+        (type (cdar apt-utils-current-packages))
         files posn)
-    (with-temp-buffer
-      (insert "(setq files '(\n")
-      (setq posn (point))
-      (call-process apt-utils-dpkg-program nil t nil "-L" package)
-      (goto-char posn)
-      (while (re-search-forward "^\\(.+\\)$" nil t)
-        (replace-match "\"\\1\""))
-      (insert "))")
-      ;; Check for files
-      (cond
-       ((or (search-backward "does not contain any files" nil t)
-            (search-backward "is not installed" nil t))
-        (message "Package does not contain any files/is not installed."))
-       (t
-        (eval-buffer)
-        (setq files
-              (delq nil
-                    (mapcar (lambda (elt)
-                              (if (or (file-regular-p elt)
-                                      (string-equal "/." elt))
-                                  elt
-                                nil))
-                            files)))
-        ;; Some versions of Emacs won't update dired for the same
-        ;; directory name if it already exists
-        (if (buffer-live-p apt-utils-dired-buffer)
-            (kill-buffer apt-utils-dired-buffer))
-        (setq apt-utils-dired-buffer (dired-noselect files))
-        (display-buffer apt-utils-dired-buffer))))))
+    (cond
+     ((or (equal type 'normal) (equal type 'normal-showpkg))
+      (with-temp-buffer
+        (insert "(setq files '(\n")
+        (setq posn (point))
+        (call-process apt-utils-dpkg-program nil t nil "-L" package)
+        (goto-char posn)
+        (while (re-search-forward "^\\(.+\\)$" nil t)
+          (replace-match "\"\\1\""))
+        (insert "))")
+        ;; Check for files
+        (cond
+         ((or (search-backward "does not contain any files" nil t)
+              (search-backward "is not installed" nil t))
+          (message "Package does not contain any files/is not installed."))
+         (t
+          (eval-buffer)
+          (setq files
+                (delq nil
+                      (mapcar (lambda (elt)
+                                (if (or (file-regular-p elt)
+                                        (string-equal "/." elt))
+                                    elt
+                                  nil))
+                              files)))
+          ;; Some versions of Emacs won't update dired for the same
+          ;; directory name if it already exists
+          (if (buffer-live-p apt-utils-dired-buffer)
+              (kill-buffer apt-utils-dired-buffer))
+          (setq apt-utils-dired-buffer (dired-noselect files))
+          (display-buffer apt-utils-dired-buffer)))))
+     (t
+      (message "No files associated for type: %s" type)))))
 
 ;;;###autoload
 (defun apt-utils-search ()
@@ -301,11 +312,11 @@ With NAMES-ONLY, match names only."
       (cond
        (names-only
         (apply 'call-process apt-utils-apt-cache-program nil t nil
-               "search" "--names-only" (split-string regexp "&&"))
+               "search" "--names-only" "--" (split-string regexp "&&"))
         (setq apt-utils-current-packages (cons (cons regexp 'search-names-only) nil)))
        (t
-        (apply 'call-process apt-utils-apt-cache-program nil t nil "search"
-               (split-string regexp "&&"))
+        (apply 'call-process apt-utils-apt-cache-program nil t nil
+               "search" "--" (split-string regexp "&&"))
         (setq apt-utils-current-packages (cons (cons regexp 'search) nil))))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
@@ -444,7 +455,8 @@ Use PROMPT for `completing-read'."
   "Find ChangeLog file for PACKAGE."
   (let ((file
          (apt-utils-find-readable-file
-          (format "/usr/share/doc/%s/changelog" package)
+          (format "/usr/share/doc/%s/" package)
+          '("CHANGELOG" "ChangeLog" "Changelog" "changelog")
           '("" ".gz"))))
     (if file
         (apt-utils-view-file file)
@@ -468,11 +480,62 @@ Use PROMPT for `completing-read'."
   "Find Debian ChangeLog file for PACKAGE."
   (let ((file
          (apt-utils-find-readable-file
-          (format "/usr/share/doc/%s/changelog.Debian" package)
-          '("" ".gz"))))
+          (format "/usr/share/doc/%s/" package)
+          '("changelog.Debian")
+          '(".gz"))))
     (if file
         (apt-utils-view-file file)
       (message "No Debian ChangeLog file found for %s." package))))
+
+;; Find NEWS files
+
+(defun apt-utils-view-news ()
+  "Find NEWS for current package."
+  (interactive)
+  (cond
+   ((not (equal major-mode 'apt-utils-mode))
+    (message "Not in APT utils buffer."))
+   ((not (equal (cdar apt-utils-current-packages) 'normal))
+    (message "Not a normal package."))
+   (t
+    (let ((package (caar apt-utils-current-packages)))
+      (apt-utils-view-news-file package)))))
+
+(defun apt-utils-view-news-file (package)
+  "Find NEWS file for PACKAGE."
+  (let ((file
+         (apt-utils-find-readable-file
+          (format "/usr/share/doc/%s/" package)
+          '("NEWS")
+          '("" ".gz"))))
+    (if file
+        (apt-utils-view-file file)
+      (message "No NEWS file found for %s." package))))
+
+;; Find Debian NEWS files
+
+(defun apt-utils-view-debian-news ()
+  "Find Debian NEWS for current package."
+  (interactive)
+  (cond
+   ((not (equal major-mode 'apt-utils-mode))
+    (message "Not in APT utils buffer."))
+   ((not (equal (cdar apt-utils-current-packages) 'normal))
+    (message "Not a normal package."))
+   (t
+    (let ((package (caar apt-utils-current-packages)))
+      (apt-utils-view-debian-news-file package)))))
+
+(defun apt-utils-view-debian-news-file (package)
+  "Find Debian NEWS file for PACKAGE."
+  (let ((file
+         (apt-utils-find-readable-file
+          (format "/usr/share/doc/%s/" package)
+          '("NEWS.Debian")
+          '(".gz"))))
+    (if file
+        (apt-utils-view-file file)
+      (message "No Debian NEWS file found for %s." package))))
 
 ;; Find README files
 
@@ -492,7 +555,8 @@ Use PROMPT for `completing-read'."
   "Find README file for PACKAGE."
   (let ((file
          (apt-utils-find-readable-file
-          (format "/usr/share/doc/%s/README" package)
+          (format "/usr/share/doc/%s/" package)
+          '("README")
           '("" ".gz"))))
     (if file
         (apt-utils-view-file file)
@@ -516,19 +580,51 @@ Use PROMPT for `completing-read'."
   "Find Debian README file for PACKAGE."
   (let ((file
          (apt-utils-find-readable-file
-          (format "/usr/share/doc/%s/README" package)
-          '(".Debian" ".Debian.gz" ".debian" ".debian.gz"))))
+          (format "/usr/share/doc/%s/" package)
+          '("README.Debian" "README.debian")
+          '("" ".gz"))))
     (if file
         (apt-utils-view-file file)
       (message "No Debian README file found for %s." package))))
 
-(defun apt-utils-find-readable-file (root suffixes)
-  "Find a readable file composed of ROOT and one of SUFFIXES."
+;; Find copyright files
+
+(defun apt-utils-view-copyright ()
+  "Find copyright file for current package."
+  (interactive)
+  (cond
+   ((not (equal major-mode 'apt-utils-mode))
+    (message "Not in APT utils buffer."))
+   ((not (equal (cdar apt-utils-current-packages) 'normal))
+    (message "Not a normal package."))
+   (t
+    (let ((package (caar apt-utils-current-packages)))
+      (apt-utils-view-copyright-file package)))))
+
+(defun apt-utils-view-copyright-file (package)
+  "Find copyright file for PACKAGE."
+  (let ((file
+         (apt-utils-find-readable-file
+          (format "/usr/share/doc/%s/copyright" package)
+          '("")
+          '(""))))
+    (if file
+        (apt-utils-view-file file)
+      (message "No copyright file found for %s." package))))
+
+;; File-related utility functions
+
+(defun apt-utils-find-readable-file (dir prefixes suffixes)
+  "Find a readable file composed of directory prefix and suffix.
+Directory is DIR, prefix is one of PREFIXES and suffix is one of
+SUFFIXES."
   (catch 'found
-    (mapcar (lambda (suffix)
-              (when (file-readable-p (concat root suffix))
-                (throw 'found (concat root suffix))))
-            suffixes)
+    (mapcar (lambda (prefix)
+              (mapcar (lambda (suffix)
+                        (when (file-readable-p (concat dir prefix suffix))
+                          (throw 'found (concat dir prefix suffix))))
+                      suffixes))
+            prefixes)
     nil))                               ; Return nil, if no file found
 
 (defun apt-utils-view-file (file)
@@ -631,10 +727,7 @@ ARG may be negative to move backward."
     (goto-char (next-single-property-change (point)
                                                  'apt-package)))
    (t
-    (let ((pos (point))
-          (number arg)
-          (old (apt-utils-package-at))
-          new)
+    (let ((old (apt-utils-package-at)))
       ;; Forward.
       (while (> arg 0)
         (cond ((eobp)
@@ -769,10 +862,14 @@ are defined."
 
 (defun apt-utils-choose-package ()
   "Choose a Debian package from list."
-  (completing-read "Choose Debian package: "
-                   (append (apt-utils-package-list)
-                         (apt-utils-virtual-package-list))
-                   nil t))
+  (let ((package
+         (and (eq major-mode 'apt-utils-mode)
+              (cadr (member 'apt-package
+                            (text-properties-at (point)))))))
+    (completing-read "Choose Debian package: "
+                     (append (apt-utils-package-list)
+                             (apt-utils-virtual-package-list))
+                     nil t package)))
 
 ;; Add hyperlinks
 
@@ -896,8 +993,9 @@ are defined."
                       (looking-at "^\\(.*\\) "))
               (setq link (match-string 1))
               ;; Store list of unique package links
-              (setq apt-utils-current-links
-                    (cons link apt-utils-current-links))
+              (unless (member link apt-utils-current-links)
+                (setq apt-utils-current-links
+                      (cons link apt-utils-current-links)))
               (cond
                ((equal (apt-utils-package-type link t) 'normal)
                 (setq face 'apt-utils-normal-package-face))
@@ -916,15 +1014,14 @@ are defined."
 (defun apt-utils-add-search-links ()
   "Add hyperlinks to related Debian packages."
   (let ((inhibit-read-only t)
-        start end face link)
+        face link)
     (setq apt-utils-current-links nil)
     (goto-char (point-min))
     (forward-line 2)                    ; Move past header
     (while (re-search-forward "^\\([^ ]+\\) - " (point-max) t)
       (setq link (match-string 1))
       ;; Store list of unique package links
-      (when
-          (not (member link apt-utils-current-links))
+      (unless (member link apt-utils-current-links)
         (setq apt-utils-current-links
               (cons link apt-utils-current-links)))
       (cond
@@ -1077,7 +1174,8 @@ TYPE can be forward, backward, or toggle."
                 ;; Packages split by commas, or alternatives by vertical
                 ;; bars; for Enhances, multiple lines my be spanned
                 (split-string (buffer-substring (point-min) (point-max))
-                              " ?[,|] ?"))))
+                              " ?[,|] ?")))
+        packages)
        (t
         (message "Not on package field line.")
         nil)))))
@@ -1096,30 +1194,33 @@ TYPE can be forward, backward, or toggle."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "#")             'apt-utils-rebuild-package-lists)
     (define-key map (kbd "1")             'delete-other-windows)
-    (define-key map (kbd "?")             'describe-mode)
     (define-key map (kbd "<")             'apt-utils-view-previous-package)
     (define-key map (kbd ">")             'apt-utils-choose-package-link)
-    (define-key map (kbd "c")             'apt-utils-view-changelog)
+    (define-key map (kbd "?")             'describe-mode)
     (define-key map (kbd "C")             'apt-utils-view-debian-changelog)
-    (define-key map (kbd "g")             'apt-utils-search-grep-dctrl)
-    (define-key map (kbd "q")             'apt-utils-quit)
-    (define-key map (kbd "l")             'apt-utils-list-package-files)
-    (define-key map (kbd "n")             'apt-utils-search-names-only)
-    (define-key map (kbd "r")             'apt-utils-view-readme)
-    (define-key map (kbd "R")             'apt-utils-view-debian-readme)
-    (define-key map (kbd "s")             'apt-utils-show-package)
-    (define-key map (kbd "S")             'apt-utils-search)
-    (define-key map (kbd "t")             'apt-utils-toggle-package-info)
-    (define-key map (kbd "SPC")           'scroll-up)
     (define-key map (kbd "DEL")           'scroll-down)
-    (define-key map (kbd "RET")           'apt-utils-follow-link)
-    (define-key map (kbd "TAB")           'apt-utils-next-package)
     (define-key map (kbd "M-TAB")         'apt-utils-previous-package)
-    (define-key map [(shift tab)]         'apt-utils-previous-package)
+    (define-key map (kbd "N")             'apt-utils-view-debian-news)
+    (define-key map (kbd "R")             'apt-utils-view-debian-readme)
+    (define-key map (kbd "RET")           'apt-utils-follow-link)
+    (define-key map (kbd "S")             'apt-utils-search)
+    (define-key map (kbd "SPC")           'scroll-up)
+    (define-key map (kbd "TAB")           'apt-utils-next-package)
+    (define-key map (kbd "c")             'apt-utils-view-changelog)
+    (define-key map (kbd "g")             'apt-utils-search-grep-dctrl)
+    (define-key map (kbd "i")             'apt-utils-view-copyright)
+    (define-key map (kbd "l")             'apt-utils-list-package-files)
+    (define-key map (kbd "n")             'apt-utils-view-news)
+    (define-key map (kbd "o")             'apt-utils-search-names-only)
+    (define-key map (kbd "q")             'apt-utils-quit)
+    (define-key map (kbd "r")             'apt-utils-view-readme)
+    (define-key map (kbd "s")             'apt-utils-show-package)
+    (define-key map (kbd "t")             'apt-utils-toggle-package-info)
     (define-key map [(shift iso-lefttab)] 'apt-utils-previous-package)
-    (if apt-utils-xemacs-p
-        (define-key map '(button2) 'apt-utils-mouse-follow-link)
-      (define-key map (kbd "<mouse-2>") 'apt-utils-mouse-follow-link))
+    (define-key map [(shift tab)]         'apt-utils-previous-package)
+    (define-key map
+      (if apt-utils-xemacs-p '(button2) (kbd "<mouse-2>"))
+      'apt-utils-mouse-follow-link)
     map)
   "Keymap for apt-utils mode.")
 
@@ -1150,19 +1251,41 @@ TYPE can be forward, backward, or toggle."
       ["View Debian ChangeLog" apt-utils-view-debian-changelog t]
       ["View README"           apt-utils-view-readme t]
       ["View Debian README"    apt-utils-view-debian-readme t]
+      ["View NEWS"             apt-utils-view-news t]
+      ["View Debian NEWS"      apt-utils-view-debian-news t]
+      ["View copyright"        apt-utils-view-copyright t]
       "---"
       ["Rebuild Package Lists" apt-utils-rebuild-package-lists t]
       "---"
       ["Quit"                  apt-utils-quit t])))
 
 (defun apt-utils-mode ()
-  "Major mode for controlling the *APT package info* buffer.
+  "Major mode to interface Emacs with APT (Debian package management).
+
+Start things off using e.g.:
+    
+    M-x apt-utils-show-package RET emacs21 RET
+
+Other packages (dependencies, conflicts etc) can be navigated
+using `apt-utils-next-package', `apt-utils-previous-package',
+`apt-utils-choose-package-link' or `apt-utils-follow-link'.
+Return to the previous package with
+`apt-utils-view-previous-package'. ChangeLog and README files for
+the current package can easily be accessed with, for example,
+`apt-utils-view-changelog'.
+
+For normal (i.e., not virtual) packages, the information can be
+toggled between `package' and `showpkg' displays using
+`apt-utils-toggle-package-info'; the latter is useful for the
+Reverse Depends.
 
 \\{apt-utils-mode-map}"
   (kill-all-local-variables)
   (use-local-map apt-utils-mode-map)
   (setq major-mode 'apt-utils-mode)
   (setq mode-name "APT utils")
+  (setq buffer-undo-list t)
+  ;; XEmacs
   (when (and (fboundp 'easy-menu-add)
              apt-utils-menu)
     (easy-menu-add apt-utils-menu))
