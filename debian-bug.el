@@ -168,7 +168,7 @@
 ;;    debian-bug: Check if empty Subject field has trailing space.  Should
 ;;     fix bug #173040 and part of #177259.
 ;; V1.37 10Apr2003 Peter S Galbraith <psg@debian.org>
-;;  - Switch priority of reportbug and bug, preferring reportbug. 
+;;  - Switch priority of reportbug and bug, preferring reportbug.
 ;;  - send to maintonly if priority wishlist or minor.  Closes: #176429.
 ;; V1.38 14Apr2003 Peter S Galbraith <psg@debian.org>
 ;;  - Revert `send to maintonly if priority wishlist or minor' change.
@@ -179,6 +179,7 @@
 ;;  - Use executable-find.  Patch contributed by Romain FRANCOISE
 ;;    <romain@orebokech.com>.  Closes: #189605
 ;;  - New actions in Bugs list menu: can now read bug reports as file or Email!
+;;  - Apply checkdoc patch from Bill Wohler <wohler@newt.com>. Thanks!
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -200,6 +201,7 @@
 
 ;;; User customizable variables:
 
+;;; Code:
 (defgroup debian-bug nil "Debian Bug report helper"
   :group 'tools
   :prefix "debian-bug-")
@@ -225,12 +227,12 @@ Use it to specify what email your bugs will be archived under."
   :type 'boolean)
 
 (defcustom debian-bug-download-directory "~/"
-  "Directory for mbox file downloads from the Debian BTS"
+  "Directory for mbox file downloads from the Debian BTS."
   :group 'debian-bug
   :type 'directory)
 
-(defcustom debian-bug-MH-E-folder "+debian-bug"
-  "The folder to put all bug folders into when using MH-E (7.3 or better)"
+(defcustom debian-bug-mh-folder "+debian-bug"
+  "The folder to put all bug folders into when using MH-E (7.3 or better)."
   :group 'debian-bug
   :type '(choice (string :tag "Folder name")
                  (const :tag "Don't use a folder"  nil)))
@@ -239,7 +241,7 @@ Use it to specify what email your bugs will be archived under."
 ;; (defcustom debian-bug-create-package-directories-flag nil
 ;;   "Non-nil means to create a directory for each package.
 ;; For rmail, this means a directory beneath `debian-bug-download-directory'.
-;; For MH-E, this means a folder beneath `debian-bug-MH-E-folder'."
+;; For MH-E, this means a folder beneath `debian-bug-mh-folder'."
 ;;   :group 'debian-bug
 ;;   :type 'boolean)
 
@@ -248,11 +250,11 @@ Use it to specify what email your bugs will be archived under."
 
 ;;; Guess From address initial value (if not set via customize)
 (defun debian-bug-From-address-init ()
-  "Return email to use for the From: line of the BTS email
+  "Return email to use for the From: line of the BTS email.
 The full name is from the environment variable DEBFULLNAME or else the
-user-full-name variable.
+variable `user-full-name'.
 The email address is from the environment variable DEBEMAIL or EMAIL,
-or else the user-mail-address variable."
+or else the `user-mail-address' variable."
   (let ((fullname (or (getenv "DEBFULLNAME")
                       (getenv "DEBNAME") ; reportbug
                       (getenv "NAME")   ;  reportbug
@@ -273,13 +275,13 @@ or else the user-mail-address variable."
 
 (defcustom debian-bug-From-address (debian-bug-From-address-init)
   "Email address to use for the From: and CC: lines of Debian bug reports.
-The default value is obtained from the function debian-bug-From-address-init."
+The default value is obtained from the function `debian-bug-From-address-init'."
   :group 'debian-bug
   :type 'string)
 
 (defcustom debian-bug-always-CC-myself t
   "Insert a CC line to myself in the bug report header.
-Will only actually do it if the variable debian-bug-From-address is set."
+Will only actually do it if the variable `debian-bug-From-address' is set."
   :group 'debian-bug
   :type 'boolean)
 
@@ -329,7 +331,7 @@ when the shell commands \"bug\" and \"reportbug\" are not available")
 (defvar debian-bug-tags-alist
   '(("patch") ("security") ("upstream"))
 ;;'(("patch") ("security") ("upstream") ("potato") ("woody") ("sid"))
-  "alist of valid Tags.")
+  "Alist of valid Tags.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "boot-floppy" "bugs.debian.org" "cdimage.debian.org" "cdrom"
@@ -337,8 +339,8 @@ when the shell commands \"bug\" and \"reportbug\" are not available")
     "lists.debian.org" "mirrors" "nonus.debian.org" "potato-cd" "press"
     "project" "qa.debian.org" "security.debian.org" "tech-ctte" "wnpp"
     "www.debian.org")
-  "List of Debian pseudo packages added (to packages-obarray) for completion
-from http://www.debian.org/Bugs/pseudo-packages")
+  "List of Debian pseudo-packages available for completion.
+See http://www.debian.org/Bugs/pseudo-packages")
 
 (defvar debian-bug-help-pseudo-packages-text
   "List of Debian pseudo packages
@@ -377,19 +379,19 @@ Aug 10th 2001, checked Feb 8th 2002.
 Used to determine if internal list is uptodate.")
 
 (defvar debian-bug-package-name nil
-  "Buffer-local variable holding the package name for this submission")
+  "Buffer-local variable holding the package name for this submission.")
 (make-variable-buffer-local 'debian-bug-package-name)
 
 (defvar debian-bug-easymenu-list nil
   "Holds the dynamically built easymenu list.")
 (defvar debian-bug-bugs-menu nil
-  "Buffer local Bugs menu")
+  "Buffer local Bugs menu.")
 (make-variable-buffer-local 'debian-bug-bugs-menu)
 (defvar debian-bug-alist nil
-  "Buffer local alist of bug numbers (and description) for this package")
+  "Buffer local alist of bug numbers (and description) for this package.")
 (make-variable-buffer-local 'debian-bug-alist)
 (defvar debian-bug-open-alist nil
-  "Buffer local alist of open bug numbers (and description) for this package")
+  "Buffer local alist of open bug numbers (and description) for this package.")
 (make-variable-buffer-local 'debian-bug-open-alist)
 
 (defalias 'report-debian-bug 'debian-bug)
@@ -559,12 +561,12 @@ The obarray associates each package with the installed version of the package."
 	      (nth 5 (file-attributes debian-bug-status-file)))
 	(mapcar 'debian-bug-intern (mapcar 'list debian-bug-pseudo-packages))
 	(mapcar 'debian-bug-intern real-pkgs)
-	(message "Building list of installed packages...  Done.")))
+	(message "Building list of installed packages...done")))
   debian-bug-packages-obarray)
 
 (defun debian-bug-check-for-program (program)
   "Check if PROGRAM is installed on the system.
-Done by calling executable-find or the external \"which\" utility."
+Done by calling `executable-find' or the external \"which\" utility."
   (if (fboundp 'executable-find)
       (executable-find program)
     (zerop (call-process "which" nil nil nil program))))
@@ -623,7 +625,8 @@ Done by calling executable-find or the external \"which\" utility."
     (forward-line -5))))
 
 (defun debian-bug (&optional package)
-  "Submit a Debian bug report."
+  "Submit a Debian bug report.
+Optional argument PACKAGE can be provided in programs."
   (interactive (list (completing-read
                       "Package name: "
                       (debian-bug-fill-packages-obarray)
@@ -634,7 +637,7 @@ Done by calling executable-find or the external \"which\" utility."
       (if (and (not (intern-soft package debian-bug-packages-obarray))
                (not (y-or-n-p
                      "Package does not appear to be installed. Continue? ")))
-          (error "Quitting."))
+          (error "Quitting"))
       (let ((severity (completing-read "Severity (default normal): "
                                        debian-bug-severity-alist
                                        nil t nil nil "normal"))
@@ -682,7 +685,7 @@ Done by calling executable-find or the external \"which\" utility."
     ("Orphaned [O]". "O")
     ("Request for Adoption [RFA]" . "RFA")
     ("Request For Package [RFP]" . "RFP"))
-  "alist of WNPP possible bug reports")
+  "Alist of WNPP possible bug reports.")
 
 (defvar debian-bug-wnpp-severities
   '(("ITP" . "wishlist")
@@ -692,7 +695,8 @@ Done by calling executable-find or the external \"which\" utility."
   "Bug severeties for each WNPP bug type.")
 
 (defun debian-bug-wnpp (&optional action)
-  "Submit a WNPP bug report to Debian."
+  "Submit a WNPP bug report to Debian.
+Optional argument ACTION can be provided in programs."
   (interactive
    (list (completing-read
 	  "Action: (Press TAB) "  debian-bug-wnpp-alist nil t nil)))
@@ -759,13 +763,13 @@ Done by calling executable-find or the external \"which\" utility."
     (set-buffer-modified-p nil)))
 
 (defun debian-bug-request-for-package ()
-  "Shortcut for debian-bug-wnpp with RFP action"
+  "Shortcut for `debian-bug-wnpp' with RFP action."
   (interactive)
   (debian-bug-wnpp "Request For Package [RFP]"))
 (defalias 'debian-bug-RFP 'debian-bug-request-for-package)
 
 (defun debian-bug-intent-to-package ()
-  "Shortcut for debian-bug-wnpp with ITP action (for Debian developers)"
+  "Shortcut for `debian-bug-wnpp' with ITP action (for Debian developers)."
   (interactive)
   (debian-bug-wnpp "Intent to Package [ITP]"))
 (defalias 'debian-bug-ITP 'debian-bug-intent-to-package)
@@ -792,7 +796,7 @@ Done by calling executable-find or the external \"which\" utility."
      (6 font-lock-string-face nil t))
     ("^Subject: \\[\\(ITP\\|O\\|RFA\\|RFP\\)\\]"
      (1 font-lock-warning-face t t)))
-  "Regexp keywords to fontify debian-bug reports.")
+  "Regexp keywords to fontify `debian-bug' reports.")
 
 ;;; ---------
 ;;; Menu-bar via minor-mode
@@ -814,16 +818,16 @@ Done by calling executable-find or the external \"which\" utility."
                        (progn (forward-line 1)(point)))))))
 
 (defun debian-bug--set-custom-From ()
-  "Set a From line using the debian-bug-From-address variable"
+  "Set a From line using the `debian-bug-From-address' variable."
   (if (not debian-bug-From-address)
-      (error "Variable debian-bug-From-address is unset, please customize it.")
+      (error "Variable debian-bug-From-address is unset, please customize it")
     (save-excursion
       (goto-char (point-min))
       (debian-bug--unset-custom-From)
       (insert "From: " debian-bug-From-address "\n"))))
 
 (defun debian-bug--toggle-custom-From ()
-  "Toggle the From line using the debian-bug-From-address variable."
+  "Toggle the From line using the `debian-bug-From-address' variable."
   (interactive)
   (if (debian-bug--is-custom-From)
       (debian-bug--unset-custom-From)
@@ -836,7 +840,8 @@ Done by calling executable-find or the external \"which\" utility."
      (concat "^X-Debbugs-CC:.*" (regexp-quote address)) nil t)))
 
 (defun debian-bug--remove-X-Debbugs-CC (address &optional nocleanup)
-  "Remove an Address, and by default cleanup empty line."
+  "Remove ADDRESS.
+Non-nil optional argument NOCLEANUP means remove empty field."
   (save-excursion
     (goto-char (point-min))
     (if (or (re-search-forward (concat "^X-Debbugs-CC:.*\\("
@@ -852,7 +857,7 @@ Done by calling executable-find or the external \"which\" utility."
 	(delete-region (match-beginning 0)(match-end 0)))))
 
 (defun debian-bug--set-X-Debbugs-CC (address)
-  "Set/Change X-Debbugs-CC. ARG is address to use."
+  "Add ADDRESS to X-Debbugs-CC."
   (debian-bug--remove-X-Debbugs-CC address t)
   (save-excursion
     (goto-char (point-min))
@@ -869,7 +874,7 @@ Done by calling executable-find or the external \"which\" utility."
       (insert "X-Debbugs-CC: " address "\n")))))
 
 (defun debian-bug--toggle-X-Debbugs-CC (address)
-  "Toggle a X-Debbugs-CC header line"
+  "Remove X-Debbugs-CC field if it exists\; otherwise add ADDRESS to it."
   (if (debian-bug--is-X-Debbugs-CC address)
       (debian-bug--remove-X-Debbugs-CC address)
     (debian-bug--set-X-Debbugs-CC address)))
@@ -893,7 +898,7 @@ Done by calling executable-find or the external \"which\" utility."
 	  (string= actualSeverity severity)))))
 
 (defun debian-bug--set-severity (severity)
-  "Set/Change bug severity level."
+  "Set bug SEVERITY level."
   (interactive (list (completing-read "Severity: " debian-bug-severity-alist
 				      nil t nil nil)))
   (if (not severity)
@@ -920,7 +925,8 @@ Done by calling executable-find or the external \"which\" utility."
     (re-search-forward (concat "^ *Tags:.*" tag) nil t)))
 
 (defun debian-bug--remove-tags (tag &optional nocleanup)
-  "Remove a Tag"
+  "Remove TAG.
+Non-nil optional argument NOCLEANUP means remove empty field."
   (save-excursion
     (goto-char (point-min))
     (if (or (re-search-forward (concat "^ *Tags:.*\\(" tag ", \\)") nil t)
@@ -933,27 +939,27 @@ Done by calling executable-find or the external \"which\" utility."
 	(delete-region (match-beginning 0)(match-end 0)))))
 
 (defun debian-bug--set-tags (tag)
-  "Set/Change Tags"
+  "Set TAG."
   (debian-bug--remove-tags tag t)
   (save-excursion
     (goto-char (point-min))
-    (cond 
+    (cond
      ((re-search-forward "^ *Tags: *$" nil t) ; Empty "Tags: "
       (insert tag))
      ((re-search-forward "^ *Tags:.*$" nil t) ; Existing "Tags: "
       (insert ", " tag))
-     ((re-search-forward "^ *Severity: .*\n" nil t)	
+     ((re-search-forward "^ *Severity: .*\n" nil t)
       (insert "Tags: " tag "\n"))
-     ((re-search-forward "^ *Version: .*\n" nil t)	
+     ((re-search-forward "^ *Version: .*\n" nil t)
       (insert "Tags: " tag "\n"))
-     ((re-search-forward "^ *Package: .*\n" nil t)	
+     ((re-search-forward "^ *Package: .*\n" nil t)
       (insert "Tags: " tag "\n"))
      (t
       (forward-line 6)
       (insert "\nTags: " tag "\n")))))
 	
 (defun debian-bug--toggle-tags (tag)
-  "Toggle a Tag"
+  "Toggle TAG."
   (interactive (list (completing-read "Tag: " debian-bug-tags-alist
 				      nil t nil nil)))
   (if (not tag)
@@ -968,8 +974,8 @@ Done by calling executable-find or the external \"which\" utility."
     (re-search-forward (concat "^To:.*" (regexp-quote address)) nil t)))
 
 (defun debian-bug--set-bts-address (address)
-  "Set/Change \"To\" header line."
-  (interactive (list (completing-read "To: " 
+  "Set \"To\" header field to ADDRESS."
+  (interactive (list (completing-read "To: "
 				      '(("submit@bugs.debian.org")
 					("quiet@bugs.debian.org")
 					("maintonly@bugs.debian.org"))
@@ -985,8 +991,8 @@ Done by calling executable-find or the external \"which\" utility."
       nil				; We're done!
     (save-excursion
       (goto-char (point-min))
-      (cond 
-       ((re-search-forward "^To: \\(.*\\)" nil t)	
+      (cond
+       ((re-search-forward "^To: \\(.*\\)" nil t)
 	(goto-char (match-beginning 1))
 	(delete-region (match-beginning 1)(match-end 1))
 	(insert address))
@@ -1016,12 +1022,12 @@ Done by calling executable-find or the external \"which\" utility."
 
 (defvar debian-bug-minor-mode nil)
 (defvar debian-bug-minor-mode-map nil
-  "Keymap for debian-bug minor mode.")
+  "Keymap for `debian-bug' minor mode.")
 (if debian-bug-minor-mode-map
     nil
   (setq debian-bug-minor-mode-map (make-sparse-keymap)))
 
-(easy-menu-define debian-bug-menu debian-bug-minor-mode-map 
+(easy-menu-define debian-bug-menu debian-bug-minor-mode-map
   "Debian Bug Mode Menu"
   '("Debian-Bug"
     ("Header"
@@ -1029,17 +1035,17 @@ Done by calling executable-find or the external \"which\" utility."
       :style toggle :active debian-bug-From-address
       :selected (debian-bug--is-custom-From)]
      "--"
-     ["To BTS, Maintainer and Mailing Lists" 
+     ["To BTS, Maintainer and Mailing Lists"
       (debian-bug--set-bts-address "submit@bugs.debian.org")
-      :style radio 
+      :style radio
       :selected (debian-bug--is-bts-address debian-bug-mail-address)]
-     ["To BTS and Maintainer Only" 
+     ["To BTS and Maintainer Only"
      (debian-bug--set-bts-address "maintonly@bugs.debian.org")
-     :style radio 
+     :style radio
      :selected (debian-bug--is-bts-address debian-bug-mail-maintonly-address)]
-     ["To BTS Only" 
+     ["To BTS Only"
       (debian-bug--set-bts-address "quiet@bugs.debian.org")
-      :style radio 
+      :style radio
       :selected (debian-bug--is-bts-address debian-bug-mail-quiet-address)]
      "--"
      ["CC debian-devel" (debian-bug--toggle-CC-devel)
@@ -1050,38 +1056,38 @@ Done by calling executable-find or the external \"which\" utility."
       :selected (debian-bug--is-X-Debbugs-CC debian-bug-From-address)]
      )
     ("Severity"
-     ["critical" (debian-bug--set-severity "critical") 
+     ["critical" (debian-bug--set-severity "critical")
       :style radio :selected (debian-bug--is-severity "critical")]
-     ["grave" (debian-bug--set-severity "grave") 
+     ["grave" (debian-bug--set-severity "grave")
       :style radio :selected (debian-bug--is-severity "grave")]
-     ["serious" (debian-bug--set-severity "serious") 
+     ["serious" (debian-bug--set-severity "serious")
       :style radio :selected (debian-bug--is-severity "serious")]
-     ["important" (debian-bug--set-severity "important") 
+     ["important" (debian-bug--set-severity "important")
       :style radio :selected (debian-bug--is-severity "important")]
-     ["normal" (debian-bug--set-severity "normal") 
+     ["normal" (debian-bug--set-severity "normal")
       :style radio :selected (debian-bug--is-severity "normal")]
-     ["minor" (debian-bug--set-severity "minor") 
+     ["minor" (debian-bug--set-severity "minor")
       :style radio :selected (debian-bug--is-severity "minor")]
-     ["wishlist" (debian-bug--set-severity "wishlist") 
+     ["wishlist" (debian-bug--set-severity "wishlist")
       :style radio :selected (debian-bug--is-severity "wishlist")]
      )
     ("Tags"
-     ["Patch Included" (debian-bug--toggle-tags "patch") 
+     ["Patch Included" (debian-bug--toggle-tags "patch")
       :style toggle :selected (debian-bug--is-tags "patch")]
-     ["Security Issue!" (debian-bug--toggle-tags "security") 
+     ["Security Issue!" (debian-bug--toggle-tags "security")
       :style toggle :selected (debian-bug--is-tags "security")]
      )
     ("Web View"
      ["Bugs for This Package" (debian-bug-web-bugs) t]
      ["Bug Number..." (debian-bug-web-bug) t]
      ["Package Info" (debian-bug-web-packages) t]
-;;   ("Info for This Package" 
+;;   ("Info for This Package"
 ;;    ["Stable" (debian-bug-web-package "stable") t]
 ;;    ["Testing" (debian-bug-web-package "testing") t]
 ;;    ["Unstable" (debian-bug-web-package "unstable") t]
 ;;    )
      )
-    ["Customize" 
+    ["Customize"
      (customize-group "debian-bug") (fboundp 'customize-group)]
     ("Help"
      ["Severities" (debian-bug-help-severity) t]
@@ -1092,13 +1098,15 @@ Done by calling executable-find or the external \"which\" utility."
     ))
 
 (defun debian-bug-minor-mode (arg)
-  "Toggle debian-bug mode."
+  "Toggle `debian-bug' mode.
+A positive prefix argument ARG turns on `debian-bug' mode\; a negative prefix
+argument turn sit off."
   (interactive "P")
   (set (make-local-variable 'debian-bug-minor-mode)
        (if arg
            (> (prefix-numeric-value arg) 0)
          (not debian-bug-minor-mode)))
-  (cond 
+  (cond
    (debian-bug-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
         (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
@@ -1107,11 +1115,11 @@ Done by calling executable-find or the external \"which\" utility."
 
 ;; Install ourselves:
 (or (assq 'debian-bug-minor-mode minor-mode-alist)
-    (setq minor-mode-alist 
+    (setq minor-mode-alist
           (cons '(debian-bug-minor-mode " DBug") minor-mode-alist)))
 (or (assq 'debian-bug-minor-mode minor-mode-map-alist)
     (setq minor-mode-map-alist
-          (cons (cons 'debian-bug-minor-mode debian-bug-minor-mode-map) 
+          (cons (cons 'debian-bug-minor-mode debian-bug-minor-mode-map)
                 minor-mode-map-alist)))
 
 ;;; ---------
@@ -1119,12 +1127,12 @@ Done by calling executable-find or the external \"which\" utility."
 
 (defvar debian-bug-wnpp-minor-mode nil)
 (defvar debian-bug-wnpp-minor-mode-map nil
-  "Keymap for debian-bug minor mode.")
+  "Keymap for `debian-bug' minor mode.")
 (if debian-bug-wnpp-minor-mode-map
     nil
   (setq debian-bug-wnpp-minor-mode-map (make-sparse-keymap)))
 
-(easy-menu-define debian-bug-wnpp-menu debian-bug-wnpp-minor-mode-map 
+(easy-menu-define debian-bug-wnpp-menu debian-bug-wnpp-minor-mode-map
   "Debian Bug Mode Menu"
   '("Debian-Bug"
     ["Custom From address" (debian-bug--toggle-custom-From)
@@ -1136,18 +1144,20 @@ Done by calling executable-find or the external \"which\" utility."
     ["CC to myself header line" (debian-bug--toggle-CC-myself)
      :style radio :active debian-bug-From-address
      :selected (debian-bug--is-X-Debbugs-CC debian-bug-From-address)]
-    ["Customize debian-bug" 
+    ["Customize debian-bug"
      (customize-group "debian-bug") (fboundp 'customize-group)]
     ))
 
 (defun debian-bug-wnpp-minor-mode (arg)
-  "Toggle debian-bug mode."
+  "Toggle `debian-bug' mode.
+A positive prefix argument ARG turns on `debian-bug' mode\; a negative prefix
+argument turn sit off."
   (interactive "P")
   (set (make-local-variable 'debian-bug-wnpp-minor-mode)
        (if arg
            (> (prefix-numeric-value arg) 0)
          (not debian-bug-wnpp-minor-mode)))
-  (cond 
+  (cond
    (debian-bug-wnpp-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
         (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
@@ -1155,11 +1165,11 @@ Done by calling executable-find or the external \"which\" utility."
 
 ;; Install ourselves:
 (or (assq 'debian-bug-wnpp-minor-mode minor-mode-alist)
-    (setq minor-mode-alist 
+    (setq minor-mode-alist
           (cons '(debian-bug-wnpp-minor-mode " WNPPBug") minor-mode-alist)))
 (or (assq 'debian-bug-wnpp-minor-mode minor-mode-map-alist)
     (setq minor-mode-map-alist
-          (cons (cons 'debian-bug-wnpp-minor-mode debian-bug-wnpp-minor-mode-map) 
+          (cons (cons 'debian-bug-wnpp-minor-mode debian-bug-wnpp-minor-mode-map)
                 minor-mode-map-alist)))
 
 ;;; ---------
@@ -1167,7 +1177,7 @@ Done by calling executable-find or the external \"which\" utility."
 ;;  by Peter Galbraith, Feb 23 2001
 
 (defun debian-bug-web-bugs ()
-  "Browse the BTS for this package via browse-url"
+  "Browse the BTS for this package via `browse-url'."
   (interactive)
   (if (not (featurep 'browse-url))
       (progn
@@ -1179,15 +1189,15 @@ Done by calling executable-find or the external \"which\" utility."
                            (debian-changelog-suggest-package-name))
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
-        (message "No package name to look up.")
+        (message "No package name to look up")
       (browse-url (concat "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
                           pkg-name))
       (message "Looking up bugs for source package %s via browse-url"
                pkg-name))))
 
 (defun debian-bug-web-bug (&optional bug-number)
-  "Browse the BTS for a bug report number via browse-url"
-  (interactive (list (completing-read "Bug number to lookup: " 
+  "Browse the BTS for BUG-NUMBER via `browse-url'."
+  (interactive (list (completing-read "Bug number to lookup: "
                                       debian-bug-alist nil nil)))
   (if (not (featurep 'browse-url))
       (progn
@@ -1195,17 +1205,17 @@ Done by calling executable-find or the external \"which\" utility."
         (if (not (featurep 'browse-url))
             (error "This function requires the browse-url elisp package"))))
   (if (or (not bug-number) (string-equal bug-number "none"))
-      (setq bug-number (completing-read "Bug number to lookup: " 
+      (setq bug-number (completing-read "Bug number to lookup: "
                                       debian-bug-alist nil nil)))
   (if (string-equal bug-number "")
-      (message "No bug number to look up.")
+      (message "No bug number to look up")
     (browse-url
      (concat "http://bugs.debian.org/cgi-bin/bugreport.cgi?archive=yes&bug="
              bug-number))
     (message "Looking up bug number %s via browse-url" bug-number)))
 
 (defun debian-bug-web-this-bug ()
-  "Browse the BTS via browse-url for the bug report number under point."
+  "Browse the BTS via `browse-url' for the bug report number under point."
   (interactive)
   (if (not (looking-at "[0-9]"))
       (error "Not a number under point/mouse"))
@@ -1216,13 +1226,14 @@ Done by calling executable-find or the external \"which\" utility."
           (debian-bug-web-bug bug-number)))))
 
 (defun debian-bug-web-this-bug-under-mouse (EVENT)
-  "Browse the BTS via browse-url for the bug report number under mouse."
+  "Browse the BTS via `browse-url' for the bug report number under mouse.
+In a program, mouse location is in EVENT."
   (interactive "e")
   (mouse-set-point EVENT)
   (debian-bug-web-this-bug))
 
 (defun debian-bug-web-packages ()
-  "Search Debian web page for this package via browse-url"
+  "Search Debian web page for this package via `browse-url'."
   (interactive)
   (if (not (featurep 'browse-url))
       (progn
@@ -1234,25 +1245,25 @@ Done by calling executable-find or the external \"which\" utility."
                            (debian-changelog-suggest-package-name))
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
-        (message "No package name to look up.")
-      (browse-url 
-       (concat 
+        (message "No package name to look up")
+      (browse-url
+       (concat
         "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
         pkg-name
         "&searchon=names&version=all&release=all"))
-      (message "Looking up web pages for package %s via browse-url" 
+      (message "Looking up web pages for package %s via browse-url"
                pkg-name))))
 
 (defvar debian-bug-archive-alist
   '(("stable") ("testing") ("unstable"))
-  "alist of valid Debian archives for web interface (excludes experimental).")
+  "Alist of valid Debian archives for web interface (excludes experimental).")
 
 (defvar debian-bug-archive-list
   '("stable" "testing" "unstable")
-  "list of valid Debian archives.")
+  "List of valid Debian archives.")
 
 (defun debian-bug-web-package (archive)
-  "Search Debian web page in ARCHIVE for this package via browse-url"
+  "Search Debian web page in ARCHIVE for this package via `browse-url'."
   (interactive "P")
   (if (not (featurep 'browse-url))
       (progn
@@ -1265,15 +1276,15 @@ Done by calling executable-find or the external \"which\" utility."
 		      (read-string "Package name: ")))
         (archiv))
     (if (string-equal "" pkg-name)
-        (message "No package name to look up.")
+        (message "No package name to look up")
       (if (not (member (list archive) debian-bug-archive-alist))
           (setq archive
                 (completing-read "Debian archive: "
                                  debian-bug-archive-alist nil t nil)))
       (if (string-equal "" archive)
-          (message "No archive name to look up.")
-        (browse-url 
-         (concat 
+          (message "No archive name to look up")
+        (browse-url
+         (concat
           "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
           pkg-name
           "&searchon=names&release=all&version=" archive))
@@ -1291,10 +1302,10 @@ Done by calling executable-find or the external \"which\" utility."
     (- (count-lines (point)(point-max)) 5)))
 
 (defun debian-bug-menusplit-p (submenu)
-  "return t if we should split the menu, comparing bug numbers to frame size.
+  "Return t if we should split the menu, comparing bug numbers to frame size.
 If SUBMENU is t, then check for current sexp submenu only."
   (let* ((menu-count (if submenu
-                         (save-excursion 
+                         (save-excursion
                            (count-lines (point)
                                         (progn (forward-sexp 1)(point))))
                        (debian-bug-menucount)))
@@ -1315,7 +1326,7 @@ If SUBMENU is t, then check for current sexp submenu only."
       ;; First, narrow to submenu
       (narrow-to-region (point)
                         (progn (forward-sexp 1)(forward-char -2)(point)))
-      (goto-char (point-min))      
+      (goto-char (point-min))
       (forward-line 1)
       ;; Now on first bug...
       (let ((lines (cond ((< 60 (frame-height)) ;Big frames
@@ -1326,7 +1337,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                           (- (frame-height) 6)))) ;Smaller frames
             (start (point))
             (bugn-end)(bugn-beg))
-        (while (< (point) (point-max)) 
+        (while (< (point) (point-max))
           (forward-line lines)
           (beginning-of-line)
           (looking-at "^\\[\"\\([0-9]+\\):")
@@ -1345,7 +1356,7 @@ If SUBMENU is t, then check for current sexp submenu only."
   (beginning-of-line))
 
 (defun debian-bug-wget-mbox (&optional bug-number)
-  "wget the mbox file for bug BUG-NUMBER and return the filename created."
+  "Wget the mbox file for bug BUG-NUMBER and return the filename created."
   (if (not debian-bug-download-directory)
       (error "Please set ` debian-bug-download-directory'"))
   (if (and (not (file-exists-p debian-bug-download-directory))
@@ -1371,13 +1382,13 @@ If SUBMENU is t, then check for current sexp submenu only."
         (message "Downloading bug %s..." bug-number )
         (setq status
               (call-process "wget" nil '(t t) nil "--quiet" "-O" filename url))
-        (message "Downloading bug %s... Done." bug-number)
+        (message "Downloading bug %s...done" bug-number)
         (if (= 0 status)
             filename
-          (error "`wget' failed."))))))
+          (error "`wget' failed"))))))
 
 (defun debian-bug-get-bug-as-file (&optional bug-number)
-  "Browse the BTS for a bug report number via browse-url."
+  "Browse the BTS for BUG-NUMBER via `browse-url'."
   (interactive (list (completing-read "Bug number to fetch: "
                                       debian-bug-alist nil nil)))
   (let ((filename (debian-bug-wget-mbox bug-number)))
@@ -1385,7 +1396,7 @@ If SUBMENU is t, then check for current sexp submenu only."
     (text-mode)))
 
 (defun debian-bug-get-bug-as-email (&optional bug-number)
-  "Browse the BTS for a bug report number via browse-url."
+  "Browse the BTS for BUG-NUMBER via `browse-url'."
   (interactive (list (completing-read "Bug number to fetch: "
                                       debian-bug-alist nil nil)))
   (cond
@@ -1393,15 +1404,15 @@ If SUBMENU is t, then check for current sexp submenu only."
          (featurep 'mh-inc))
     ;; MH-E
     (mh-find-path)
-    (let ((mh-e-folder (concat (if debian-bug-MH-E-folder
-                                   (concat debian-bug-MH-E-folder "/")
+    (let ((mh-e-folder (concat (if debian-bug-mh-folder
+                                   (concat debian-bug-mh-folder "/")
                                  "+debian-bug-")
                                (if debian-bug-package-name
                                    (concat debian-bug-package-name "-"))
                                bug-number)))
       (if (and (file-exists-p (mh-expand-file-name mh-e-folder))
                (not (y-or-n-p "Bug folder already exists.  Download again? ")))
-          (mh-visit-folder mh-e-folder)      
+          (mh-visit-folder mh-e-folder)
         (if (file-exists-p (mh-expand-file-name mh-e-folder))
             (mh-exec-cmd-quiet nil "rmf" mh-e-folder))
         (let ((filename (debian-bug-wget-mbox bug-number)))
@@ -1413,7 +1424,7 @@ If SUBMENU is t, then check for current sexp submenu only."
       (rmail filename)))))
 
 (defun debian-bug-menu-action (bugnumber)
-  "Do something with BUGNUMBER based on `debian-bug-menu-action'"
+  "Do something with BUGNUMBER based on variable `debian-bug-menu-action'."
   (cond
    ((equal debian-bug-menu-action 'browse)
     (debian-bug-web-bug bugnumber))
@@ -1425,10 +1436,10 @@ If SUBMENU is t, then check for current sexp submenu only."
     (debian-changelog-close-bug bugnumber))))
 
 (defun debian-bug-build-bug-menu (package)
-  "Build a menu listing the bugs for this package"
+  "Build a menu listing the bugs for this PACKAGE."
   (setq debian-bug-alist nil
         debian-bug-open-alist nil)
-  (let ((debian-bug-tmp-buffer 
+  (let ((debian-bug-tmp-buffer
          (get-buffer-create "*debian-bug-tmp-buffer*"))
         (bug-alist)
         (bug-open-alist)
@@ -1441,29 +1452,29 @@ If SUBMENU is t, then check for current sexp submenu only."
       (insert "(setq debian-bug-easymenu-list\n'(\"Bugs\"\n")
       (insert "[\"* Regenerate list *\" (debian-bug-build-bug-this-menu) t]
       \"--\"
-      [\"Browse\" 
+      [\"Browse\"
        (list (setq debian-bug-menu-action 'browse))
        :style radio :selected (equal debian-bug-menu-action 'browse)]
-      [\"Read as a File\" 
+      [\"Read as a File\"
        (list (setq debian-bug-menu-action 'readfile))
        :style radio :selected (equal  debian-bug-menu-action 'readfile)]
-      [\"Read as Email\" 
+      [\"Read as Email\"
        (list (setq debian-bug-menu-action 'email))
        :style radio :selected (equal  debian-bug-menu-action 'email)]\n")
       (if is-changelog-mode
-          (insert "            [\"Close Bug\" 
+          (insert "            [\"Close Bug\"
        (list (setq debian-bug-menu-action 'close))
        :style radio :selected (equal debian-bug-menu-action 'close)]\n"))
       (insert "      \"-\"\n")
       (with-temp-buffer
         (message "Fetching bug list via wget...")
-	(call-process "wget" nil '(t t) nil "--quiet" "-O" "-" 
-		      (concat 
+	(call-process "wget" nil '(t t) nil "--quiet" "-O" "-"
+		      (concat
                        "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
                        package))
-        (message "Fetching bug list via wget... Done.")
+        (message "Fetching bug list...done")
 	(goto-char (point-min))
-        (while 
+        (while
             (re-search-forward
              "\\(<H2>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">#\\(.+\\)</a>\\)"
              nil t)
@@ -1484,7 +1495,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                         (cons (list bugnumber description) bug-open-alist)))
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
-                (insert 
+                (insert
                  "[\"" (if (< 60 (length description))
                            (substring description 0 60)
                          description)
@@ -1544,7 +1555,7 @@ If SUBMENU is t, then check for current sexp submenu only."
         (easy-menu-add debian-changelog-menu))))
      (t
       (easy-menu-define
-        debian-bug-bugs-menu 
+        debian-bug-bugs-menu
         debian-bug-minor-mode-map "Debian Bug Mode Bugs Menu"
         debian-bug-easymenu-list)
       (cond
@@ -1555,7 +1566,7 @@ If SUBMENU is t, then check for current sexp submenu only."
         (easy-menu-add debian-bug-menu)))))))
 
 (defun debian-bug-build-bug-this-menu ()
-  "Regenerate Bugs list menu for this buffer's package"
+  "Regenerate Bugs list menu for this buffer's package."
   (let ((package (or (and (fboundp 'debian-changelog-suggest-package-name)
 			  (debian-changelog-suggest-package-name))
 		     (and (boundp 'debian-bug-package-name)
@@ -1564,12 +1575,12 @@ If SUBMENU is t, then check for current sexp submenu only."
     (debian-bug-build-bug-menu package)))
 
 (defun debian-bug-bug-menu-init (minor-mode-map)
-  "Initialize menu -- before it gets filled-in on request.
-Add this function to the calling major-mode function."
-  (easy-menu-define debian-bug-bugs-menu minor-mode-map 
+  "Initialize empty bug menu.
+Call this function from the mode setup with MINOR-MODE-MAP."
+  (easy-menu-define debian-bug-bugs-menu minor-mode-map
     "Debian Bug Mode Bugs Menu"
     '("Bugs"
-      ["* Generate menu *" (debian-bug-build-bug-this-menu) 
+      ["* Generate menu *" (debian-bug-build-bug-this-menu)
        (debian-bug-check-for-program "wget")]))
   (easy-menu-add debian-bug-bugs-menu))
 
@@ -1584,12 +1595,12 @@ Add this function to the calling major-mode function."
       (set-buffer tmp-buffer)
       (unwind-protect
           (progn
-            (call-process "dpkg" nil '(t nil) nil "-S" 
+            (call-process "dpkg" nil '(t nil) nil "-S"
                           (expand-file-name filename))
             (goto-char (point-min))
-            (cond 
+            (cond
              ((re-search-forward "not found.$" nil t)
-              (message "%s not found in package list." filename)
+              (message "%s not found in package list" filename)
               nil)
              ((re-search-forward "^\\(.*, .*\\): " nil t)
               (with-output-to-temp-buffer "*Help*"
@@ -1598,7 +1609,7 @@ Add this function to the calling major-mode function."
              ((re-search-forward "^\\(.*\\): " nil t)
               (match-string 1))
              (t
-              (message "%s not found in package list." filename)
+              (message "%s not found in package list" filename)
               nil)))
         (kill-buffer tmp-buffer)))))
 
@@ -1608,7 +1619,7 @@ Add this function to the calling major-mode function."
   (let ((filename (read-file-name "Filename: " "/" nil t nil)))
     (cond
      ((string-equal "" filename)
-      (message "Giving up."))
+      (message "Giving up"))
      (t
       (let ((package (debian-bug-search-file filename)))
         (if package
@@ -1618,3 +1629,7 @@ Add this function to the calling major-mode function."
                   (debian-bug package)))))))))
 
 (provide 'debian-bug)
+
+(provide 'debian-bug)
+
+;;; debian-bug.el ends here
