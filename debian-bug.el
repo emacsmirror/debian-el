@@ -1,4 +1,4 @@
-;;; debian-bug.el --- report a bug to Debian's bug tracking system
+;; debian-bug.el --- report a bug to Debian's bug tracking system
 
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003 Peter S Galbraith <psg@debian.org>
@@ -205,6 +205,10 @@
 ;;  - Display help when prompting for package name and bug severity
 ;;    (Closes: #200058)
 ;;  - debian-bug-display-help: new defcustom.
+;; V1.45 05Sep2003 Peter S Galbraith <psg@debian.org>
+;;  - debian-bug-filename: Added File: in informational block.
+;;  - debian-bug-search-file: Added message about system call to dpkg.
+;;  - debian-bug-font-lock-keywords: added File:
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -867,6 +871,9 @@ Optional argument ACTION can be provided in programs."
 ;;; font-lock by Peter S Galbraith <psg@debian.org>, August 11th 2001
 (defvar debian-bug-font-lock-keywords
   '(("^ *\\(Package:\\) *\\([^ ]+\n\\)?"
+     (1 font-lock-keyword-face)
+     (2 font-lock-type-face nil t))
+    ("^ *\\(File:\\) *\\([^ ]+\n\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-type-face nil t))
     ("^ *\\(Version:\\) *\\([^ \n]+\n\\)?"
@@ -1722,8 +1729,10 @@ Call this function from the mode setup with MINOR-MODE-MAP."
       (set-buffer tmp-buffer)
       (unwind-protect
           (progn
+            (message "Calling dpkg for the search...")
             (call-process "dpkg" nil '(t nil) nil "-S"
                           (expand-file-name filename))
+            (message "Calling dpkg for the search...done")
             (goto-char (point-min))
             (cond
              ((re-search-forward "not found.$" nil t)
@@ -1752,8 +1761,11 @@ Call this function from the mode setup with MINOR-MODE-MAP."
         (if package
             (let ((answer (y-or-n-p (format "File is in package %s; continue? "
                                             package))))
-              (if answer
-                  (debian-bug package)))))))))
+              (when answer
+                (debian-bug package)
+                (save-excursion
+                  (forward-char -1)
+                  (insert "File: " filename "\n"))))))))))
 
 (provide 'debian-bug)
 
