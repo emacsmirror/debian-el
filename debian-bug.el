@@ -188,6 +188,9 @@
 ;;  - Minor doc string fixes.
 ;;  - renamed X-Debbugs-CC commands to simple CC, specifying the field to
 ;;    use as an new argument.  So it can be used in d-b-control.
+;; V1.40 12May2003 Peter S Galbraith <psg@debian.org>
+;;  - check if `debian-changelog-mode' is available as a feature, and not
+;;    simply the if the autoloaded are fboundp (which is always true).
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1241,7 +1244,7 @@ argument turn sit off."
         (if (not (featurep 'browse-url))
             (error "This function requires the browse-url elisp package"))))
   (let ((pkg-name (or debian-bug-package-name
-                      (and (fboundp 'debian-changelog-suggest-package-name)
+                      (and (featurep 'debian-changelog-mode)
                            (debian-changelog-suggest-package-name))
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
@@ -1297,7 +1300,7 @@ In a program, mouse location is in EVENT."
         (if (not (featurep 'browse-url))
             (error "This function requires the browse-url elisp package"))))
   (let ((pkg-name (or debian-bug-package-name
-                      (and (fboundp 'debian-changelog-suggest-package-name)
+                      (and (featurep 'debian-changelog-mode)
                            (debian-changelog-suggest-package-name))
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
@@ -1327,7 +1330,7 @@ In a program, mouse location is in EVENT."
         (if (not (featurep 'browse-url))
             (error "This function requires the browse-url elisp package"))))
   (let ((pkg-name (or debian-bug-package-name
-                      (and (fboundp 'debian-changelog-suggest-package-name)
+                      (and (featurep 'debian-changelog-mode)
                            (debian-changelog-suggest-package-name))
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
@@ -1462,7 +1465,7 @@ If SUBMENU is t, then check for current sexp submenu only."
     (let* ((package-name (cond
                           (debian-bug-package-name
                            debian-bug-package-name)
-                          ((fboundp 'debian-changelog-suggest-package-name)
+                          ((featurep 'debian-changelog-mode)
                            (debian-changelog-suggest-package-name))
                           (t
                            (read-string "Package name: "))))
@@ -1634,7 +1637,7 @@ If SUBMENU is t, then check for current sexp submenu only."
 
 (defun debian-bug-build-bug-this-menu ()
   "Regenerate Bugs list menu for this buffer's package."
-  (let ((package (or (and (fboundp 'debian-changelog-suggest-package-name)
+  (let ((package (or (and (featurep 'debian-changelog-mode)
 			  (debian-changelog-suggest-package-name))
 		     (and (boundp 'debian-bug-package-name)
 			  debian-bug-package-name)
