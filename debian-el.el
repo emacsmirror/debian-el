@@ -15,8 +15,8 @@
   "Debian debian-el package customization."
   :group 'convenience)
 
-(require 'emacs-goodies-loaddefs)
-;;(require 'emacs-goodies-custom)
+(require 'debian-el-loaddefs)
+;;(require 'debian-el-custom)
 
 ;; apt-sources
 (add-to-list 'auto-mode-alist '("sources.list$" . apt-sources-mode))
