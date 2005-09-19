@@ -1714,7 +1714,7 @@ Only decodes if `rfc2047-decode-string' is available."
 	(goto-char (point-min))
         (while
             (re-search-forward
-             "\\(<H2><a name.*</a>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
+             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
@@ -1730,8 +1730,9 @@ Only decodes if `rfc2047-decode-string' is available."
              (t
               (setq bug-alist (cons (list bugnumber description) bug-alist))
               (when bugs-are-open-flag
-                (when (and (re-search-forward "Reported by: <a href=[^>]+>"
-                                              nil t)
+                (when (and (re-search-forward
+                            "Reported by: <a class=\"submitter\" href=\"pkgreport.cgi\\?submitter=[^;]+;arch=source\">"
+                            nil t)
                            (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
                                (looking-at "\\(.*\\) &lt;")))
                   (setq shortdescription
