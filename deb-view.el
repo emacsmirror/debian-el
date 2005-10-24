@@ -208,8 +208,10 @@
 
 ;; 1.12 2005-10-24  Peter S. Galbraith <psg@debian.org>
 ;;  - Output an error message if the package file is corrupted
-;;    (e.g. partial download).  Thanks to Dan
-;;    Jacobson for suggesting this change (Closes: #235673).
+;;    (e.g. partial download).
+;;    Thanks to Dan Jacobson for suggesting this change (Closes: #235673).
+;;  - deb-view-dired-view: Check if file in dired is a .deb before opening.
+;;    Thanks to Dan Jacobson for suggesting this change (Closes: #273902)
 
 
 ;;; Code:
