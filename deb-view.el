@@ -206,6 +206,11 @@
 ;;    doesn't really need to be 1/2 the screen.  Thanks to Dan
 ;;    Jacobson for suggesting this change (Closes: #224950).
 
+;; 1.12 2005-10-24  Peter S. Galbraith <psg@debian.org>
+;;  - Output an error message if the package file is corrupted
+;;    (e.g. partial download).  Thanks to Dan
+;;    Jacobson for suggesting this change (Closes: #235673).
+
 
 ;;; Code:
 
@@ -287,7 +292,10 @@ See also the variable deb-find-directory."
 Press \"q\" in either window to kill both buffers
 and return to the dired buffer. See deb-view."
   (interactive)
-  (deb-view (dired-get-filename)))
+  (let  ((file (dired-get-filename)))
+    (if (string-match ".deb$" file)
+        (deb-view file)
+      (error "Not a Debian package file"))))
 
 ;;;###autoload
 (defun deb-view (debfile)
@@ -386,10 +394,18 @@ at the prompt."
     (delete-other-windows)
     ;; data
     (set-buffer data-buffer)
-    (call-process shell-file-name nil t nil shell-command-switch
-                  (if new-archive-format
-                      (concat "ar -p " debfile " data.tar.gz | gzip -cd")
-                    (concat "dpkg-deb --fsys-tarfile " debfile)))
+    (cond
+     (new-archive-format
+      (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.gz")
+      (goto-char (point-max))
+      (when (search-backward "is not a valid archive" nil t)
+        (kill-buffer data-buffer)
+        (kill-buffer info-buffer)        
+        (error "%s: Not a valid package file" deb-view-buffer-name))
+      (call-process-region (point-min) (point-max) "gzip" t t nil "-cd"))
+     (t      
+      (call-process shell-file-name nil t nil shell-command-switch
+                    (concat "dpkg-deb --fsys-tarfile " debfile))))
     (goto-char 1)
     (setq buffer-file-name (concat deb-view-file-name "-DATA"))
     (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
