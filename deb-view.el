@@ -212,6 +212,9 @@
 ;;    Thanks to Dan Jacobson for suggesting this change (Closes: #235673).
 ;;  - deb-view-dired-view: Check if file in dired is a .deb before opening.
 ;;    Thanks to Dan Jacobson for suggesting this change (Closes: #273902)
+;;  - deb-view-tar-view: If the file to be opned is from the INFO buffer,
+;;    then open in the other (larger) window.
+;;    Thanks to Dan Jacobson for suggesting this change (Closes: #321869)
 
 
 ;;; Code:
@@ -603,13 +606,16 @@ It then selects a major mode from the uncompressed file name and contents.
   (goto-char 1))
 
 (defun deb-view-tar-view ()
-  "*In Tar mode, view the tar file entry on this line."
+  "*In Tar mode, view the tar file entry on this line.
+If the file is from the INFO buffer, then open in the other (larger) window."
   (interactive)
   (let ((auto-mode-alist
          (append '(("\\.gz$" . deb-view-tar-uncompress-while-visiting)
                    ("\\.Z$"  . deb-view-tar-uncompress-while-visiting)
                    ) auto-mode-alist)))
-    (tar-extract 'view)))
+    (if (string-match "INFO$" buffer-file-name)
+        (tar-extract-other-window)
+      (tar-extract 'view))))
 
 (defun deb-view-tar-w3 ()
   "*In Tar mode, view the tar file entry on this line as HTML with w3-mode."
