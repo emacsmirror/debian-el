@@ -5,7 +5,7 @@
 (provide 'debian-el-loaddefs)
 
 ;;;### (autoloads (apt-sources-mode) "apt-sources" "apt-sources.el"
-;;;;;;  (16284 30712))
+;;;;;;  (16342 41238))
 ;;; Generated autoloads from apt-sources.el
 
 (autoload (quote apt-sources-mode) "apt-sources" "\
@@ -17,21 +17,25 @@ Sets up command `font-lock-mode'.
 ;;;***
 
 ;;;### (autoloads (apt-utils-search apt-utils-show-package) "apt-utils"
-;;;;;;  "apt-utils.el" (16120 61272))
+;;;;;;  "apt-utils.el" (17055 6333))
 ;;; Generated autoloads from apt-utils.el
 
 (autoload (quote apt-utils-show-package) "apt-utils" "\
-Write APT package information to buffer.
-With ARG, choose that package, otherwise prompt for one." t nil)
+Show information for a Debian package.
+A selection of known packages is presented.  See `apt-utils-mode'
+for more detailed help.  If NEW-SESSION is non-nil, generate a
+new `apt-utils-mode' buffer." t nil)
 
 (autoload (quote apt-utils-search) "apt-utils" "\
 Search Debian packages for regular expression.
-To search for multiple patterns use a string like \"foo&&bar\"." t nil)
+To search for multiple patterns use a string like \"foo && bar\".
+The regular expression used to split the
+terms (`apt-utils-search-split-regexp') is customisable." t nil)
 
 ;;;***
 
 ;;;### (autoloads (deb-find deb-view-mode deb-view deb-view-dired-view)
-;;;;;;  "deb-view" "deb-view.el" (16289 55313))
+;;;;;;  "deb-view" "deb-view.el" (17245 26632))
 ;;; Generated autoloads from deb-view.el
 
 (autoload (quote deb-view-dired-view) "deb-view" "\
@@ -62,9 +66,9 @@ easily repeat a `deb-find' command." t nil)
 
 ;;;### (autoloads (debian-bug debian-bug-get-bug-as-email debian-bug-get-bug-as-file
 ;;;;;;  debian-bug-web-package debian-bug-web-packages debian-bug-web-this-bug-under-mouse
-;;;;;;  debian-bug-web-this-bug debian-bug-web-bug debian-bug-web-bugs
-;;;;;;  debian-bug-intent-to-package debian-bug-request-for-package
-;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (16262 3361))
+;;;;;;  debian-bug-web-this-bug debian-bug-web-bug debian-bug-web-developer-page
+;;;;;;  debian-bug-web-bugs debian-bug-intent-to-package debian-bug-request-for-package
+;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (17198 2200))
 ;;; Generated autoloads from debian-bug.el
 
 (autoload (quote debian-bug-wnpp) "debian-bug" "\
@@ -78,7 +82,11 @@ Shortcut for `debian-bug-wnpp' with RFP action." t nil)
 Shortcut for `debian-bug-wnpp' with ITP action (for Debian developers)." t nil)
 
 (autoload (quote debian-bug-web-bugs) "debian-bug" "\
-Browse the BTS for this package via `browse-url'." t nil)
+Browse the BTS for this package via `browse-url'.
+With optional argument prefix ARCHIVED, display archived bugs." t nil)
+
+(autoload (quote debian-bug-web-developer-page) "debian-bug" "\
+Browse the web for this package's developer page." t nil)
 
 (autoload (quote debian-bug-web-bug) "debian-bug" "\
 Browse the BTS for BUG-NUMBER via `browse-url'." t nil)
@@ -104,6 +112,14 @@ Read bug report #BUG-NUMBER via Email interface." t nil)
 
 (autoload (quote debian-bug) "debian-bug" "\
 Submit a Debian bug report." t nil)
+
+;;;***
+
+;;;### (autoloads (preseed-mode) "preseed" "preseed.el" (17245 33079))
+;;; Generated autoloads from preseed.el
+
+(autoload (quote preseed-mode) "preseed" "\
+Major mode for editing debian-installer preseed files colourfully." t nil)
 
 ;;;***
 
