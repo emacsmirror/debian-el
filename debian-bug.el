@@ -255,6 +255,9 @@
 ;; V1.55 05Jan2005 Kevin Ryde <user42@zip.com.au>
 ;;  - adds gnus support to debian-bug-get-bug-as-email, bringing the bug
 ;;   messages up in a gnus group. (Closes: #288469)
+;; V1.55 05Jan2005 Peter S Galbraith <psg@debian.org>
+;;   debian-bug-package: skip over mml directives in new drafts.
+;;   Thanks to Luca Capello <luca@pca.it> (Closes: #336466)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -645,6 +648,8 @@ Reportbug may have sent an empty report!")))
       (require 'sendmail)
       (goto-char (mail-header-end))
       (forward-line 1)
+      (if (looking-at "^<#secure")      ;Skip over mml directives
+          (forward-line 1))
       (message "Getting package information from system...")
       (debian-bug-prefill-report package severity)
       (message "Getting package information from system...done")
