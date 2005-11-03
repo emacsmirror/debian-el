@@ -258,6 +258,14 @@
 ;; V1.55 05Jan2005 Peter S Galbraith <psg@debian.org>
 ;;   debian-bug-package: skip over mml directives in new drafts.
 ;;   Thanks to Luca Capello <luca@pca.it> (Closes: #336466)
+;; V1.56 03Nov2005 Peter S Galbraith <psg@debian.org>
+;;   - debian-bug-prompt-bug-number: new function to prompt user for a bug
+;;     number using number under point if any.
+;;   - debian-bug-web-bug: use it.
+;;   - debian-bug-web-this-bug: deleted (no longer needed).
+;;   - debian-bug-get-bug-as-file: use it.
+;;   - debian-bug-get-bug-as-email: use it.
+;;     (Closes: #337233)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1397,11 +1405,29 @@ With optional argument prefix ARCHIVED, display archived bugs."
       (message "Looking up developer web page for package %s via browse-url"
                pkg-name))))
 
+(defun debian-bug-prompt-bug-number (prompt)
+  "Prompt the user for a bug number using PROMPT."
+  (let ((default-number)
+        (item (word-at-point)))
+    ;; First see if there's a number under point
+    (if (and item
+	     (string-match "^[0-9]+[0-9]$" item))
+        (setq default-number (match-string-no-properties 0 item))
+      ;; If not, try for mail message header
+      (save-excursion
+        (goto-char (point-min))
+        (if (re-search-forward "\\([0-9]+\\)@bugs.debian.org"
+                               (mail-header-end) t)
+            (setq default-number (match-string-no-properties 1)))))
+    (list (completing-read (if default-number
+                               (format "%s [%s]: " prompt default-number)
+                             (format "%s: " prompt))
+                           debian-bug-alist nil nil nil nil default-number))))
+
 ;;;###autoload
 (defun debian-bug-web-bug (&optional bug-number)
   "Browse the BTS for BUG-NUMBER via `browse-url'."
-  (interactive (list (completing-read "Bug number to lookup: "
-                                      debian-bug-alist nil nil)))
+  (interactive (debian-bug-prompt-bug-number "Bug number to lookup"))
   (if (not (featurep 'browse-url))
       (progn
         (load "browse-url" nil t)
@@ -1418,9 +1444,11 @@ With optional argument prefix ARCHIVED, display archived bugs."
     (message "Looking up bug number %s via browse-url" bug-number)))
 
 ;;;###autoload
-(defun debian-bug-web-this-bug ()
-  "Browse the BTS via `browse-url' for the bug report number under point."
-  (interactive)
+(defun debian-bug-web-this-bug-under-mouse (EVENT)
+  "Browse the BTS via `browse-url' for the bug report number under mouse.
+In a program, mouse location is in EVENT."
+  (interactive "e")
+  (mouse-set-point EVENT)
   (if (not (looking-at "[0-9]"))
       (error "Not a number under point/mouse"))
   (save-excursion
@@ -1428,14 +1456,6 @@ With optional argument prefix ARCHIVED, display archived bugs."
     (if (looking-at "[0-9]+")
         (let ((bug-number (match-string 0)))
           (debian-bug-web-bug bug-number)))))
-
-;;;###autoload
-(defun debian-bug-web-this-bug-under-mouse (EVENT)
-  "Browse the BTS via `browse-url' for the bug report number under mouse.
-In a program, mouse location is in EVENT."
-  (interactive "e")
-  (mouse-set-point EVENT)
-  (debian-bug-web-this-bug))
 
 ;;;###autoload
 (defun debian-bug-web-packages ()
@@ -1596,8 +1616,7 @@ If SUBMENU is t, then check for current sexp submenu only."
 ;;;###autoload
 (defun debian-bug-get-bug-as-file (&optional bug-number)
   "Read bug report #BUG-NUMBER as a regular file."
-  (interactive (list (completing-read "Bug number to fetch: "
-                                      debian-bug-alist nil nil)))
+  (interactive (debian-bug-prompt-bug-number "Bug number to fetch"))
   (let ((filename (debian-bug-wget-mbox bug-number)))
     (find-file filename)
     (text-mode)))
@@ -1612,8 +1631,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                           (not (and (fboundp 'gnus-alive-p)
                                     (gnus-alive-p))))
                      (error "Please start `gnus' (or `gnus-slave') first"))
-                 (list (completing-read "Bug number to fetch: "
-                                        debian-bug-alist nil nil))))
+                 (debian-bug-prompt-bug-number "Bug number to fetch")))
   (cond
    ((and (eq mail-user-agent 'mh-e-user-agent)
          (featurep 'mh-inc))
