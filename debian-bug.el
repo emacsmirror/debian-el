@@ -266,6 +266,8 @@
 ;;   - debian-bug-get-bug-as-file: use it.
 ;;   - debian-bug-get-bug-as-email: use it.
 ;;     (Closes: #337233)
+;; V1.57 03Nov2005 Peter S Galbraith <psg@debian.org>
+;;   - Swap CC: for X-Debbugs-CC: in mail header (Closes: #208570)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -635,6 +637,10 @@ Reportbug may have sent an empty report!")))
       (if (and (equal mail-user-agent 'gnus-user-agent)
                (string-equal " *nntpd*" (buffer-name)))
           (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
+      (goto-char (point-min))
+      (when (re-search-forward "cc:" nil t)
+        (delete-region (match-beginning 0)(match-end 0))
+        (insert "X-Debbugs-CC:"))
       (goto-char (point-min))
       (cond
        ((re-search-forward "To: " nil t)
