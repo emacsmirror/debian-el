@@ -36,7 +36,7 @@
 
 ;;; Code:
 
-(defconst apt-utils-version "2.4.0"
+(defconst apt-utils-version "2.6.0"
   "Version number of this package.")
 
 (require 'browse-url)
@@ -140,6 +140,23 @@ See `apt-utils-web-format-url'."
   :group 'apt-utils
   :type 'hook)
 
+(defcustom apt-utils-use-current-window nil
+  "If non-nil always display APT utils buffers in the current window.
+In this case `switch-to-buffer' is used to select the APT utils
+buffer.  If nil, `display-buffer' is used, and the precise
+behaviour depends on the value of `pop-up-windows'."
+  :group 'apt-utils
+  :type 'boolean)
+
+(defcustom apt-utils-dpkg-program "/usr/bin/dpkg"
+  "Location of the dpkg program.
+This can be set to dlocate, which has the advantage of better
+performance, but uses cached data that may be out of date."
+  :group 'apt-utils
+  :type '(choice (const :tag "dpkg" "/usr/bin/dpkg")
+                 (const : tag "dlocate" "/usr/bin/dlocate")
+                 (file :must-match t)))
+
 ;; Faces
 
 (defface apt-utils-normal-package-face
@@ -192,16 +209,16 @@ See `apt-utils-web-format-url'."
   "Face used for unknown APT package."
   :group 'apt-utils)
 
+(defface apt-utils-file-face
+  '((((class color))
+     (:foreground "brown")))
+  "Face used for files."
+  :group 'apt-utils)
+
 ;; Other variables
 
 (defvar apt-utils-apt-cache-program "/usr/bin/apt-cache"
   "Location of the apt-cache program.")
-
-(defvar apt-utils-dpkg-program
-  (if (file-executable-p "/usr/bin/dlocate")
-      "/usr/bin/dlocate"
-    "/usr/bin/dpkg")
-  "Location of the dpkg program.")
 
 (defvar apt-utils-grep-dctrl-program "/usr/bin/grep-dctrl"
   "Location of the grep-dctrl program.")
@@ -258,6 +275,11 @@ These are stored in a hash table.  See also
    ((fboundp 'line-end-position) 'line-end-position)
    ((fboundp 'point-at-eol) 'point-at-eol)))
 
+(defalias 'apt-utils-line-beginning-position
+  (cond
+   ((fboundp 'line-beginning-position) 'line-beginning-position)
+   ((fboundp 'point-at-bol) 'point-at-bol)))
+
 (defconst apt-utils-completing-read-hashtable-p
   ;; I think this is a valid way to check this feature...
   (condition-case nil
@@ -304,33 +326,33 @@ A selection of known packages is presented.  See `apt-utils-mode'
 for more detailed help.  If NEW-SESSION is non-nil, generate a
 new `apt-utils-mode' buffer."
   (interactive "P")
-  (apt-utils-show-package-1 t nil new-session))
+  (apt-utils-check-package-lists)
+  (let ((package (apt-utils-choose-package)))
+    (when (> (length package) 0)
+      (apt-utils-show-package-1 package t new-session))))
 
-(defun apt-utils-show-package-1 (&optional interactive package-spec new-session)
+(defun apt-utils-show-package-1 (package-spec &optional interactive new-session)
   "Present Debian package information in a dedicated buffer.
+
+PACKAGE-SPEC can be either a string (the name of the package) or
+a list, where the car of the list is the name of the package, and
+the cdr is the package type.
 
 If INTERACTIVE is non-nil, then we have been called
 interactively (or from a keyboard macro) via
 `apt-utils-show-package'.  Hence, reset the history of visited
 packages.
 
-If PACKAGE-SPEC is specified, this can either be a string (the
-name of the package) or a list, where the car of the list is the
-name of the package, and the cdr is the package type; if not
-specified, a package name is prompted for.  If NEW-SESSION is
-non-nil, generate a new `apt-utils-mode' buffer."
+If NEW-SESSION is non-nil, generate a new `apt-utils-mode'
+buffer."
   (apt-utils-check-package-lists)
   (let (package type)
     (cond ((and package-spec (listp package-spec))
            (setq package (car package-spec))
            (setq type (cdr package-spec)))
           ((stringp package-spec)
-           (setq package package-spec))
-          (t
-           (setq package (apt-utils-choose-package))))
-    ;; Type might not be known yet
-    (unless type
-      (setq type (apt-utils-package-type package)))
+           (setq package package-spec
+                 type (apt-utils-package-type package))))
     ;; Set up the buffer
     (cond
      (new-session
@@ -362,7 +384,7 @@ non-nil, generate a new `apt-utils-mode' buffer."
             (delete-region (point) (point-max))))
         (apt-utils-add-package-links))
        ;; Virtual package or normal package w/ showpkg
-       ((or (equal type 'virtual) (equal type 'normal-showpkg))
+       ((memq type '(virtual normal-showpkg))
         (call-process apt-utils-apt-cache-program nil '(t nil) nil "showpkg" package)
         (apt-utils-add-showpkg-links))
        ;; Normal search
@@ -391,15 +413,17 @@ non-nil, generate a new `apt-utils-mode' buffer."
                         (concat (format "\"%s\" " (car package))
                                 (mapconcat 'identity (cdr package) " "))))
         (apply 'call-process apt-utils-grep-dctrl-program nil t nil package)
-        (apt-utils-add-package-links))))
-    (set-buffer-modified-p nil)
-    (setq buffer-read-only t)
-    ;; The point and window-start only need setting for new sessions
-    ;; or when choosing new packages with apt-utils-follow-link or
-    ;; apt-utils-choose-package-link.
-    (goto-char (point-min))
-    (set-window-start (display-buffer (current-buffer)) (point-min)))
-  (run-hooks 'apt-utils-show-package-hooks))
+        (apt-utils-add-package-links)))
+      (if apt-utils-use-current-window
+          (switch-to-buffer (current-buffer))
+	(select-window (display-buffer (current-buffer))))
+      ;; Point only needs setting for new sessions or when choosing
+      ;; new packages with apt-utils-follow-link or
+      ;; apt-utils-choose-package-link.
+      (goto-char (point-min))
+      (run-hooks 'apt-utils-show-package-hooks)))
+  (set-buffer-modified-p nil)
+  (setq buffer-read-only t))
 
 (defun apt-utils-list-package-files ()
   "List the files associated with the current package.
@@ -410,8 +434,13 @@ installed packages; uses `apt-utils-dpkg-program'."
         (type (cdar apt-utils-package-history))
         files)
     (setq files (apt-utils-get-package-files package))
+    ;; Some meta packages contain only directories, so
+    ;; apt-utils-get-package-files returns '("/."); however, we don't
+    ;; want to list /.
+    (when (equal files '("/."))
+      (setq files nil))
     (cond
-     ((or (equal type 'normal) (equal type 'normal-showpkg))
+     ((memq type '(normal normal-showpkg))
       (if files
           (progn
             ;; Some versions of Emacs won't update dired for the same
@@ -423,6 +452,8 @@ installed packages; uses `apt-utils-dpkg-program'."
         (message "Package does not contain any files/is not installed.")))
      (t
       (message "No files associated for type: %s." type)))))
+
+(defalias 'apt-utils-view-package-files 'apt-utils-list-package-files)
 
 (defun apt-utils-get-package-files (package &optional filter installed)
   "Return a list of files belonging to package PACKAGE.
@@ -502,7 +533,8 @@ search is specified by PROMPT."
      (t
       (set-buffer (get-buffer-create "*APT package info*"))
       (apt-utils-mode)))
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          result)
       (erase-buffer)
       ;; Can't search for string starting with "-" because the "--"
       ;; option isn't understood by dpkg or dlocate
@@ -514,26 +546,30 @@ search is specified by PROMPT."
                             ((eq type 'search-file-names) " (file names)")
                             (t ""))
                       regexp))
-      (cond
-       ((eq type 'search)
-        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
-               "search" "--"
-               (split-string regexp apt-utils-search-split-regexp))
-        (setq apt-utils-package-history (cons (cons regexp 'search) nil)))
-       ((eq type 'search-names-only)
-        (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
-               "search" "--names-only" "--"
-               (split-string regexp apt-utils-search-split-regexp))
-        (setq apt-utils-package-history (cons (cons regexp 'search-names-only) nil)))
+      (setq result
+            (cond
+             ((eq type 'search)
+              (setq apt-utils-package-history (cons (cons regexp 'search) nil))
+              (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
+                     "search" "--"
+                     (split-string regexp apt-utils-search-split-regexp)))
+             ((eq type 'search-names-only)
+              (setq apt-utils-package-history (cons (cons regexp 'search-names-only) nil))
+              (apply 'call-process apt-utils-apt-cache-program nil '(t nil) nil
+                     "search" "--names-only" "--"
+                     (split-string regexp apt-utils-search-split-regexp)))
 
-       ((eq type 'search-file-names)
-        (apply 'call-process apt-utils-dpkg-program nil t nil
-               "-S" (list regexp))
-        (setq apt-utils-package-history (cons (cons regexp 'search-file-names) nil))))
+             ((eq type 'search-file-names)
+              (setq apt-utils-package-history (cons (cons regexp 'search-file-names) nil))
+              (apply 'call-process apt-utils-dpkg-program nil t nil
+                     "-S" (list regexp)))))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
         (setq apt-utils-buffer-positions (make-hash-table :test 'equal)))
-      (apt-utils-add-search-links type)
+      (if (eq result 0)
+          (apt-utils-add-search-links type)
+        (if (hash-table-p apt-utils-current-links)
+            (clrhash apt-utils-current-links)))
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
@@ -564,7 +600,8 @@ search is specified by PROMPT."
      (t
       (set-buffer (get-buffer-create "*APT package info*"))
       (apt-utils-mode)))
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          result)
       (erase-buffer)
       ;; Construct argument list (need to keep this)
       (setq args (append (list regexp fields show) apt-utils-grep-dctrl-args
@@ -578,13 +615,17 @@ search is specified by PROMPT."
                              (format "\"%s\"" regexp)
                            elt))
                        args " ")))
-      (apply 'call-process
-             apt-utils-grep-dctrl-program nil t nil args)
+      (setq result
+            (apply 'call-process
+                   apt-utils-grep-dctrl-program nil t nil args))
       (setq apt-utils-package-history (cons (cons args 'search-grep-dctrl) nil))
       (if (hash-table-p apt-utils-buffer-positions)
           (clrhash apt-utils-buffer-positions)
         (setq apt-utils-buffer-positions (make-hash-table :test 'equal)))
-      (apt-utils-add-package-links)
+      (if (eq result 0)
+          (apt-utils-add-package-links)
+        (if (hash-table-p apt-utils-current-links)
+            (clrhash apt-utils-current-links)))
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
@@ -601,7 +642,8 @@ Use PROMPT for `completing-read'."
                         "Filename" "Installed-Size" "MD5sum" "Maintainer"
                         "Origin" "Package" "Pre-Depends" "Priority"
                         "Provides" "Recommends" "Replaces" "Section"
-                        "Size" "Source" "Suggests" "Task" "Version" "url"))
+                        "Size" "Source" "Suggests" "Tag" "Task" "Version"
+                        "url"))
         fields)
     (while (> (length chosen) 0)
         (setq chosen
@@ -633,7 +675,7 @@ Use PROMPT for `completing-read'."
       (setq apt-utils-package-history
             (cons (cons package 'normal-showpkg)
                   (cdr apt-utils-package-history)))
-      (apt-utils-show-package-1 nil (car apt-utils-package-history))
+      (apt-utils-show-package-1 (car apt-utils-package-history) nil)
       (goto-char (car posns))
       (set-window-start (selected-window) (cadr posns)))
      ((equal type 'normal-showpkg)
@@ -641,7 +683,7 @@ Use PROMPT for `completing-read'."
       (setq apt-utils-package-history
             (cons (cons package 'normal)
                   (cdr apt-utils-package-history)))
-      (apt-utils-show-package-1 nil (car apt-utils-package-history))
+      (apt-utils-show-package-1 (car apt-utils-package-history) nil)
       (goto-char (car posns))
       (set-window-start (selected-window) (cadr posns)))
      ((equal type 'virtual)
@@ -687,7 +729,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -714,7 +756,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -724,7 +766,7 @@ See also `apt-utils-toggle-package-info'."
         (message "No Debian ChangeLog file found for %s." package))))))
 
 (defun apt-utils-debian-changelog-file (&optional package)
-  "Find Debian ChangeLog file for PACKAGE or the current package. "
+  "Find Debian ChangeLog file for PACKAGE or the current package."
   (unless package (setq package (caar apt-utils-package-history)))
   (let ((file
          (apt-utils-find-readable-file
@@ -741,7 +783,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -768,7 +810,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -795,7 +837,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -822,7 +864,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -849,7 +891,7 @@ See also `apt-utils-toggle-package-info'."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let* ((package (caar apt-utils-package-history))
@@ -876,7 +918,7 @@ offer a choice."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-package-history))
@@ -919,13 +961,19 @@ a choice."
   (cond
    ((not (equal major-mode 'apt-utils-mode))
     (message "Not in APT utils buffer."))
-   ((not (equal (cdar apt-utils-package-history) 'normal))
+   ((not (memq (cdar apt-utils-package-history) '(normal normal-showpkg)))
     (message "Not a normal package."))
    (t
     (let ((package (caar apt-utils-package-history))
           chosen files table)
-      (setq files (apt-utils-get-package-files package
-                                               "^/etc/emacs/site-start.d/.*"))
+      (setq files
+            (or (apt-utils-get-package-files package
+                                             "^/etc/emacs/site-start.d/.*")
+                (and (boundp 'debian-emacs-flavor)
+                     (apt-utils-get-package-files
+                      package
+                      (format "^/etc/%s/site-start.d/.*"
+                              (symbol-name debian-emacs-flavor))))))
       (cond
        ((null files)
         (message "No Emacs startup files found for %s." package))
@@ -943,6 +991,53 @@ a choice."
                     table)))))
       (when chosen
         (apt-utils-view-file chosen))))))
+
+(defun apt-utils-view-version ()
+  "View installed version information for current package."
+  (interactive)
+  (let ((package (caar apt-utils-package-history))
+        (type (cdar apt-utils-package-history))
+        (desired-list '((?u "Unknown")
+                   (?i "Install")
+                   (?r "Remove")
+                   (?p "Purge")
+                   (?h "Hold")))
+        (status-list '((?n "Not Installed")
+                  (?i "Installed")
+                  (?c "Config Files")
+                  (?u "Unpackage")
+                  (?f "Failed Config")
+                  (?h "Half Installed")))
+        (err-list '((?  "None")
+               (?h "Hold")
+               (?r "Reinstall Required")
+               (?x "Hold + Reinstall Required")))
+        desired status err status-bad err-bad)
+    (if (memq type '(normal normal-showpkg))
+        (progn
+          (with-temp-buffer
+            (call-process apt-utils-dpkg-program nil t nil "-l" package)
+            (cond
+             ((re-search-backward
+               (format "^\\([a-z ][a-z ][a-z ]\\)\\s-+%s\\s-+\\(\\S-+\\)"
+                       (regexp-quote package)) nil t)
+
+              (setq desired (aref (match-string 1) 0)
+                    status (aref (match-string 1) 1)
+                    err (aref (match-string 1) 2)
+                    status-bad (not (eq status (downcase status)))
+                    err-bad (not (eq err (downcase err))))
+              (message "%s: version %s (Desired = %s; Status = %s; Error = %s)"
+                       package
+                       (match-string 2)
+                       (cadr (assoc desired desired-list))
+                       (concat (cadr (assoc (downcase status) status-list))
+                               (and status-bad " [bad]"))
+                       (concat (cadr (assoc (downcase err) err-list))
+                               (and err-bad " [bad]"))))
+             (t
+              (message "No installation information available")))))
+      (message "Can show version info only for normal packages"))))
 
 ;; File-related utility functions
 
@@ -1008,7 +1103,7 @@ With non-nil NEW-SESSION, follow link in a new buffer."
    (package
     (unless new-session
       (apt-utils-update-buffer-positions 'forward))
-    (apt-utils-show-package-1 nil package new-session)
+    (apt-utils-show-package-1 package nil new-session)
     (unless new-session
       (setq apt-utils-package-history
             (cons (cons package (apt-utils-package-type package))
@@ -1026,7 +1121,7 @@ With non-nil NEW-SESSION, follow link in a new buffer."
   (if (cdr apt-utils-package-history)
       (progn
         (let ((posns (apt-utils-update-buffer-positions 'backward)))
-          (apt-utils-show-package-1 nil (cadr apt-utils-package-history))
+          (apt-utils-show-package-1 (cadr apt-utils-package-history) nil)
           (goto-char (car posns))
           (set-window-start (selected-window) (cadr posns)))
         (setq apt-utils-package-history (cdr apt-utils-package-history)))
@@ -1047,13 +1142,9 @@ ARG may be negative to move backward."
     (error "Not in APT utils buffer"))
   (cond
    ;; No links
-   ((= (hash-table-count apt-utils-current-links) 0)
+   ((or (null apt-utils-current-links)
+        (= (hash-table-count apt-utils-current-links) 0))
     (message "No package links."))
-   ;; One link
-   ((= (hash-table-count apt-utils-current-links) 1)
-    (goto-char (point-min))
-    (goto-char (next-single-property-change (point)
-                                                 'apt-package)))
    (t
     (let ((old (apt-utils-package-at)))
       ;; Forward.
@@ -1125,7 +1216,7 @@ With non-nil NEW-SESSION, follow link in a new buffer."
       (when (> (length package) 0)
         (unless new-session
           (apt-utils-update-buffer-positions 'forward))
-        (apt-utils-show-package-1 nil package new-session)
+        (apt-utils-show-package-1 package nil new-session)
         (unless new-session
           (setq apt-utils-package-history
                 (cons (cons package (apt-utils-package-type package))
@@ -1152,14 +1243,14 @@ indicated in `mode-name'."
             (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames")
             (mapcar (lambda (elt)
                       (apt-utils-puthash elt 'virtual apt-utils-package-list))
-                    (split-string (buffer-string) "\n"))
+                    (split-string (buffer-string)))
             ;; Normal packages
             (erase-buffer)
             (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames"
                           "-o" "APT::Cache::AllNames=0")
             (mapcar (lambda (elt)
                       (apt-utils-puthash elt 'normal apt-utils-package-list))
-                    (split-string (buffer-string) "\n")))
+                    (split-string (buffer-string))))
           (message "Building Debian package lists...done.")
           (setq apt-utils-package-list-built (current-time))
           (apt-utils-update-mode-name))
@@ -1180,7 +1271,8 @@ indicated in `mode-name'."
          (and (eq major-mode 'apt-utils-mode)
               (cadr (member 'apt-package
                             (text-properties-at (point)))))))
-    (when (eq package 'broken) (setq package nil))
+    (when (not (stringp package))
+      (setq package nil))
     (completing-read "Choose Debian package: "
                      (cond
                       (apt-utils-completing-read-hashtable-p
@@ -1191,14 +1283,14 @@ indicated in `mode-name'."
                      nil t package)))
 
 (defun apt-utils-build-completion-table (hash)
-  "Build completion table for packages using keys of hashtable HASH. "
+  "Build completion table for packages using keys of hashtable HASH."
   (with-temp-buffer
     (maphash (lambda (key value)
                (insert key "\n"))
              hash)
     (mapcar (lambda (elt)
               (list elt))
-            (split-string (buffer-string) "\n"))))
+            (split-string (buffer-string)))))
 
 ;; Add hyperlinks
 
@@ -1250,6 +1342,8 @@ indicated in `mode-name'."
              (t
               (setq face 'apt-utils-broken-face)
               (setq package 'broken)))
+            ;; Store package links
+            (apt-utils-current-links-add-package package)
             ;; Add text properties
             (add-text-properties (point) (+ (point) length-no-version)
                                  `(,apt-utils-face-property ,face
@@ -1267,8 +1361,6 @@ indicated in `mode-name'."
               (when (equal (char-before) ?\ )
                 (delete-char -1))          ; trailing whitespace
               (insert "\n" (make-string (+ 2 (length match)) ? )))
-            ;; Store package links
-            (apt-utils-puthash package nil apt-utils-current-links)
             (forward-char length)
             (skip-chars-forward ", |\n")
             (setq packages (cdr packages)))))
@@ -1315,8 +1407,6 @@ indicated in `mode-name'."
             (when (or (looking-at "^\\s-+\\(.*\\),")
                       (looking-at "^\\(.*\\) "))
               (setq link (match-string 1))
-              ;; Store package links
-              (apt-utils-puthash link nil apt-utils-current-links)
               (cond
                ((equal (apt-utils-package-type link t) 'normal)
                 (setq face 'apt-utils-normal-package-face))
@@ -1325,6 +1415,8 @@ indicated in `mode-name'."
                (t
                 (setq face 'apt-utils-broken-face)
                 (setq link 'broken)))
+              ;; Store package links
+              (apt-utils-current-links-add-package link)
               (add-text-properties (match-beginning 1) (match-end 1)
                                    `(,apt-utils-face-property ,face
                                           mouse-face highlight
@@ -1336,7 +1428,15 @@ indicated in `mode-name'."
   "Add hyperlinks to related Debian packages.
 The type of search is specified by TYPE."
   (let ((inhibit-read-only t)
+        local-keymap
         face link regexp)
+    (when (eq type 'search-file-names)
+      (setq local-keymap (make-sparse-keymap))
+      (define-key local-keymap (kbd "RET")
+        (lambda ()
+          (interactive)
+          (view-file (or (get-text-property (point) 'apt-package-file)
+                         (get-text-property (1- (point)) 'apt-package-file))))))
     (if (hash-table-p apt-utils-current-links)
         (clrhash apt-utils-current-links)
       (setq apt-utils-current-links (make-hash-table :test 'equal)))
@@ -1353,8 +1453,6 @@ The type of search is specified by TYPE."
       (setq regexp"^\\([^ ]+\\) - ")))
     (while (re-search-forward regexp (point-max) t)
       (setq link (match-string 1))
-      ;; Store package links
-      (apt-utils-puthash link nil apt-utils-current-links)      
       (cond
        ((equal (apt-utils-package-type link t) 'normal)
         (setq face 'apt-utils-normal-package-face))
@@ -1363,6 +1461,8 @@ The type of search is specified by TYPE."
        (t
         (setq face 'apt-utils-broken-face)
         (setq link 'broken)))
+      ;; Store package links
+      (apt-utils-current-links-add-package link)
       (add-text-properties (match-beginning 1) (match-end 1)
                            `(,apt-utils-face-property ,face
                                   mouse-face highlight
@@ -1370,8 +1470,28 @@ The type of search is specified by TYPE."
       ;; Multiple fields separated by commas
       (when (eq type 'search-file-names)
         (if (eq (char-before) ?\:)
-            (goto-char (1+ (apt-utils-line-end-position)))
-          (skip-chars-forward ", "))))))
+            (progn
+              (when local-keymap
+		(let ((start (1+ (point)))
+		      (end (save-excursion
+			     (goto-char (apt-utils-line-end-position))
+			     (re-search-backward " (diversion \\(from\\|to\\))"
+						 (apt-utils-line-beginning-position)
+						 t)
+			     (point))))
+		  (add-text-properties start end
+				       `(face apt-utils-file-face
+					      keymap ,local-keymap
+					      ;; Pretend we're a package
+					      ;; so that we can move
+					      ;; here with
+					      ;; apt-utils-next-package
+					      apt-package dummy
+					      apt-package-file
+					      ,(buffer-substring-no-properties start end)
+					      ))))
+	      (goto-char (1+ (apt-utils-line-end-position))))
+	  (skip-chars-forward ", "))))))
 
 (defun apt-utils-package-type (package &optional no-error)
   "Return what type of package PACKAGE is.
@@ -1395,6 +1515,9 @@ packages."
   "Emit message describing package at point."
   (let ((package (apt-utils-package-at)))
     (cond
+     ((eq package 'dummy)
+      ;; Do nothing as this isn't really a package
+      )
      ((equal package 'broken)
       (message "Package name is broken somehow."))
      (package
@@ -1405,24 +1528,20 @@ packages."
           (message "%s: virtual package (no description)."
                    package)))))))
 
-(defun apt-utils-quit ()
-  "Quit this `apt-utils-mode' buffer."
-  (interactive)
+(defun apt-utils-quit (&optional kill-buffer)
+  "Quit this `apt-utils-mode' buffer.
+With prefix argument KILL-BUFFER, kill the `apt-utils-mode'
+buffer."
+  (interactive "P")
   (unless (equal major-mode 'apt-utils-mode)
     (error "Not in APT utils buffer"))
-  (if (fboundp 'quit-window)
-      (quit-window)
-    (bury-buffer)))
-
-(defun apt-utils-kill-buffer ()
-  "Kill this `apt-utils-mode' buffer.
-Also clean up `apt-utils-package-list' using
-`apt-utils-cleanup'."
-  (interactive)
-  (unless (equal major-mode 'apt-utils-mode)
-    (error "Not in APT utils buffer"))
-  (kill-buffer (current-buffer))
-  (apt-utils-cleanup))
+  (let ((buffer (current-buffer)))
+    (if (fboundp 'quit-window)
+        (quit-window)
+      (bury-buffer))
+    (when kill-buffer
+      (kill-buffer buffer)))
+  (run-hooks 'apt-utils-quit-hooks))
 
 (defun apt-utils-cleanup ()
   "Clean up lists used by `apt-utils-mode'.
@@ -1432,7 +1551,7 @@ there are no buffers left in `apt-utils-mode'."
                 (mapcar (lambda (b)
                           (with-current-buffer b
                             major-mode))
-                        (buffer-list)))
+                        (delete (current-buffer) (buffer-list))))
     (clrhash apt-utils-package-list)
     (setq apt-utils-package-list-built nil)))
 
@@ -1446,20 +1565,24 @@ there are no buffers left in `apt-utils-mode'."
 See `apt-utils-kill-buffer-confirmation-function' for
 customisation options."
   (interactive)
-  (unless (eq major-mode 'apt-utils-mode)
+  (cond
+   ((not (eq major-mode 'apt-utils-mode))
     (error "Not in APT utils buffer"))
-  (when (or (null apt-utils-kill-buffer-confirmation-function)
-            (funcall apt-utils-kill-buffer-confirmation-function
-                     "Kill buffers in other windows? "))
-    (let ((buffer-list
-           (delq (current-buffer)
-                 (mapcar #'window-buffer (window-list)))))
-      (mapc (lambda (b)
-              (when (buffer-live-p b)
-                (kill-buffer b)))
-            buffer-list))
-    (delete-other-windows))
-  (message nil))
+   ((not (cdr (window-list)))
+    (message "No other windows to kill"))
+   (t
+    (when (or (null apt-utils-kill-buffer-confirmation-function)
+              (funcall apt-utils-kill-buffer-confirmation-function
+                       "Kill buffers in other windows? "))
+      (let ((buffer-list
+             (delq (current-buffer)
+                   (mapcar #'window-buffer (window-list)))))
+        (mapc (lambda (b)
+                (when (buffer-live-p b)
+                  (kill-buffer b)))
+              buffer-list))
+      (delete-other-windows))
+    (message nil))))
 
 ;; Track positions
 
@@ -1575,7 +1698,7 @@ TYPE can be forward, backward, or toggle."
   "Say whether time value T1 is less than time value T2."
   (or (< (car t1) (car t2))
       (and (= (car t1) (car t2))
-	   (< (nth 1 t1) (nth 1 t2)))))
+           (< (nth 1 t1) (nth 1 t2)))))
 
 (defun apt-utils-web-browse-debian-changelog ()
   "Browse web version of Debian ChangeLog file for the current package."
@@ -1677,6 +1800,11 @@ The tokens that can be replaced are:
                 (setq mode-name name))))
           (buffer-list))))
 
+(defun apt-utils-current-links-add-package (package)
+  "Add PACKAGE to `apt-utils-current-links' hashtable."
+  (unless (eq package 'broken)
+    (apt-utils-puthash package nil apt-utils-current-links)))
+
 ;; Mode settings
 
 (defvar apt-utils-mode-map
@@ -1688,7 +1816,6 @@ The tokens that can be replaced are:
     (define-key map (kbd "?")             'describe-mode)
     (define-key map (kbd "DEL")           'scroll-down)
     (define-key map (kbd "M-TAB")         'apt-utils-previous-package)
-    (define-key map (kbd "Q")             'apt-utils-kill-buffer)
     (define-key map (kbd "RET")           'apt-utils-follow-link)
     (define-key map (kbd "S s")           'apt-utils-search)
     (define-key map (kbd "S f")           'apt-utils-search-file-names)
@@ -1704,6 +1831,7 @@ The tokens that can be replaced are:
     (when (fboundp 'window-list)
       (define-key map (kbd "k")           'apt-utils-kill-other-window-buffers))
     (define-key map (kbd "l")             'apt-utils-list-package-files)
+    (define-key map (kbd "o")             'other-window)
     (define-key map (kbd "q")             'apt-utils-quit)
     (define-key map (kbd "s")             'apt-utils-show-package)
     (define-key map (kbd "t")             'apt-utils-toggle-package-info)
@@ -1712,10 +1840,12 @@ The tokens that can be replaced are:
     (define-key map (kbd "v N")           'apt-utils-view-debian-news)
     (define-key map (kbd "v c")           'apt-utils-view-changelog)
     (define-key map (kbd "v e")           'apt-utils-view-emacs-startup-file)
+    (define-key map (kbd "v f")           'apt-utils-view-package-files)
     (define-key map (kbd "v l")           'apt-utils-view-copyright)
     (define-key map (kbd "v m")           'apt-utils-view-man-page)
     (define-key map (kbd "v n")           'apt-utils-view-news)
     (define-key map (kbd "v r")           'apt-utils-view-readme)
+    (define-key map (kbd "v v")           'apt-utils-view-version)
     (define-key map [(shift iso-lefttab)] 'apt-utils-previous-package)
     (define-key map [(shift tab)]         'apt-utils-previous-package)
     (define-key map
@@ -1746,8 +1876,6 @@ The tokens that can be replaced are:
        (> (hash-table-count apt-utils-current-links) 0)]
       ["Follow Link at Point"       apt-utils-follow-link
        (apt-utils-package-at-point)]
-      ["List Package Files (dired)" apt-utils-list-package-files
-       (apt-utils-current-package-installed-p)]
       ["Rebuild Package Lists"      apt-utils-rebuild-package-lists t]
       "---"
       ("Search"
@@ -1776,6 +1904,9 @@ The tokens that can be replaced are:
         (apt-utils-copyright-file)]
        "---"
        ["Man Page"                  apt-utils-view-man-page
+        (apt-utils-current-package-installed-p)]
+       "---"
+       ["All Package Files (dired)" apt-utils-view-package-files
         (apt-utils-current-package-installed-p)])
       ("Browse URL"
        ,@(list (if apt-utils-xemacs-p
@@ -1788,8 +1919,7 @@ The tokens that can be replaced are:
        ["Package Versions"          apt-utils-web-browse-versions t])
       "---"
       ["Help"                       describe-mode t]
-      ["Quit"                       apt-utils-quit t]
-      ["Kill Buffer"                apt-utils-kill-buffer t])))
+      ["Quit"                       apt-utils-quit t])))
 
 (defun apt-utils-mode ()
   "Major mode to interface Emacs with APT (Debian package management).
@@ -1856,11 +1986,14 @@ Key definitions:
   (when (and (fboundp 'easy-menu-add)
              apt-utils-menu)
     (easy-menu-add apt-utils-menu))
+  (make-local-hook 'kill-buffer-hook)
+  (add-hook 'kill-buffer-hook 'apt-utils-cleanup nil t)
   (run-hooks 'apt-utils-mode-hook))
 
 ;; Debugging
 
 (defun apt-utils-trace-all ()
+  "Trace all `apt-utils' functions.  For debugging."
   (require 'trace)
   (let ((buffer (get-buffer-create "*APT Utils Trace*")))
     (buffer-disable-undo buffer)
