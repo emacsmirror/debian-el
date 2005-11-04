@@ -5,7 +5,7 @@
 (provide 'debian-el-loaddefs)
 
 ;;;### (autoloads (apt-sources-mode) "apt-sources" "apt-sources.el"
-;;;;;;  (16342 41238))
+;;;;;;  (16377 50278))
 ;;; Generated autoloads from apt-sources.el
 
 (autoload (quote apt-sources-mode) "apt-sources" "\
@@ -17,7 +17,7 @@ Sets up command `font-lock-mode'.
 ;;;***
 
 ;;;### (autoloads (apt-utils-search apt-utils-show-package) "apt-utils"
-;;;;;;  "apt-utils.el" (17055 6333))
+;;;;;;  "apt-utils.el" (17259 27466))
 ;;; Generated autoloads from apt-utils.el
 
 (autoload (quote apt-utils-show-package) "apt-utils" "\
@@ -66,9 +66,9 @@ easily repeat a `deb-find' command." t nil)
 
 ;;;### (autoloads (debian-bug debian-bug-get-bug-as-email debian-bug-get-bug-as-file
 ;;;;;;  debian-bug-web-package debian-bug-web-packages debian-bug-web-this-bug-under-mouse
-;;;;;;  debian-bug-web-this-bug debian-bug-web-bug debian-bug-web-developer-page
-;;;;;;  debian-bug-web-bugs debian-bug-intent-to-package debian-bug-request-for-package
-;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (17198 2200))
+;;;;;;  debian-bug-web-bug debian-bug-web-developer-page debian-bug-web-bugs
+;;;;;;  debian-bug-intent-to-package debian-bug-request-for-package
+;;;;;;  debian-bug-wnpp) "debian-bug" "debian-bug.el" (17258 25899))
 ;;; Generated autoloads from debian-bug.el
 
 (autoload (quote debian-bug-wnpp) "debian-bug" "\
@@ -91,9 +91,6 @@ Browse the web for this package's developer page." t nil)
 (autoload (quote debian-bug-web-bug) "debian-bug" "\
 Browse the BTS for BUG-NUMBER via `browse-url'." t nil)
 
-(autoload (quote debian-bug-web-this-bug) "debian-bug" "\
-Browse the BTS via `browse-url' for the bug report number under point." t nil)
-
 (autoload (quote debian-bug-web-this-bug-under-mouse) "debian-bug" "\
 Browse the BTS via `browse-url' for the bug report number under mouse.
 In a program, mouse location is in EVENT." t nil)
@@ -115,7 +112,7 @@ Submit a Debian bug report." t nil)
 
 ;;;***
 
-;;;### (autoloads (preseed-mode) "preseed" "preseed.el" (17245 33079))
+;;;### (autoloads (preseed-mode) "preseed" "preseed.el" (17245 35005))
 ;;; Generated autoloads from preseed.el
 
 (autoload (quote preseed-mode) "preseed" "\
