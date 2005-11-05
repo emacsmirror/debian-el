@@ -268,6 +268,9 @@
 ;;     (Closes: #337233)
 ;; V1.57 03Nov2005 Peter S Galbraith <psg@debian.org>
 ;;   - Swap CC: for X-Debbugs-CC: in mail header (Closes: #208570)
+;; V1.58 05Nov2005 Peter S Galbraith <psg@debian.org>
+;;   - debian-bug-wnpp: skip over mml directives in new drafts.
+;;   Thanks to Luca Capello <luca@pca.it> (Closes: #337659)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -734,6 +737,8 @@ Optional argument ACTION can be provided in programs."
     (require 'sendmail)
     (goto-char (mail-header-end))
     (forward-line 1)
+    (if (looking-at "^<#secure")      ;Skip over mml directives
+        (forward-line 1))
     (save-excursion
       (goto-char (point-min))
       (if debian-bug-use-From-address
