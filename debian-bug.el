@@ -271,6 +271,8 @@
 ;; V1.58 05Nov2005 Peter S Galbraith <psg@debian.org>
 ;;   - debian-bug-wnpp: skip over mml directives in new drafts.
 ;;   Thanks to Luca Capello <luca@pca.it> (Closes: #337659)
+;; V1.59 14Nov2005 Peter S Galbraith <psg@debian.org>
+;;   - Search for "^cc:" instead of simply "cc:" in Bug #208570 change.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -641,7 +643,7 @@ Reportbug may have sent an empty report!")))
                (string-equal " *nntpd*" (buffer-name)))
           (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
       (goto-char (point-min))
-      (when (re-search-forward "cc:" nil t)
+      (when (re-search-forward "^cc:" nil t)
         (delete-region (match-beginning 0)(match-end 0))
         (insert "X-Debbugs-CC:"))
       (goto-char (point-min))
