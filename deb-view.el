@@ -216,6 +216,14 @@
 ;;    then open in the other (larger) window.
 ;;    Thanks to Dan Jacobson for suggesting this change (Closes: #321869)
 
+;; 1.13 2006-02-02 Sven Joachim <sven_joachim@web.de>
+;;    Bug fix for UTF-8 (Closes: #344260)
+;;    The `call-process' and `call-process-region' use
+;;    default-process-coding-system rather than coding-system-for-read.
+;;    The former is set to '(mule-utf-8 . mule-utf-8) in my setup, and that
+;;    caused the problem.  So the solution is to bind
+;;    default-process-coding-system as well in deb-view-process
+
 
 ;;; Code:
 
@@ -343,6 +351,7 @@ at the prompt."
                              (get-buffer-create data-buffer-name)))
          (return-buffer (current-buffer))
 	 (coding-system-for-read 'no-conversion)
+         (default-process-coding-system '(no-conversion . no-conversion))
 	 file-buffer
          new-archive-format)
     (message "deb-view processing deb file %s..." deb-view-buffer-name)
