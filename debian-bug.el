@@ -273,6 +273,8 @@
 ;;   Thanks to Luca Capello <luca@pca.it> (Closes: #337659)
 ;; V1.59 14Nov2005 Peter S Galbraith <psg@debian.org>
 ;;   - Search for "^cc:" instead of simply "cc:" in Bug #208570 change.
+;; V1.60 30May2006 Luca Capello <luca@pca.it>
+;;   - Change the face of Tags: for experimental, (Closes: #357265)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -796,7 +798,7 @@ Optional argument ACTION can be provided in programs."
     ("^ *\\(Version:\\) *\\([^ \n]+\n\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-type-face nil t))
-    ("^ *\\(Tags:\\).*\\(patch\\)"
+    ("^ *\\(Tags:\\).*\\(\\(patch\\|experimental\\)\\)"
      (1 font-lock-keyword-face)
      (2 font-lock-type-face nil t))
     ("^ *\\(Tags:\\).*\\(security\\)"
