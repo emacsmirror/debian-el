@@ -1772,7 +1772,8 @@ Only decodes if `rfc2047-decode-string' is available."
                             "Reported by: <a class=\"submitter\" href=\"pkgreport.cgi\\?submitter=[^;]+;arch=source\">"
                             nil t)
                            (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
-                               (looking-at "\\(.*\\) &lt;")))
+                               (looking-at "\\(.*\\) &lt;")
+			       (looking-at "\\(.*\\)<")))
                   (setq shortdescription
                         (concat "Bug fix: \"" shortdescription
                                 "\", thanks to "
