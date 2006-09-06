@@ -36,7 +36,7 @@
 
 ;;; Code:
 
-(defconst apt-utils-version "2.6.0"
+(defconst apt-utils-version "2.8.0"
   "Version number of this package.")
 
 (require 'browse-url)
@@ -157,6 +157,11 @@ performance, but uses cached data that may be out of date."
                  (const : tag "dlocate" "/usr/bin/dlocate")
                  (file :must-match t)))
 
+(defcustom apt-utils-display-installed-status t
+  "If non-nil display the installed status of the current package."
+  :group 'apt-utils
+  :type 'boolean)
+
 ;; Faces
 
 (defface apt-utils-normal-package-face
@@ -213,6 +218,12 @@ performance, but uses cached data that may be out of date."
   '((((class color))
      (:foreground "brown")))
   "Face used for files."
+  :group 'apt-utils)
+
+(defface apt-utils-installed-status-face
+  '((((class color))
+     (:italic t)))
+  "Face used for installed status."
   :group 'apt-utils)
 
 ;; Other variables
@@ -386,7 +397,7 @@ buffer."
        ;; Virtual package or normal package w/ showpkg
        ((memq type '(virtual normal-showpkg))
         (call-process apt-utils-apt-cache-program nil '(t nil) nil "showpkg" package)
-        (apt-utils-add-showpkg-links))
+        (apt-utils-add-showpkg-links package))
        ;; Normal search
        ((equal type 'search)
         (insert (format "Debian package search for %s\n\n" package))
@@ -923,7 +934,7 @@ offer a choice."
    (t
     (let ((package (caar apt-utils-package-history))
           (regexp
-           "^.*/man/\\([a-zA-Z_/]+\\)?man[0-9]/\\(.*\\)\\.\\([0-9a-z]+\\)\\.gz")
+           "^.*/man/\\([a-zA-Z_/.]+\\)?man[0-9]/\\(.*\\)\\.\\([0-9a-z]+\\)\\.gz")
           choice chosen files table)
       (setq files (apt-utils-get-package-files package
                                                "/man/.*\\.gz$"))
@@ -938,8 +949,8 @@ offer a choice."
                        (setq choice
                              (with-temp-buffer
                                (insert file)
-                               (re-search-backward regexp nil t)
-                               (replace-match "\\2 (\\1\\3)" nil nil)
+                               (when (re-search-backward regexp nil t)
+                                 (replace-match "\\2 (\\1\\3)" nil nil))
                                (buffer-string)))
                        (cons choice file))
                      files))
@@ -996,48 +1007,63 @@ a choice."
   "View installed version information for current package."
   (interactive)
   (let ((package (caar apt-utils-package-history))
-        (type (cdar apt-utils-package-history))
-        (desired-list '((?u "Unknown")
-                   (?i "Install")
-                   (?r "Remove")
-                   (?p "Purge")
-                   (?h "Hold")))
-        (status-list '((?n "Not Installed")
-                  (?i "Installed")
-                  (?c "Config Files")
-                  (?u "Unpackage")
-                  (?f "Failed Config")
-                  (?h "Half Installed")))
-        (err-list '((?  "None")
-               (?h "Hold")
-               (?r "Reinstall Required")
-               (?x "Hold + Reinstall Required")))
-        desired status err status-bad err-bad)
+        (type (cdar apt-utils-package-history)))
     (if (memq type '(normal normal-showpkg))
-        (progn
-          (with-temp-buffer
-            (call-process apt-utils-dpkg-program nil t nil "-l" package)
-            (cond
-             ((re-search-backward
+        (let ((info (apt-utils-get-installed-info package)))
+          (if info
+              (message (apply #'format
+                              "%s: version %s (Desired = %s; Status = %s; Error = %s)"
+                              package info))
+            (message "Not installed; not known to dkpg")))
+      (message "Can show version info only for normal packages"))))
+
+(defun apt-utils-get-installed-info (package)
+  "Return list of installation information for package PACKAGE."
+  (let ((desired-list '((?u "Unknown")
+                        (?i "Install")
+                        (?r "Remove")
+                        (?p "Purge")
+                        (?h "Hold")))
+        (status-list '((?n "Not installed")
+                       (?i "Installed")
+                       (?c "Config files")
+                       (?u "Unpackage")
+                       (?f "Failed config")
+                       (?h "Half installed")))
+        (err-list '((?  "None")
+                    (?h "Hold")
+                    (?r "Reinstall required")
+                    (?x "Hold + reinstall required")))
+        desired status err status-bad err-bad)
+    (unless (eq package 'broken)
+      (with-temp-buffer
+        (let ((process-environment (append '("COLUMNS=200") (copy-alist process-environment))))
+          (call-process apt-utils-dpkg-program nil t nil "-l" package))
+        (when (re-search-backward
                (format "^\\([a-z ][a-z ][a-z ]\\)\\s-+%s\\s-+\\(\\S-+\\)"
                        (regexp-quote package)) nil t)
+          (progn
+            (setq desired (aref (match-string 1) 0)
+                  status (aref (match-string 1) 1)
+                  err (aref (match-string 1) 2)
+                  status-bad (not (eq status (downcase status)))
+                  err-bad (not (eq err (downcase err))))
+            ;; Return list of information
+            (list (match-string 2)      ; version
+                  (cadr (assoc desired desired-list))
+                  (concat (cadr (assoc (downcase status) status-list))
+                          (and status-bad " [bad]"))
+                  (concat (cadr (assoc (downcase err) err-list))
+                          (and err-bad " [bad]")))))))))
 
-              (setq desired (aref (match-string 1) 0)
-                    status (aref (match-string 1) 1)
-                    err (aref (match-string 1) 2)
-                    status-bad (not (eq status (downcase status)))
-                    err-bad (not (eq err (downcase err))))
-              (message "%s: version %s (Desired = %s; Status = %s; Error = %s)"
-                       package
-                       (match-string 2)
-                       (cadr (assoc desired desired-list))
-                       (concat (cadr (assoc (downcase status) status-list))
-                               (and status-bad " [bad]"))
-                       (concat (cadr (assoc (downcase err) err-list))
-                               (and err-bad " [bad]"))))
-             (t
-              (message "No installation information available")))))
-      (message "Can show version info only for normal packages"))))
+(defun apt-utils-insert-installed-info (package)
+  "Insert installed information for package PACKAGE at point."
+  (let ((posn (point)))
+    (insert (format " (%s)" (or (nth 2 (apt-utils-get-installed-info package))
+                                "Not installed; not known to dpkg")))
+    (add-text-properties (1+ posn)
+                         (point)
+                         '(face apt-utils-installed-status-face))))
 
 ;; File-related utility functions
 
@@ -1145,6 +1171,12 @@ ARG may be negative to move backward."
    ((or (null apt-utils-current-links)
         (= (hash-table-count apt-utils-current-links) 0))
     (message "No package links."))
+   ;; One link
+   ((and (= (hash-table-count apt-utils-current-links) 1)
+         (not (eq (cdar apt-utils-package-history) 'search-file-names)))
+    (goto-char (point-min))
+    (goto-char (next-single-property-change (point)
+                                                 'apt-package)))
    (t
     (let ((old (apt-utils-package-at)))
       ;; Forward.
@@ -1362,6 +1394,9 @@ indicated in `mode-name'."
                 (delete-char -1))          ; trailing whitespace
               (insert "\n" (make-string (+ 2 (length match)) ? )))
             (forward-char length)
+            (when (and (equal match "Package")
+                       apt-utils-display-installed-status)
+              (apt-utils-insert-installed-info package))
             (skip-chars-forward ", |\n")
             (setq packages (cdr packages)))))
        ((equal match "Description")
@@ -1381,8 +1416,8 @@ indicated in `mode-name'."
                                (point))
                              `(,apt-utils-face-property apt-utils-field-contents-face)))))))
 
-(defun apt-utils-add-showpkg-links ()
-  "Add hyperlinks to related Debian packages."
+(defun apt-utils-add-showpkg-links (package)
+  "Add hyperlinks to related Debian packages for PACKAGE."
   (let ((keywords '("Reverse Depends" "Reverse Provides"))
         (inhibit-read-only t)
         start end regexp face link)
@@ -1422,7 +1457,12 @@ indicated in `mode-name'."
                                           mouse-face highlight
                                           apt-package ,link)))
           (forward-line))))
-      (setq keywords (cdr keywords)))))
+      (setq keywords (cdr keywords))))
+  (when (and apt-utils-display-installed-status
+             (eq (apt-utils-package-type package t) 'normal))
+    (goto-char (point-min))
+    (re-search-forward "Package: .*$")
+    (apt-utils-insert-installed-info package)))
 
 (defun apt-utils-add-search-links (type)
   "Add hyperlinks to related Debian packages.
