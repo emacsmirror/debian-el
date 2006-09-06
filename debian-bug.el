@@ -1,7 +1,7 @@
 ;; debian-bug.el --- report a bug to Debian's bug tracking system
 
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -275,6 +275,8 @@
 ;;   - Search for "^cc:" instead of simply "cc:" in Bug #208570 change.
 ;; V1.60 30May2006 Luca Capello <luca@pca.it>
 ;;   - Change the face of Tags: for experimental, (Closes: #357265)
+;; V1.61 05Sep2006 evin Ryde <user42@zip.com.au>
+;;   - word-at-point needs an autoload or a require statement (Closes: #384542)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1422,6 +1424,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
 
 (defun debian-bug-prompt-bug-number (prompt)
   "Prompt the user for a bug number using PROMPT."
+  (require 'thingatpt)
   (let ((default-number)
         (item (word-at-point)))
     ;; First see if there's a number under point
