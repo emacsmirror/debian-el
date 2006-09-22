@@ -277,6 +277,10 @@
 ;;   - Change the face of Tags: for experimental, (Closes: #357265)
 ;; V1.61 05Sep2006 evin Ryde <user42@zip.com.au>
 ;;   - word-at-point needs an autoload or a require statement (Closes: #384542)
+;; V1.62 22Sep2006 Peter S Galbraith <psg@debian.org>
+;;   - Added "Owner:" to ITP bugs. Thanks to Romain Francoise for bringing
+;;     this to my attention (Closes: #388747)
+;;   - Updated the list of valid tags.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -455,9 +459,10 @@ Debian maintainers.")
 
 (defvar debian-bug-alltags-alist
   '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
-    ("fixed") ("security") ("upstream") ("potato") ("woody") ("sarge")
-    ("sarge-ignore") ("sid") ("experimental") ("confirmed") ("fixed-upstream")
-    ("d-i") ("ipv6") ("lfs"))
+    ("fixed") ("fixed-in-experimental") ("fixed-upstream") ("security")
+    ("upstream") ("confirmed") ("d-i") ("ipv6") ("lfs") ("l10n") ("potato")
+    ("woody") ("sarge") ("sarge-ignore") ("etch") ("etch-ignore") ("sid")
+    ("experimental"))
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
@@ -758,8 +763,11 @@ Optional argument ACTION can be provided in programs."
       (if CC-devel
           (debian-bug--set-CC "debian-devel@lists.debian.org"
                               "X-Debbugs-CC:")))
-    (insert "Package: wnpp\n"
-	    (format "Severity: %s\n\n" severity))
+    (insert "Package: wnpp\n")
+    (when (and (string-equal tag "ITP")
+               debian-bug-From-address)
+      (insert (format "Owner: %s\n" debian-bug-From-address)))
+    (insert (format "Severity: %s\n\n" severity))
     (when (or (string-equal tag "ITP")
 	      (string-equal tag "RFP"))
       (insert
@@ -792,6 +800,9 @@ Optional argument ACTION can be provided in programs."
 ;;; font-lock by Peter S Galbraith <psg@debian.org>, August 11th 2001
 (defvar debian-bug-font-lock-keywords
   '(("^ *\\(Package:\\) *\\([^ ]+\n\\)?"
+     (1 font-lock-keyword-face)
+     (2 font-lock-type-face nil t))
+    ("^ *\\(Owner:\\) *\\(.+\n\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-type-face nil t))
     ("^ *\\(File:\\) *\\([^ ]+\n\\)?"
@@ -1085,87 +1096,118 @@ Feb 8th 2002, checked Apr 22 2003.")))
  you look at the full bug log.
 
  Tags can be set by supplying a Tags line in the pseudo-header when the bug
- is submitted (see the instructions for reporting bugs), or by using the tags
- command with the control request server.
+ is submitted (see the instructions for reporting bugs), or by using the
+ tags command with the control request server. Separate multiple tags with
+ commas, spaces, or both.
 
  The current bug tags are:
 
  patch
-      A patch or some other easy procedure for fixing the bug is included in
-      the bug logs. If there's a patch, but it doesn't resolve the bug
-      adequately or causes some other problems, this tag should not be used.
+    A patch or some other easy procedure for fixing the bug is included in
+    the bug logs. If there's a patch, but it doesn't resolve the bug adequately
+    or causes some other problems, this tag should not be used.
+
  wontfix
-      This bug won't be fixed. Possibly because this is a choice between two
-      arbitrary ways of doing things and the maintainer and submitter prefer
-      different ways of doing things, possibly because changing the behaviour
-      will cause other, worse, problems for others, or possibly for other
-      reasons.
+    This bug won't be fixed.  Possibly because this is a choice between
+    two arbitrary ways of doing things and the maintainer and submitter prefer
+    different ways of doing things, possibly because changing the behaviour
+    will cause other, worse, problems for others, or possibly for other
+    reasons.
+
  moreinfo
-      This bug can't be addressed until more information is provided by the
-      submitter. The bug will be closed if the submitter doesn't provide more
-      information in a reasonable (few months) timeframe. This is for bugs
-      like \"It doesn't work\". What doesn't work?
+    This bug can't be addressed until more information is provided by the
+    submitter. The bug will be closed if the submitter doesn't provide more
+    information in a reasonable (few months) timeframe. This is for bugs like
+    \"It doesn't work\". What doesn't work?
+
  unreproducible
-      This bug can't be reproduced on the maintainer's system. Assistance
-      from third parties is needed in diagnosing the cause of the problem.
+    This bug can't be reproduced on the maintainer's system. Assistance
+    from third parties is needed in diagnosing the cause of the problem.
+
  help
-      The maintainer is requesting help with dealing with this bug.
+    The maintainer is requesting help with dealing with this bug. 
+
  pending
-      The problem described in the bug is being actively worked on, i.e.
-      a solution is pending.  It is marked in the BTS as \"pending upload\".
- confirmed
-      for bugs that you've looked at, understand, and basically agree with,
-      but haven't yet fixed yet. Bugs marked \"unreproducible\" or \"moreinfo\"
-      generally can't be \"confirmed\", bugs marked \"help\" could be depending
-      on what sort of help you're asking for.
+    A solution to this bug has been found and an upload will be made soon. 
+
  fixed
-      This bug is fixed or worked around (by a non-maintainer upload, for
-      example), but there's still an issue that needs to be resolved. This
-      tag replaces the old \"fixed\" severity.
+    This bug is fixed or worked around (by a non-maintainer upload, for
+    example), but there's still an issue that needs to be resolved. This tag
+    replaces the old \"fixed\" severity.
+
  security
-      This bug describes a security problem in a package (e.g., bad
-      permissions allowing access to data that shouldn't be accessible;
-      buffer overruns allowing people to control a system in ways they
-      shouldn't be able to; denial of service attacks that should be fixed,
-      etc). Most security bugs should also be set at critical or grave
-      severity.
+    This bug describes a security problem in a package (e.g., bad
+    permissions allowing access to data that shouldn't be accessible, buffer
+    overruns allowing people to control a system in ways they shouldn't be
+    able to, denial of service attacks that should be fixed, etc). Most
+    security bugs should also be set at critical or grave severity.
+
  upstream
-      This bug applies to the upstream part of the package.
- fixed-upstream
-      The bug has been fixed by the upstream maintainer, but not yet in the
-      package (for whatever reason: perhaps it is too complicated to backport
-      the change or too minor to be worth bothering).
+    This bug applies to the upstream part of the package. 
+
+ confirmed
+    The maintainer has looked at, understands, and basically agrees with
+    the bug, but has yet to fix it. (Use of this tag is optional, it is
+    intended mostly for maintainers who need to manage large numbers of open
+    bugs.)  fixed-upstream
+
+    The bug has been fixed by the upstream maintainer, but not yet in the
+    package (for whatever reason: perhaps it is too complicated to backport
+    the change or too minor to be worth bothering).
+
+ fixed-in-experimental
+    The bug has been fixed in the package of the experimental
+    distribution, but not yet in the unstable distribution.
+
  d-i
-      This bug is relevant to the development of debian-installer. It is
-      expected that this will be used when the bug affects installer
-      development but is not filed against a package that forms a direct
-      part of the installer itself.
+    This bug is relevant to the development of debian-installer. It is
+    expected that this will be used when the bug affects installer development
+    but is not filed against a package that forms a direct part of the
+    installer itself.
+
  ipv6
-      This bug affects support for Internet Protocol version 6.
+    This bug affects support for Internet Protocol version 6. 
+
  lfs
-      This bug affects support for large files (over 2 gigabytes).
+    This bug affects support for large files (over 2 gigabytes). 
+
+ l10n
+    This bug is relevant to the localisation of the package. 
+
  potato
-      This bug particularly applies to the potato release of Debian.
+    This bug particularly applies to the potato release of Debian. 
+
  woody
-      This bug particularly applies to the woody distribution.
+    This bug particularly applies to the woody distribution. 
+
  sarge
-      This bug particularly applies to the (unreleased) sarge distribution.
+    This bug should not be archived until it is fixed in sarge. 
+
  sarge-ignore
-      This release-critical bug is to be ignored for the purposes of releasing
-      sarge. This tag should only be used by the release manager; do not set
-      it yourself without explicit authorization from him.
+    This release-critical bug is to be ignored for the purposes of
+    releasing sarge. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ etch
+    This bug should not be archived until it is fixed in etch. 
+
+ etch-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing etch. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
  sid
-      This bug particularly applies to an architecture that is currently
-      unreleased (that is, in the sid distribution).
+    This bug should not be archived until it is fixed in sid. 
+
  experimental
-    This bug particularly applies to the experimental distribution.
+    This bug should not be archived until it is fixed in experimental. 
 
- The latter five tags are intended to be used mainly for release critical
- bugs, for which it's important to know which distributions are affected to
- make sure fixes (or removals) happen in the right place.
-
+The meanings of the latter 6 tags have changed recently, the ignore tags
+ignore the bug for the purpose of a testing propagation. The release tags,
+which used to indicate which bugs affected a specific release now indicate
+when a bug can be archived.
 Info from http://www.debian.org/Bugs/Developer#tags
-May 31st 2003")))
+Sep 22, 2006")))
 
 (defun debian-bug-help-pseudo-packages ()
   "Display pseudo-packages help."
