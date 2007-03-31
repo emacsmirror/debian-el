@@ -1814,7 +1814,7 @@ Only decodes if `rfc2047-decode-string' is available."
               (setq bug-alist (cons (list bugnumber description) bug-alist))
               (when bugs-are-open-flag
                 (when (and (re-search-forward
-                            "Reported by: <a class=\"submitter\" href=\"pkgreport.cgi\\?submitter=[^;]+;arch=source\">"
+                            "Reported by: <a class=\"submitter\" href=\"pkgreport.cgi\\?submitter=[^\"]+\">"
                             nil t)
                            (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
                                (looking-at "\\(.*\\) &lt;")
