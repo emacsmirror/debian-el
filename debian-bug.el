@@ -466,11 +466,11 @@ Debian maintainers.")
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
-  '("base" "boot-floppy" "bugs.debian.org" "cdimage.debian.org" "cdrom"
-    "ftp.debian.org" "general" "install" "installation"
+  '("base" "bugs.debian.org" "cdimage.debian.org" "cdrom"
+    "ftp.debian.org" "general"
     "installation-reports" "kernel" "listarchives"
-    "lists.debian.org" "mirrors" "nonus.debian.org" "potato-cd" "press"
-    "project" "qa.debian.org" "security.debian.org" "tech-ctte"
+    "lists.debian.org" "mirrors" "press"
+    "project" "qa.debian.org" "release-notes" "security.debian.org" "tech-ctte"
     "upgrade-reports" "wnpp" "www.debian.org")
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
