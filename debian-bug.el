@@ -349,6 +349,29 @@ Use it to specify what email your bugs will be archived under."
 ;;   :group 'debian-bug
 ;;   :type 'boolean)
 
+
+;; this solves the consistency problem with `debian-changelog-close-bug'
+;; as per bug #FILL-IN
+(defcustom debian-changelog-close-bug-statement "(closes: #%s)"
+  "The text to be inserted to close a bug.  `%s' is replaced by
+the bug number."
+  :group 'debian-changelog
+  :type 'string)
+
+;; this function is stolen from emacs/lisp/calendar/icalendar.el,
+;; necessary to replace "%s" with the bug number in the above
+;; `debian-changelog-close-bug-statement'
+(defsubst debian-changelog--rris (&rest args)
+  "Replace regular expression in string.
+Pass ARGS to `replace-regexp-in-string' (GNU Emacs) or to
+`replace-in-string' (XEmacs)."
+  ;; XEmacs:
+  (if (fboundp 'replace-in-string)
+      (save-match-data ;; apparently XEmacs needs save-match-data
+        (apply 'replace-in-string args))
+    ;; Emacs:
+    (apply 'replace-regexp-in-string args)))
+
 (defvar debian-bug-minor-mode nil)
 (defvar debian-bug-minor-mode-map nil
   "Keymap for `debian-bug' minor mode.")
@@ -1824,7 +1847,9 @@ Only decodes if `rfc2047-decode-string' is available."
                                 "\", thanks to "
                                 (debian-bug-rfc2047-decode-string
                                  (match-string 1))
-                                " (Closes: #" bugnumber ").")))
+                                " " (debian-changelog--rris
+				     "%s" bugnumber
+				     debian-changelog-close-bug-statement))))
                 (setq bug-open-alist
                       (cons
                        (list bugnumber shortdescription) bug-open-alist)))
