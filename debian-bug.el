@@ -281,6 +281,8 @@
 ;;   - Added "Owner:" to ITP bugs. Thanks to Romain Francoise for bringing
 ;;     this to my attention (Closes: #388747)
 ;;   - Updated the list of valid tags.
+;; V1.63 25Jul2007 Peter S Galbraith <psg@debian.org>
+;;  - Adapt patch from Luca Capello <luca@pca.it> for bug #431091
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -349,19 +351,10 @@ Use it to specify what email your bugs will be archived under."
 ;;   :group 'debian-bug
 ;;   :type 'boolean)
 
-
-;; this solves the consistency problem with `debian-changelog-close-bug'
-;; as per bug #FILL-IN
-(defcustom debian-changelog-close-bug-statement "(closes: #%s)"
-  "The text to be inserted to close a bug.  `%s' is replaced by
-the bug number."
-  :group 'debian-changelog
-  :type 'string)
-
-;; this function is stolen from emacs/lisp/calendar/icalendar.el,
-;; necessary to replace "%s" with the bug number in the above
+;; This function is from emacs/lisp/calendar/icalendar.el,
+;; necessary to replace "%s" with the bug number in
 ;; `debian-changelog-close-bug-statement'
-(defsubst debian-changelog--rris (&rest args)
+(defsubst debian-bug--rris (&rest args)
   "Replace regular expression in string.
 Pass ARGS to `replace-regexp-in-string' (GNU Emacs) or to
 `replace-in-string' (XEmacs)."
@@ -1847,7 +1840,7 @@ Only decodes if `rfc2047-decode-string' is available."
                                 "\", thanks to "
                                 (debian-bug-rfc2047-decode-string
                                  (match-string 1))
-                                " " (debian-changelog--rris
+                                " " (debian-bug--rris
 				     "%s" bugnumber
 				     debian-changelog-close-bug-statement))))
                 (setq bug-open-alist
