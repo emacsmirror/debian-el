@@ -1,7 +1,8 @@
 ;; debian-bug.el --- report a bug to Debian's bug tracking system
 
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2001, 2002, 2003, 2004 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2005, 2006, 2007 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -24,10 +25,6 @@
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
 ;; ----------------------------------------------------------------------------
 ;;; Commentary:
 ;;
@@ -283,6 +280,9 @@
 ;;   - Updated the list of valid tags.
 ;; V1.63 25Jul2007 Peter S Galbraith <psg@debian.org>
 ;;  - Adapt patch from Luca Capello <luca@pca.it> for bug #431091
+;; V1.64 29Aug2007 Peter S Galbraith <psg@debian.org>
+;;  - `debian-changelog-close-bug-statement' may not be bound (Closes: #440002)
+;;    Thanks to my friend Bill Wohler for finding this bug.
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1772,6 +1772,7 @@ Only decodes if `rfc2047-decode-string' is available."
       (rfc2047-decode-string string)
     string))
 
+(defvar debian-changelog-close-bug-statement)
 (defun debian-bug-build-bug-menu (package)
   "Build a menu listing the bugs for PACKAGE."
   (setq debian-bug-alist nil
@@ -1842,7 +1843,9 @@ Only decodes if `rfc2047-decode-string' is available."
                                  (match-string 1))
                                 " " (debian-bug--rris
 				     "%s" bugnumber
-				     debian-changelog-close-bug-statement))))
+				     (if (boundp 'debian-changelog-close-bug-statement)
+					 debian-changelog-close-bug-statement
+				       "(Closes: #%s)")))))
                 (setq bug-open-alist
                       (cons
                        (list bugnumber shortdescription) bug-open-alist)))
