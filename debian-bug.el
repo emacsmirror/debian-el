@@ -697,9 +697,9 @@ Reportbug may have sent an empty report!")))
       (forward-line 1)
       (if (looking-at "^<#secure")      ;Skip over mml directives
           (forward-line 1))
-      (message "Getting package information from system...")
+      (message "Getting package information from reportbug...")
       (debian-bug-prefill-report package severity)
-      (message "Getting package information from system...done")
+      (message "Getting package information from reportbug...done")
       (if debian-bug-use-From-address
           (debian-bug--set-custom-From))
       (if debian-bug-always-CC-myself
@@ -1337,12 +1337,11 @@ Aug 10th 2001
      ["Bugs for This Package" (debian-bug-web-bugs) t]
      ["Archived Bugs for This Package" (debian-bug-web-bugs t) t]
      ["Bug Number..." (debian-bug-web-bug) t]
-     ["Package Info" (debian-bug-web-packages) t]
-     ("Info for This Package"
-      ["Stable" (debian-bug-web-package "stable") t]
-      ["Testing" (debian-bug-web-package "testing") t]
-      ["Unstable" (debian-bug-web-package "unstable") t]
-      )
+     ["Package search for all releases" (debian-bug-web-packages) t]
+     "-- Package Web Pages --"
+     ["Stable" (debian-bug-web-package "stable") t]
+     ["Testing" (debian-bug-web-package "testing") t]
+     ["Unstable" (debian-bug-web-package "unstable") t]
      )
     ["Customize"
      (customize-group "debian-bug") (fboundp 'customize-group)]
