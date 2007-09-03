@@ -283,6 +283,9 @@
 ;; V1.64 29Aug2007 Peter S Galbraith <psg@debian.org>
 ;;  - `debian-changelog-close-bug-statement' may not be bound (Closes: #440002)
 ;;    Thanks to my friend Bill Wohler for finding this bug.
+;; V1.65 02Sep2007 Peter S Galbraith <psg@debian.org>
+;;  - Implement pacakge lookup on http://packages.debian.org/
+;;    See http://bugs.debian.org/87725
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1335,11 +1338,11 @@ Aug 10th 2001
      ["Archived Bugs for This Package" (debian-bug-web-bugs t) t]
      ["Bug Number..." (debian-bug-web-bug) t]
      ["Package Info" (debian-bug-web-packages) t]
-;;   ("Info for This Package"
-;;    ["Stable" (debian-bug-web-package "stable") t]
-;;    ["Testing" (debian-bug-web-package "testing") t]
-;;    ["Unstable" (debian-bug-web-package "unstable") t]
-;;    )
+     ("Info for This Package"
+      ["Stable" (debian-bug-web-package "stable") t]
+      ["Testing" (debian-bug-web-package "testing") t]
+      ["Unstable" (debian-bug-web-package "unstable") t]
+      )
      )
     ["Customize"
      (customize-group "debian-bug") (fboundp 'customize-group)]
@@ -1548,13 +1551,13 @@ In a program, mouse location is in EVENT."
 		      (read-string "Package name: "))))
     (if (string-equal "" pkg-name)
         (message "No package name to look up")
-      (browse-url
-       (concat
-        "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
-        pkg-name
-        "&searchon=names&version=all&release=all"))
-      (message "Looking up web pages for package %s via browse-url"
-               pkg-name))))
+      (browse-url (concat "http://packages.debian.org/" pkg-name))
+;; 2007-09-02 This URL is becoming obsolete...
+;;       (concat
+;;        "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
+;;        pkg-name
+;;        "&searchon=names&version=all&release=all")
+      (message "Looking up web pages for package %s via browse-url" pkg-name))))
 
 (defvar debian-bug-archive-alist
   '(("stable") ("testing") ("unstable"))
@@ -1585,11 +1588,8 @@ In a program, mouse location is in EVENT."
                                  debian-bug-archive-alist nil t nil)))
       (if (string-equal "" archive)
           (message "No archive name to look up")
-        (browse-url
-         (concat
-          "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
-          pkg-name
-          "&searchon=names&release=all&version=" archive))
+        (browse-url (format "http://packages.debian.org/%s/%s"
+                            archive pkg-name))
         (message "Looking up %s web page for package %s via browse-url"
                  archive pkg-name)))))
 
