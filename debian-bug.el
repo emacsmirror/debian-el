@@ -286,6 +286,9 @@
 ;; V1.65 02Sep2007 Peter S Galbraith <psg@debian.org>
 ;;  - Implement pacakge lookup on http://packages.debian.org/
 ;;    See http://bugs.debian.org/87725
+;; V1.66 24Sep2007 Luca Capello <luca@pca.it>
+;;  - Add `debian-bug-get-bug-as-email-hook' and relative `run-hooks'
+;;    (Closes: #392475) 
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -444,6 +447,13 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
 Otherwise, simply use the menu entry to generate it."
   :group 'debian-bug
   :type 'boolean)
+
+;; hooks
+(defcustom debian-bug-get-bug-as-email-hook nil
+  "Hook run when getting a bug through `mail-user-agent'."
+  :group 'debian-bug
+  :type 'hook)
+
 
 ;;; Internal variables:
 
@@ -1707,6 +1717,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                                     (gnus-alive-p))))
                      (error "Please start `gnus' (or `gnus-slave') first"))
                  (debian-bug-prompt-bug-number "Bug number to fetch")))
+  (run-hooks 'debian-bug-get-bug-as-email-hook)
   (cond
    ((and (eq mail-user-agent 'mh-e-user-agent)
          (featurep 'mh-inc))
