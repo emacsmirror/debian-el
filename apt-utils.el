@@ -1,6 +1,6 @@
 ;;; apt-utils.el --- Emacs interface to APT (Debian package management)
 
-;;; Copyright (C) 2002, 2003, 2004, 2005 Matthew P. Hodges
+;;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Matthew P. Hodges
 
 ;; Author: Matthew P. Hodges <MPHodges@member.fsf.org>
 ;;	$Id$
@@ -36,7 +36,7 @@
 
 ;;; Code:
 
-(defconst apt-utils-version "2.8.0"
+(defconst apt-utils-version "2.10.0"
   "Version number of this package.")
 
 (require 'browse-url)
@@ -337,7 +337,6 @@ A selection of known packages is presented.  See `apt-utils-mode'
 for more detailed help.  If NEW-SESSION is non-nil, generate a
 new `apt-utils-mode' buffer."
   (interactive "P")
-  (apt-utils-check-package-lists)
   (let ((package (apt-utils-choose-package)))
     (when (> (length package) 0)
       (apt-utils-show-package-1 package t new-session))))
@@ -582,6 +581,10 @@ search is specified by PROMPT."
         (if (hash-table-p apt-utils-current-links)
             (clrhash apt-utils-current-links)))
       (goto-char (point-min))
+      ;; Sort results
+      (save-excursion
+        (forward-line 2)
+        (sort-lines nil (point) (point-max)))
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
       (display-buffer (current-buffer)))))
@@ -1236,15 +1239,16 @@ With non-nil NEW-SESSION, follow link in a new buffer."
    ((= (hash-table-count apt-utils-current-links) 0)
     (message "No package links."))
    (t
-    (let ((package
-           (completing-read "Choose related Debian package: "
-                            (cond
-                             (apt-utils-completing-read-hashtable-p
-                              apt-utils-current-links)
-                             (t
-                              (apt-utils-build-completion-table
-                               apt-utils-current-links)))
-                            nil t)))
+    (let* ((PC-word-delimiters "-")
+           (package
+            (completing-read "Choose related Debian package: "
+                             (cond
+                              (apt-utils-completing-read-hashtable-p
+                               apt-utils-current-links)
+                              (t
+                               (apt-utils-build-completion-table
+                                apt-utils-current-links)))
+                             nil t)))
       (when (> (length package) 0)
         (unless new-session
           (apt-utils-update-buffer-positions 'forward))
@@ -1273,16 +1277,22 @@ indicated in `mode-name'."
           (with-temp-buffer
             ;; Virtual and normal packages
             (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames")
-            (mapcar (lambda (elt)
-                      (apt-utils-puthash elt 'virtual apt-utils-package-list))
-                    (split-string (buffer-string)))
+            (goto-char (point-min))
+            (while (not (eobp))
+              (apt-utils-puthash (buffer-substring (apt-utils-line-beginning-position)
+                                                   (apt-utils-line-end-position))
+                                 'virtual apt-utils-package-list)
+              (forward-line 1))
             ;; Normal packages
             (erase-buffer)
             (call-process apt-utils-apt-cache-program nil '(t nil) nil "pkgnames"
                           "-o" "APT::Cache::AllNames=0")
-            (mapcar (lambda (elt)
-                      (apt-utils-puthash elt 'normal apt-utils-package-list))
-                    (split-string (buffer-string))))
+            (goto-char (point-min))
+            (while (not (eobp))
+              (apt-utils-puthash (buffer-substring (apt-utils-line-beginning-position)
+                                                   (apt-utils-line-end-position))
+                                 'normal apt-utils-package-list)
+              (forward-line 1)))
           (message "Building Debian package lists...done.")
           (setq apt-utils-package-list-built (current-time))
           (apt-utils-update-mode-name))
@@ -1302,27 +1312,54 @@ indicated in `mode-name'."
   (let ((package
          (and (eq major-mode 'apt-utils-mode)
               (cadr (member 'apt-package
-                            (text-properties-at (point)))))))
+                            (text-properties-at (point))))))
+        (PC-word-delimiters "-"))
     (when (not (stringp package))
       (setq package nil))
-    (completing-read "Choose Debian package: "
-                     (cond
-                      (apt-utils-completing-read-hashtable-p
-                       apt-utils-package-list)
-                      (t
-                       (apt-utils-build-completion-table
-                        apt-utils-package-list)))
+    (completing-read (if package
+                         (format "Choose Debian package (%s): " package)
+                       "Choose Debian package: ")
+                     'apt-utils-choose-package-completion
                      nil t package)))
+
+;; emacs 22 has `dynamic-completion-table' to help construct a
+;; function like this, but emacs 21 and xemacs 21) don't
+(defun apt-utils-choose-package-completion (str pred all)
+  "Apt package name completion handler, for `completing-read'."
+  (let ((enable-recursive-minibuffers t))
+    (apt-utils-check-package-lists))
+  (cond ((null all)
+         (try-completion str (if apt-utils-completing-read-hashtable-p
+                                 apt-utils-package-list
+                               (apt-utils-build-completion-table
+                                apt-utils-package-list))
+                         pred))
+        ((eq all t)
+         (all-completions str (if apt-utils-completing-read-hashtable-p
+                                  apt-utils-package-list
+                                (apt-utils-build-completion-table
+                                 apt-utils-package-list))
+                          pred))
+        ((eq all 'lambda)
+         (if (fboundp 'test-completion)
+	     ;; `test-completion' is new in emacs22, and it takes
+	     ;; hashtables, so don't really need to test
+	     ;; apt-utils-completing-read-hashtable-p
+             (test-completion str (if apt-utils-completing-read-hashtable-p
+                                      apt-utils-package-list
+                                    (apt-utils-build-completion-table
+                                     apt-utils-package-list))
+                              pred)
+           (and (gethash str apt-utils-package-list)
+		t)))))
 
 (defun apt-utils-build-completion-table (hash)
   "Build completion table for packages using keys of hashtable HASH."
-  (with-temp-buffer
+  (let (ret)
     (maphash (lambda (key value)
-               (insert key "\n"))
+               (setq ret (cons (list key) ret)))
              hash)
-    (mapcar (lambda (elt)
-              (list elt))
-            (split-string (buffer-string)))))
+    ret))
 
 ;; Add hyperlinks
 
