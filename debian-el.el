@@ -6,6 +6,9 @@
 
 ;;; History:
 ;;
+;; 2008-04-12 - Géraud Meyer
+;;  - Use apt-sources-mode for files in /etc/apt/sources.list.d/ too.
+;;  - Use \' instead of $ for the end of filenames.
 ;; 2003-09-01 - Peter Galbraith
 ;;  - Created.
 
@@ -19,8 +22,9 @@
 ;;(require 'debian-el-custom)
 
 ;; apt-sources
-(add-to-list 'auto-mode-alist '("sources.list$" . apt-sources-mode))
-(defgroup apt-sources nil "Mode for editing apt source.list file"
+(add-to-list 'auto-mode-alist '("sources\\.list\\'" . apt-sources-mode))
+(add-to-list 'auto-mode-alist '("sources\\.list\\.d/.*\\.list\\'" . apt-sources-mode))
+(defgroup apt-sources nil "Mode for editing apt sources.list files"
   :group 'tools
   :prefix "apt-sources-"
   :link '(custom-manual "(debian-el)apt-sources")
@@ -49,7 +53,7 @@
 
 ;; deb-view.el
 (setq auto-mode-alist
-      (append '(("\\.u?deb$" . deb-view-mode)) auto-mode-alist))
+      (append '(("\\.u?deb\\'" . deb-view-mode)) auto-mode-alist))
 (defgroup deb-view nil
   "View Debian package files with tar-mode"
   :group 'tools

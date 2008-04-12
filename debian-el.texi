@@ -45,7 +45,7 @@ basis, do:
 @end example
 
 @menu
-* apt-sources::                 Mode for editing apt source.list file
+* apt-sources::                 Mode for editing apt sources.list files
 * apt-utils::                   Emacs interface to APT
 * debian-bug::                  Report a bug to Debian's bug tracking system
 * deb-view::                    View Debian package archive files with tar-mode
@@ -69,10 +69,11 @@ works, this text is also licensed under the GPL V2 (See
 @email{psg@@debian.org}.
 
 @node apt-sources, apt-utils, Top, Top
-@chapter apt-sources - Mode for editing apt source.list file.
+@chapter apt-sources - Mode for editing apt sources.list files.
 
-This mode is for editing @file{/etc/apt/sources.list}, the APT
-(Advanced Package Tool) configuration file found on Debian systems.
+This mode is for editing @file{/etc/apt/sources.list} and
+@file{/etc/apt/sources.list.d/*.list}, the APT (Advanced Package Tool)
+configuration files found on Debian systems.
 
 APT is a package retrieval tool for Debian; for example you could
 install Emacs with the command:
