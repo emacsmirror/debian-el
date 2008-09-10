@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003, 2004 Peter S Galbraith <psg@debian.org>
-;; Copyright (C) 2005, 2006, 2007 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2005, 2006, 2007, 2008 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -289,6 +289,9 @@
 ;; V1.66 24Sep2007 Luca Capello <luca@pca.it>
 ;;  - Add `debian-bug-get-bug-as-email-hook' and relative `run-hooks'
 ;;    (Closes: #392475) 
+;; V1.67 09Sept2008 Peter S Galbraith <psg@debian.org>
+;;  - Bug fix: "Bug submenus have vanished", thanks to Bill Wohler for the
+;;    report and to Camm Maguire for an initial patch (Closes: #463053).
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1824,7 +1827,7 @@ Only decodes if `rfc2047-decode-string' is available."
 	(goto-char (point-min))
         (while
             (re-search-forward
-             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<li><a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(#[0-9]+: \\(.+\\)\\)</a>\\)"
+             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+: \\(.+\\)\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
@@ -1832,6 +1835,7 @@ Only decodes if `rfc2047-decode-string' is available."
                 (description (match-string 6))
                 (shortdescription (match-string 7)))
             (cond
+             ((string= type "-->"))          ;Do nothing
              (type
               (setq bugs-are-open-flag (not (string-match "resolved" type)))
               (save-excursion
@@ -1841,7 +1845,7 @@ Only decodes if `rfc2047-decode-string' is available."
               (setq bug-alist (cons (list bugnumber description) bug-alist))
               (when bugs-are-open-flag
                 (when (and (re-search-forward
-                            "Reported by: <a class=\"submitter\" href=\"pkgreport.cgi\\?submitter=[^\"]+\">"
+                            "Reported by: <a href=\"pkgreport.cgi\\?submitter=[^\"]+\">"
                             nil t)
                            (or (looking-at "&quot;\\(.*\\)&quot; &lt;")
                                (looking-at "\\(.*\\) &lt;")
@@ -1862,9 +1866,10 @@ Only decodes if `rfc2047-decode-string' is available."
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert
-                 "[\"" (if (< 60 (length description))
-                           (substring description 0 60)
-                         description)
+                 "[\"#"  bugnumber " "
+                 (if (< 60 (length description))
+                     (substring description 0 60)
+                   description)
                  "\" (debian-bug-menu-action \"" bugnumber "\")"
                  " :active "
                  (if bugs-are-open-flag
