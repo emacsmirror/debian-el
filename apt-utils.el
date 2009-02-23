@@ -2033,7 +2033,7 @@ Files associated with installed packages can be accessed using:
     \\[apt-utils-view-changelog] view ChangeLog file
     \\[apt-utils-view-debian-changelog] view Debian ChangeLog file
     \\[apt-utils-view-readme] view README file
-    \\[apt-utils-view-debian-readme] view Debian ChangeLog file
+    \\[apt-utils-view-debian-readme] view Debian README file
     \\[apt-utils-view-news] view NEWS file
     \\[apt-utils-view-debian-news] view Debian NEWS file
     \\[apt-utils-view-copyright] view copyright (licence) file
