@@ -3,6 +3,7 @@
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003, 2004 Peter S Galbraith <psg@debian.org>
 ;; Copyright (C) 2005, 2006, 2007, 2008 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2009 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -292,6 +293,9 @@
 ;; V1.67 09Sept2008 Peter S Galbraith <psg@debian.org>
 ;;  - Bug fix: "Bug submenus have vanished", thanks to Bill Wohler for the
 ;;    report and to Camm Maguire for an initial patch (Closes: #463053).
+;; V1.68 23Feb2009 Peter S Galbraith <psg@debian.org>
+;;  - Bug fix: Adapted patch from Håkon Stordahl <haastord@online.no> to
+;;    quote bug descriptions when building the bug menu. (Closes: #489786)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1866,11 +1870,12 @@ Only decodes if `rfc2047-decode-string' is available."
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert
-                 "[\"#"  bugnumber " "
-                 (if (< 60 (length description))
-                     (substring description 0 60)
-                   description)
-                 "\" (debian-bug-menu-action \"" bugnumber "\")"
+                 "["
+                 (format "%S" (concat "#" bugnumber " "
+                                      (if (< 60 (length description))
+                                          (substring description 0 60)
+                                        description)))
+                 " (debian-bug-menu-action \"" bugnumber "\")"
                  " :active "
                  (if bugs-are-open-flag
                      "t"
