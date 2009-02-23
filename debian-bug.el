@@ -296,6 +296,8 @@
 ;; V1.68 23Feb2009 Peter S Galbraith <psg@debian.org>
 ;;  - Bug fix: Adapted patch from Håkon Stordahl <haastord@online.no> to
 ;;    quote bug descriptions when building the bug menu. (Closes: #489786)
+;;  - Bug fix: Applied patch from Håkon Stordahl <hakon@stordahl.org>
+;;    for garbled Help buffer (Closes: #502426)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1991,6 +1993,7 @@ Call this function from the mode setup with MINOR-MODE-MAP."
             (if package
                 package
               (message "Calling dpkg for the search...")
+              (erase-buffer)
               (call-process "dpkg" nil '(t nil) nil "-S"
                             (expand-file-name filename))
               (message "Calling dpkg for the search...done")
