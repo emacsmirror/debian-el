@@ -12,7 +12,7 @@
 ;; Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
 ;;  1997 nCipher Corporation Ltd.
 
-;; Author (Up to version 1.7):           Francesco Potort� <pot@gnu.org>
+;; Author (Up to version 1.7):           Francesco Potortì <pot@gnu.org>
 ;; Maintainer from version 1.8 onwards:  Peter S Galbraith <psg@debian.org>
 ;; Keywords: debian, bug, reporter
 
@@ -44,9 +44,9 @@
 ;; ----------------------------------------------------------------------------
 ;;; Change log:
 ;;
-;; V1.5 23sep99 Francesco Potort� <pot@gnu.org>
+;; V1.5 23sep99 Francesco Potortì <pot@gnu.org>
 ;;  - V1.1 -> 1.5 versions had no changelogs; starting one now.
-;; V1.5 and V1.7 by Francesco Potort� <pot@gnu.org> were unreleased.
+;; V1.5 and V1.7 by Francesco Potortì <pot@gnu.org> were unreleased.
 ;; V1.8 04aug01 Peter S Galbraith <psg@debian.org>
 ;;  - WNPP interface code added.  I'm unsure whether the functions useful
 ;;    only to Debian developpers should be in here.  Perhaps split into a
@@ -294,10 +294,12 @@
 ;;  - Bug fix: "Bug submenus have vanished", thanks to Bill Wohler for the
 ;;    report and to Camm Maguire for an initial patch (Closes: #463053).
 ;; V1.68 23Feb2009 Peter S Galbraith <psg@debian.org>
-;;  - Bug fix: Adapted patch from H�kon Stordahl <haastord@online.no> to
+;;  - Bug fix: Adapted patch from Håkon Stordahl <haastord@online.no> to
 ;;    quote bug descriptions when building the bug menu. (Closes: #489786)
-;;  - Bug fix: Applied patch from H�kon Stordahl <hakon@stordahl.org>
+;;  - Bug fix: Applied patch from Håkon Stordahl <hakon@stordahl.org>
 ;;    for garbled Help buffer (Closes: #502426)
+;; V1.69 12May2009 Peter S Galbraith <psg@debian.org>
+;;  - Updated debian-bug-pseudo-packages (Closes: #526496)
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -504,12 +506,12 @@ Debian maintainers.")
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
-  '("base" "bugs.debian.org" "cdimage.debian.org" "cdrom"
-    "ftp.debian.org" "general"
-    "installation-reports" "kernel" "listarchives"
-    "lists.debian.org" "mirrors" "press"
-    "project" "qa.debian.org" "release-notes" "security.debian.org" "tech-ctte"
-    "upgrade-reports" "wnpp" "www.debian.org")
+  '("base" "bugs.debian.org" "buildd.debian.org" "buildd.emdebian.org"
+    "cdimage.debian.org" "cdrom" "debian-i18n" "ftp.debian.org" "general"
+    "installation-reports" "lists.debian.org" "mirrors" "nm.debian.org"
+    "press" "project" "qa.debian.org" "release-notes" "release.debian.org"
+    "security-tracker" "security.debian.org" "tech-ctte" "upgrade-reports"
+    "wiki.debian.org" "wnpp" "www.debian.org")
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
 
@@ -1252,34 +1254,36 @@ Sep 22, 2006")))
   (with-output-to-temp-buffer "*Help*"
     (princ "List of Debian pseudo packages
 
- base -- Base system (baseX_Y.tgz) general bugs
- boot-floppy -- Installation system
- bugs.debian.org -- The bug tracking system, @bugs.debian.org
- cdimage.debian.org -- CD Image issues
- cdrom -- Installation system
- ftp.debian.org -- Problems with the FTP site
- general -- General problems (e.g. \"many manpages are mode 755\")
- install -- Installation system
- installation -- Installation system
- installation-reports -- Reports of installation problems with stable & testing
- kernel -- Problems with the Linux kernel, or that shipped with Debian
- listarchives -- Problems with the WWW mailing list archives
- lists.debian.org -- The mailing lists, debian-*@lists.debian.org
- mirrors -- Problems with the official mirrors
- nonus.debian.org -- Problems with the non-US FTP site
- potato-cd -- Potato CD
- press -- Press release issues
- project -- Problems related to project administration
- qa.debian.org -- The Quality Assurance group
- security.debian.org -- The Debian Security Team
- tech-ctte -- The Debian Technical Committee (see the Constitution)
- upgrade-reports -- Reports of upgrade problems for stable & testing
- wnpp -- Work-Needing and Prospective Packages list
- www.debian.org -- Problems with the WWW site
+ base — Base system general bugs
+ bugs.debian.org — The bug tracking system, @bugs.debian.org
+ buildd.debian.org — Problems and requests related to the Debian Buildds
+ buildd.emdebian.org — Problems related to building packages for Emdebian
+ cdimage.debian.org — CD Image issues
+ cdrom — Installation system
+ debian-i18n — Requests regarding Internationalization (i18n) of the distribution
+ ftp.debian.org — Problems with the FTP site
+ general — General problems (e.g. \"many manpages are mode 755\")
+ installation-reports — Reports of installation problems with stable & testing
+ lists.debian.org — The mailing lists, debian-*@lists.debian.org
+ mirrors — Problems with the official mirrors
+ nm.debian.org — New Maintainer process and nm.debian.org webpages
+ press — Press release issues
+ project — Problems related to project administration
+ qa.debian.org — The Quality Assurance group
+ release-notes — Problems with the Release Notes
+ release.debian.org — Requests regarding Debian releases and release team tools
+ security-tracker — The Debian Security Bug Tracker
+ security.debian.org — The Debian Security Team
+ tech-ctte — The Debian Technical Committee (see the Constitution)
+ upgrade-reports — Reports of upgrade problems for stable & testing
+ wiki.debian.org — Problems with the Debian wiki
+ wnpp — Work-Needing and Prospective Packages list
+ www.debian.org — Problems with the WWW site 
 
-from http://www.debian.org/Bugs/pseudo-packages, Apr 22th 2003.
-Copyright 1999 Darren O. Benham, 1994-1997 Ian Jackson,
- 1997 nCipher Corporation Ltd.")))
+from http://www.debian.org/Bugs/pseudo-packages, May 12th 2009.
+Copyright 1999 Darren O. Benham, 1997, 2003 nCipher Corporation Ltd,
+1994-1997 Ian Jackson.
+")))
 
 (defun debian-bug-help-email ()
   "Display help about various bug report emails to use."
