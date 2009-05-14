@@ -298,8 +298,10 @@
 ;;    quote bug descriptions when building the bug menu. (Closes: #489786)
 ;;  - Bug fix: Applied patch from Håkon Stordahl <hakon@stordahl.org>
 ;;    for garbled Help buffer (Closes: #502426)
-;; V1.69 12May2009 Peter S Galbraith <psg@debian.org>
+;; V1.69 13May2009 Peter S Galbraith <psg@debian.org>
 ;;  - Updated debian-bug-pseudo-packages (Closes: #526496)
+;;  - [PATCH] using the "maintainer mbox" instead of "mbox folder".
+;;    Thanks to Evgeny M. Zubok (Closes: #521571).
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1699,7 +1701,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                      debian-bug-download-directory))
           (status)
           (url (concat "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug="
-                       bug-number "&mbox=yes")))
+                       bug-number "&mbox=yes&mboxmaint=yes")))
       (if (and (file-exists-p filename)
                (not (y-or-n-p "Bug file already exists.  Download again? ")))
           filename
