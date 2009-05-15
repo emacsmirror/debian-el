@@ -302,6 +302,7 @@
 ;;  - Updated debian-bug-pseudo-packages (Closes: #526496)
 ;;  - [PATCH] using the "maintainer mbox" instead of "mbox folder".
 ;;    Thanks to Evgeny M. Zubok (Closes: #521571).
+;;  - Fix "incomplete Bugs menu again", thanks to A Mennucc (Closes: #524043).
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -1839,21 +1840,26 @@ Only decodes if `rfc2047-decode-string' is available."
 	(goto-char (point-min))
         (while
             (re-search-forward
-             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+: \\(.+\\)\\)</a>\\)"
+;;;          "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+: \\(.+\\)\\)</a>\\)"
+             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
                 (bugnumber (match-string 5))
                 (description (match-string 6))
-                (shortdescription (match-string 7)))
+                (shortdescription (match-string 6)))
             (cond
-             ((string= type "-->"))          ;Do nothing
+             ((string= type "-->"))                  ;Do nothing
              (type
               (setq bugs-are-open-flag (not (string-match "resolved" type)))
               (save-excursion
                 (set-buffer debian-bug-tmp-buffer)
                 (insert "\"-\"\n\"" type "\"\n")))
+             ((null description))                    ;Do nothing
+             ((string-match "^#?[0-9]+$" description)) ;Do nothing
              (t
+              (if (string-match "^[^ ]+: \\(.+\\)" description)
+                  (setq shortdescription (match-string 1 description)))
               (setq bug-alist (cons (list bugnumber description) bug-alist))
               (when bugs-are-open-flag
                 (when (and (re-search-forward
