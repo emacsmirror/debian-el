@@ -408,6 +408,7 @@ at the prompt."
     (delete-other-windows)
     ;; data
     (set-buffer data-buffer)
+    (buffer-disable-undo)
     (cond
      (new-archive-format
       (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.gz")
@@ -429,6 +430,7 @@ at the prompt."
     (setq deb-view-dired-view-return-buffer return-buffer)
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
+    (buffer-enable-undo)
     (switch-to-buffer-other-window data-buffer)
     (if new-archive-format (other-window 1))
     (shrink-window-if-larger-than-buffer)
