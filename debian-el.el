@@ -91,7 +91,8 @@ there's no buffer passed to coding system functions)."
   (and (eq (car arg-list) 'insert-file-contents) ;; first arg
        (consp (cadr arg-list)) ;; second arg like ("./control" . BUFFER)
        (let ((buffer (cdr (cadr arg-list))))
-         (and (string-match "\\.deb-INFO!\\./control\\'"
+         (and (buffer-file-name buffer)
+	      (string-match "\\.deb-INFO!\\./control\\'"
                             (buffer-file-name buffer))
               'utf-8))))
 
