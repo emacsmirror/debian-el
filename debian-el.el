@@ -87,17 +87,17 @@ tell if it's from a deb.
 Note: This only works in emacs22, in emacs21 or xemacs21 tar-mode
 does something a bit different and doesn't reach here (and
 there's no buffer passed to coding system functions)."
-
-  (and (eq (car arg-list) 'insert-file-contents) ;; first arg
-       (consp (cadr arg-list)) ;; second arg like ("./control" . BUFFER)
-       (let ((buffer (cdr (cadr arg-list))))
-         (and (buffer-file-name buffer)
-	      (string-match "\\.deb-INFO!\\./control\\'"
-                            (buffer-file-name buffer))
-              'utf-8))))
+  (if (and (eq (car arg-list) 'insert-file-contents) ;; first arg
+           (consp (cadr arg-list)) ;; second arg like ("./control" . BUFFER)
+           (let ((buffer (cdr (cadr arg-list))))
+             (and (buffer-file-name buffer)
+                  (string-match "\\.deb-INFO!\\./control\\'"
+                                (buffer-file-name buffer))
+                  'utf-8)))
+      'undecided))
 
   (add-to-list 'file-coding-system-alist
-               '("control" . deb-view-control-coding)))
+               '("\\'control\\'" . deb-view-control-coding)))
 
 (provide 'debian-el)
 
