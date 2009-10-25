@@ -1,11 +1,11 @@
 ;;; deb-view.el --- view Debian package files with tar-mode
 
 ;; Copyright (C) 1998 Rick Macdonald <rickmacd@shaw.ca>
-;; Copyright (C) 2003, 2004 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2003, 2004, 2005, 2009 Peter S Galbraith <psg@debian.org>
 
 ;; Author:     Rick Macdonald <rickmacd@shaw.ca>
 ;; Maintainer: Peter S. Galbraith <psg@debian.org>
-;; Version: 1.10
+;; Version: 1.14
 
 ;; This file is not part of GNU Emacs.
 
@@ -224,6 +224,8 @@
 ;;    caused the problem.  So the solution is to bind
 ;;    default-process-coding-system as well in deb-view-process
 
+;; 1.14 2009-10-25  Peter S. Galbraith <psg@debian.org>
+;;    Added support for data.tar.bz2 deb files (Closes: #457094).
 
 ;;; Code:
 
@@ -411,13 +413,26 @@ at the prompt."
     (buffer-disable-undo)
     (cond
      (new-archive-format
-      (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.gz")
-      (goto-char (point-max))
-      (when (search-backward "is not a valid archive" nil t)
-        (kill-buffer data-buffer)
-        (kill-buffer info-buffer)        
-        (error "%s: Not a valid package file" deb-view-buffer-name))
-      (call-process-region (point-min) (point-max) "gzip" t t nil "-cd"))
+      (call-process "ar" nil '(t t) nil "-t" debfile)
+      (cond
+       ((re-search-forward "data.tar.gz" nil t)
+        (erase-buffer)
+        (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.gz")
+        (goto-char (point-max))
+        (when (search-backward "is not a valid archive" nil t)
+          (kill-buffer data-buffer)
+          (kill-buffer info-buffer)        
+          (error "%s: Not a valid package file" deb-view-buffer-name))
+        (call-process-region (point-min) (point-max) "gzip" t t nil "-cd"))
+       ((and (goto-char 1)(re-search-forward "data.tar.bz2" nil t))
+        (erase-buffer)
+        (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.bz2")
+        (goto-char (point-max))
+        (when (search-backward "is not a valid archive" nil t)
+          (kill-buffer data-buffer)
+          (kill-buffer info-buffer)        
+          (error "%s: Not a valid package file" deb-view-buffer-name))
+        (call-process-region (point-min) (point-max) "bzip2" t t nil "-cd"))))
      (t      
       (call-process shell-file-name nil t nil shell-command-switch
                     (concat "dpkg-deb --fsys-tarfile " debfile))))
