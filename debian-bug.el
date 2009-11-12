@@ -46,7 +46,7 @@
 ;;
 ;; V1.5 23sep99 Francesco Potortì <pot@gnu.org>
 ;;  - V1.1 -> 1.5 versions had no changelogs; starting one now.
-;; V1.5 and V1.7 by Francesco Potortì <pot@gnu.org> were unreleased.
+;; V1.6 and V1.7 by Francesco Potortì <pot@gnu.org> were unreleased.
 ;; V1.8 04aug01 Peter S Galbraith <psg@debian.org>
 ;;  - WNPP interface code added.  I'm unsure whether the functions useful
 ;;    only to Debian developpers should be in here.  Perhaps split into a
@@ -273,7 +273,7 @@
 ;;   - Search for "^cc:" instead of simply "cc:" in Bug #208570 change.
 ;; V1.60 30May2006 Luca Capello <luca@pca.it>
 ;;   - Change the face of Tags: for experimental, (Closes: #357265)
-;; V1.61 05Sep2006 evin Ryde <user42@zip.com.au>
+;; V1.61 05Sep2006 Kevin Ryde <user42@zip.com.au>
 ;;   - word-at-point needs an autoload or a require statement (Closes: #384542)
 ;; V1.62 22Sep2006 Peter S Galbraith <psg@debian.org>
 ;;   - Added "Owner:" to ITP bugs. Thanks to Romain Francoise for bringing
@@ -303,6 +303,10 @@
 ;;  - [PATCH] using the "maintainer mbox" instead of "mbox folder".
 ;;    Thanks to Evgeny M. Zubok (Closes: #521571).
 ;;  - Fix "incomplete Bugs menu again", thanks to A Mennucc (Closes: #524043).
+;; V1.70 11Nov2009 Peter S Galbraith <psg@debian.org>
+;;  - Add `debian-bug-bts-URL' variable
+;;  - Add `emacs-bug-web-bug', `emacs-bug-get-bug-as-email':
+;;     New commands to interface with Emacs BTS
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -471,6 +475,12 @@ Otherwise, simply use the menu entry to generate it."
 
 ;;; Internal variables:
 
+(defvar debian-bug-bts-URL "http://bugs.debian.org/cgi-bin/bugreport.cgi?"
+  "URL of the Bug Tracking System to query.")
+
+(defvar debian-bts-control-for-emacs nil
+  "Whether debian-bts-control is being called for Emacs BTS.")
+
 (defvar debian-bug-mail-address
   "Debian Bug Tracking System <submit@bugs.debian.org>"
   "Email address that bugs are sent to.")
@@ -591,7 +601,10 @@ The obarray associates each package with the installed version of the package."
 	(mapcar 'debian-bug-intern (mapcar 'list debian-bug-pseudo-packages))
 	(mapcar 'debian-bug-intern real-pkgs)
 	(message "Building list of installed packages...done")))
-  debian-bug-packages-obarray)
+  (if debian-bts-control-for-emacs
+      '(("bzr") ("emacsbugs.donarmstrong.com") ("gnus") ("octave")
+        ("other") ("rmail"))
+    debian-bug-packages-obarray))
 
 (defun debian-bug-check-for-program (program)
   "Check if PROGRAM is installed on the system.
@@ -1542,10 +1555,16 @@ With optional argument prefix ARCHIVED, display archived bugs."
                                       debian-bug-alist nil nil)))
   (if (string-equal bug-number "")
       (message "No bug number to look up")
-    (browse-url
-     (concat "http://bugs.debian.org/cgi-bin/bugreport.cgi?archive=yes&bug="
-             bug-number))
+    (browse-url (concat debian-bug-bts-URL "archive=yes&bug=" bug-number))
     (message "Looking up bug number %s via browse-url" bug-number)))
+
+;;;###autoload
+(defun emacs-bug-web-bug (&optional bug-number)
+  "Browse the Emacs BTS for BUG-NUMBER via `browse-url'."
+  (interactive "NBug number: ")
+  (let ((debian-bug-bts-URL
+         "http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?"))
+    (debian-bug-web-bug (number-to-string bug-number))))
 
 ;;;###autoload
 (defun debian-bug-web-this-bug-under-mouse (EVENT)
@@ -1701,8 +1720,8 @@ If SUBMENU is t, then check for current sexp submenu only."
                              bug-number)
                      debian-bug-download-directory))
           (status)
-          (url (concat "http://bugs.debian.org/cgi-bin/bugreport.cgi?bug="
-                       bug-number "&mbox=yes&mboxmaint=yes")))
+          (url (concat debian-bug-bts-URL "bug=" bug-number
+                       "&mbox=yes&mboxmaint=yes")))
       (if (and (file-exists-p filename)
                (not (y-or-n-p "Bug file already exists.  Download again? ")))
           filename
@@ -1773,6 +1792,14 @@ If SUBMENU is t, then check for current sexp submenu only."
     ;; rmail
     (let ((filename (debian-bug-wget-mbox bug-number)))
       (rmail filename)))))
+
+;;;###autoload
+(defun emacs-bug-get-bug-as-email (&optional bug-number)
+  "Read Emacs bug report #BUG-NUMBER via Email interface."
+  (interactive "NBug number: ")
+  (let ((debian-bug-package-name "Emacs")
+        (debian-bug-bts-URL "http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?"))
+    (debian-bug-get-bug-as-email (number-to-string bug-number))))
 
 (defvar debian-changelog-menu)
 
