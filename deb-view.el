@@ -5,7 +5,7 @@
 
 ;; Author:     Rick Macdonald <rickmacd@shaw.ca>
 ;; Maintainer: Peter S. Galbraith <psg@debian.org>
-;; Version: 1.14
+;; Version: 1.15
 
 ;; This file is not part of GNU Emacs.
 
@@ -226,6 +226,10 @@
 
 ;; 1.14 2009-10-25  Peter S. Galbraith <psg@debian.org>
 ;;    Added support for data.tar.bz2 deb files (Closes: #457094).
+
+;; 1.15 2009-11-02  Peter S. Galbraith <psg@debian.org>
+;;    Fixed stupid bug "deb-view.el fails on own debian-el_30.9-1_all.deb",
+;;    thanks to Kevin Ryde (Closes: #554039).
 
 ;;; Code:
 
@@ -414,6 +418,7 @@ at the prompt."
     (cond
      (new-archive-format
       (call-process "ar" nil '(t t) nil "-t" debfile)
+      (goto-char 1)
       (cond
        ((re-search-forward "data.tar.gz" nil t)
         (erase-buffer)
