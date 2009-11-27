@@ -1,15 +1,16 @@
 ;;; apt-sources.el --- Mode for editing apt source.list file
 ;;
-;; Time-stamp: "2003-10-18 19:50:43 drs"
-;; Version: 0.9.8
+;; Version: 0.9.9
 ;; $Revision:
 ;; $Id:
 ;; $Source:
 
 ;; Author: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
-;; Mantainer: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
+;; Mantainer: Peter S. Galbraith <psg@debian.org>
+;;            (I can't find Dr. Rafael Sepúlveda)
 
 ;; Copyright (C) 2001-2003, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
+;; Copyright (C) 2009  Peter S. Galbraith <psg@debian.org>
 
 ;;   This program is free software; you can redistribute it and/or modify
 ;;   it under the terms of the GNU General Public License as published by
@@ -35,8 +36,8 @@
 ;;
 ;;   apt-get install emacs21
 ;;
-;; and APT will then retrieve the package and install it for you. The
-;; sources.list file tells APT where to look for packages. Mine looks
+;; and APT will then retrieve the package and install it for you.  The
+;; sources.list file tells APT where to look for packages.  Mine looks
 ;; like this:
 ;;
 ;;   deb http://http.us.debian.org/debian unstable main contrib
@@ -47,17 +48,17 @@
 ;; This mode font-locks the file and add some things including new
 ;; source lines and modifying existing source lines.
 ;;
-;; This mode can be customized in diferent parts. You can (interactively)
+;; This mode can be customized in diferent parts.  You can (interactively)
 ;; change if you want blank lines around a new source line and comment
-;; with `apt-sources-around-lines'. Also you can change the way that
+;; with `apt-sources-around-lines'.  Also you can change the way that
 ;; this mode names each source line, with variable`apt-sources-source-name';
 ;; if no name is entered, no commente name will be inserted.
 ;; To customize, try `M-x customize-group [RET] apt-sources'
 ;;
 ;; You can modify existing parts of the source line; check the mode
-;; documentation for mor details. Another thing that this mode can do is to
+;; documentation for mor details.  Another thing that this mode can do is to
 ;; replicate an existing line (`C-c C-r') that will be changed to the 'deb' or
-;; 'deb-src' corresponding line. If it replicates a 'deb' line, an identical
+;; 'deb-src' corresponding line.  If it replicates a 'deb' line, an identical
 ;; 'deb-src' source line will be created.
 ;;
 ;; To load this mode, you can add a "Local Variables" block at the end of
@@ -73,7 +74,9 @@
 
 ;;; History:
 
-;; 0.9.8 -- Remove dependancy to autoinsert, because it's no longer required.
+;; 0.9.9 2009-11-25 Peter S. Galbraith <psg@debian.org>
+;;       -- Create syntax table and add comments. (Closes: #469971)
+;; 0.9.8 -- Remove dependency to autoinsert, because it's no longer required.
 ;;           (suggested by Peter S. Galbraith <psg@debian.org>)
 ;; 0.9.7 -- Converted relevant defvar statements to defcustom, and added
 ;;           `auto-mode-alist' entry. (Peter S. Galbraith <psg@debian.org>)
@@ -138,13 +141,13 @@
 (defcustom apt-sources-load-hook nil
   "*Hook run when the `apt-sources-mode' is loaded."
   :type 'hook
-  :group 'apt-sources)  
+  :group 'apt-sources)
 
 (defcustom apt-sources-around-lines t
   "Put blank lines around the inserted source lines.
 This variable can be changed by function `apt-sources-around-lines'"
   :type 'boolean
-  :group 'apt-sources)  
+  :group 'apt-sources)
 
 (defcustom apt-sources-source-name "##\n## %s\n##\n\n"
   "Format used in the name of a new source line.
@@ -153,33 +156,43 @@ use ANSI quoting as described in the info elisp manual, chapter
 'Character Type'.  The '%s' is where the name of the source line will be
 inserted."
   :type 'string
-  :group 'apt-sources)  
+  :group 'apt-sources)
+
+(defvar apt-sources-mode-syntax-table nil
+  "Syntax table used in `apt-sources-mode' buffers.")
+(if apt-sources-mode-syntax-table
+    ()
+  (setq apt-sources-mode-syntax-table (make-syntax-table))
+
+  ;; Support # style comments
+  (modify-syntax-entry ?#  "<"  apt-sources-mode-syntax-table)
+  (modify-syntax-entry ?\n "> " apt-sources-mode-syntax-table))
 
 ;;Regexps for identifying source line parts for font-lock.
-(defvar apt-sources-font-lock-deb-regexp "\\(deb \\|deb-src \\)"
+(defvar apt-sources-font-lock-deb-regexp "\\(deb\\|deb-src\\)"
   "A regexp that matches 'deb' or 'deb-src' at the begining of line.")
 
 (defvar apt-sources-font-lock-uri-regexp
-  "\\([^ ]*\\)"
+  "\\([^ ]+\\)"
   "A regexp that matches the URI part of the source line.")
 
 (defvar apt-sources-font-lock-distribution-regexp
-  "\\( [^ \n]*\\)"
+  "\\([^ ]+\\)"
   "A regexp that matches the distribution name part of the source line.")
 
 
 (defvar apt-sources-font-lock-keywords
   (list
    ;; Comments
-   '("^#.*$" . font-lock-comment-face)
+   ;;'("^#.*$" . font-lock-comment-face)
    ;; sources.list lines:
    ;; deb http://http.us.debian.org/debian unstable main contrib
    (cons
     (concat "^"
-	    apt-sources-font-lock-deb-regexp
-	    apt-sources-font-lock-uri-regexp
+	    apt-sources-font-lock-deb-regexp " +"
+	    apt-sources-font-lock-uri-regexp " +"
 	    apt-sources-font-lock-distribution-regexp
-	    "\\(.*\\)$")
+	    " +\\([^#\n]+\\)")
     '(
       (1 font-lock-constant-face)
       (2 font-lock-variable-name-face)
@@ -258,6 +271,7 @@ Sets up command `font-lock-mode'.
   ;;
   (set (make-local-variable 'comment-start) "#")
   (set (make-local-variable 'comment-start-skip) "#+ *")
+  (set-syntax-table apt-sources-mode-syntax-table)
   ;;
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '(apt-sources-font-lock-keywords))
