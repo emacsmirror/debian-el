@@ -307,6 +307,8 @@
 ;;  - Add `debian-bug-bts-URL' variable
 ;;  - Add `emacs-bug-web-bug', `emacs-bug-get-bug-as-email':
 ;;     New commands to interface with Emacs BTS
+;; V1.71 19Dec2009 Peter S Galbraith <psg@debian.org>
+;;  - Emacs BTS moved to debbugs.gnu.org 
 ;; ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -602,7 +604,7 @@ The obarray associates each package with the installed version of the package."
 	(mapcar 'debian-bug-intern real-pkgs)
 	(message "Building list of installed packages...done")))
   (if debian-bts-control-for-emacs
-      '(("bzr") ("emacsbugs.donarmstrong.com") ("gnus") ("octave")
+      '(("bzr") ("debbugs.gnu.org") ("gnus") ("octave")
         ("other") ("rmail"))
     debian-bug-packages-obarray))
 
@@ -1563,7 +1565,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
   "Browse the Emacs BTS for BUG-NUMBER via `browse-url'."
   (interactive "NBug number: ")
   (let ((debian-bug-bts-URL
-         "http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?"))
+         "http://debbugs.gnu.org/cgi-bin/bugreport.cgi?"))
     (debian-bug-web-bug (number-to-string bug-number))))
 
 ;;;###autoload
@@ -1798,7 +1800,7 @@ If SUBMENU is t, then check for current sexp submenu only."
   "Read Emacs bug report #BUG-NUMBER via Email interface."
   (interactive "NBug number: ")
   (let ((debian-bug-package-name "Emacs")
-        (debian-bug-bts-URL "http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?"))
+        (debian-bug-bts-URL "http://debbugs.gnu.org/cgi-bin/bugreport.cgi?"))
     (debian-bug-get-bug-as-email (number-to-string bug-number))))
 
 (defvar debian-changelog-menu)
