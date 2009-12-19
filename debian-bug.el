@@ -1565,7 +1565,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
   "Browse the Emacs BTS for BUG-NUMBER via `browse-url'."
   (interactive "NBug number: ")
   (let ((debian-bug-bts-URL
-         "http://debbugs.gnu.org/cgi-bin/bugreport.cgi?"))
+         "http://debbugs.gnu.org/cgi/bugreport.cgi?"))
     (debian-bug-web-bug (number-to-string bug-number))))
 
 ;;;###autoload
@@ -1800,7 +1800,7 @@ If SUBMENU is t, then check for current sexp submenu only."
   "Read Emacs bug report #BUG-NUMBER via Email interface."
   (interactive "NBug number: ")
   (let ((debian-bug-package-name "Emacs")
-        (debian-bug-bts-URL "http://debbugs.gnu.org/cgi-bin/bugreport.cgi?"))
+        (debian-bug-bts-URL "http://debbugs.gnu.org/cgi/bugreport.cgi?"))
     (debian-bug-get-bug-as-email (number-to-string bug-number))))
 
 (defvar debian-changelog-menu)
