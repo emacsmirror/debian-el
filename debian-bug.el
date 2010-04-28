@@ -3,7 +3,7 @@
 ;; Copyright (C) 1998, 1999 Free Software Foundation, Inc.
 ;; Copyright (C) 2001, 2002, 2003, 2004 Peter S Galbraith <psg@debian.org>
 ;; Copyright (C) 2005, 2006, 2007, 2008 Peter S Galbraith <psg@debian.org>
-;; Copyright (C) 2009 Peter S Galbraith <psg@debian.org>
+;; Copyright (C) 2009, 2010 Peter S Galbraith <psg@debian.org>
 
 ;; Help texts from
 ;;  http://www.debian.org/Bugs/Developer#severities
@@ -309,7 +309,15 @@
 ;;     New commands to interface with Emacs BTS
 ;; V1.71 19Dec2009 Peter S Galbraith <psg@debian.org>
 ;;  - Emacs BTS moved to debbugs.gnu.org 
-;; ----------------------------------------------------------------------------
+;; V1.72 27Apr2010 Peter S Galbraith <psg@debian.org>
+;;  - debian-bug-build-bug-menu takes optional SOURCE argument to create a
+;;    menu for source package.  The problem comes from the BTS that no longer
+;;    finds source packages automatically, e.g. this won't work:
+;;        http://bugs.debian.org/cgi-bin/pkgreport.cgi?src=debian-el
+;;    but this is needed instead:
+;;        http://bugs.debian.org/cgi-bin/pkgreport.cgi?src=emacs-goodes-el
+;;    with the _real_ source package name.
+;;  ----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
 ;;
@@ -1828,8 +1836,9 @@ Only decodes if `rfc2047-decode-string' is available."
     string))
 
 (defvar debian-changelog-close-bug-statement)
-(defun debian-bug-build-bug-menu (package)
-  "Build a menu listing the bugs for PACKAGE."
+(defun debian-bug-build-bug-menu (package &optional source)
+  "Build a menu listing the bugs for PACKAGE.
+Optionally, if SOURCE is t, make it a source package."
   (setq debian-bug-alist nil
         debian-bug-open-alist nil)
   (let ((debian-bug-tmp-buffer
@@ -1863,14 +1872,15 @@ Only decodes if `rfc2047-decode-string' is available."
         (message "Fetching bug list...")
 	(call-process "wget" nil '(t t) nil "--quiet" "-O" "-"
 		      (concat
-                       "http://bugs.debian.org/cgi-bin/pkgreport.cgi?src="
+                       "http://bugs.debian.org/cgi-bin/pkgreport.cgi?"
+                       (if source "src=" "pkg=")
                        package))
         (message "Fetching bug list...done")
 	(goto-char (point-min))
         (while
             (re-search-forward
 ;;;          "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+: \\(.+\\)\\)</a>\\)"
-             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\(.+\\)</a>\\)"
+             "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\([^#].+\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
               ;;(URL (match-string 4))
@@ -1902,11 +1912,17 @@ Only decodes if `rfc2047-decode-string' is available."
                                 "\", thanks to "
                                 (debian-bug-rfc2047-decode-string
                                  (match-string 1))
-                                " " (debian-bug--rris
-				     "%s" bugnumber
-				     (if (boundp 'debian-changelog-close-bug-statement)
-					 debian-changelog-close-bug-statement
-				       "(Closes: #%s)")))))
+                                " " (if (fboundp 'replace-regexp-in-string)
+                                        (replace-regexp-in-string
+                                         "%s" bugnumber
+                                         (if (boundp 'debian-changelog-close-bug-statement)
+                                             debian-changelog-close-bug-statement
+                                           "(Closes: #%s)"))
+                                      (debian-bug--rris
+                                       "%s" bugnumber
+                                       (if (boundp 'debian-changelog-close-bug-statement)
+                                           debian-changelog-close-bug-statement
+                                         "(Closes: #%s)"))))))
                 (setq bug-open-alist
                       (cons
                        (list bugnumber shortdescription) bug-open-alist)))
@@ -1986,12 +2002,13 @@ Only decodes if `rfc2047-decode-string' is available."
 
 (defun debian-bug-build-bug-this-menu ()
   "Regenerate Bugs list menu for this buffer's package."
-  (let ((package (or (and (featurep 'debian-changelog-mode)
-			  (debian-changelog-suggest-package-name))
-		     (and (boundp 'debian-bug-package-name)
-			  debian-bug-package-name)
-		     (read-string "Package name: "))))
-    (debian-bug-build-bug-menu package)))
+  (if (and (featurep 'debian-changelog-mode)
+           (debian-changelog-suggest-package-name))
+      (debian-bug-build-bug-menu (debian-changelog-suggest-package-name) t)
+    (let ((package (or (and (boundp 'debian-bug-package-name)
+                            debian-bug-package-name)
+                       (read-string "Package name: "))))
+      (debian-bug-build-bug-menu package nil))))
 
 (defun debian-bug-bug-menu-init (minor-mode-map)
   "Initialize empty bug menu.
