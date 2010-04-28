@@ -317,7 +317,10 @@
 ;;    but this is needed instead:
 ;;        http://bugs.debian.org/cgi-bin/pkgreport.cgi?src=emacs-goodes-el
 ;;    with the _real_ source package name.
-;;  ----------------------------------------------------------------------------
+;; V1.73 28Apr2010 H. Stordahl <hakon@stordahl.org>
+;;    As of version 4.12 reportbug has a --no-bug-script option which can
+;;    be used to work around bug #502317.
+;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
 ;;
@@ -650,7 +653,7 @@ This can be removed at some point since `bug' is not released in sarge."
     (save-excursion
       (call-process "reportbug" nil '(t t) nil
 		    "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
-                    "--list-cc=none"
+                    "--list-cc=none" "--no-bug-script"
                     "-q" package)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
