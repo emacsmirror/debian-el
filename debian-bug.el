@@ -289,7 +289,7 @@
 ;;    See http://bugs.debian.org/87725
 ;; V1.66 24Sep2007 Luca Capello <luca@pca.it>
 ;;  - Add `debian-bug-get-bug-as-email-hook' and relative `run-hooks'
-;;    (Closes: #392475) 
+;;    (Closes: #392475)
 ;; V1.67 09Sept2008 Peter S Galbraith <psg@debian.org>
 ;;  - Bug fix: "Bug submenus have vanished", thanks to Bill Wohler for the
 ;;    report and to Camm Maguire for an initial patch (Closes: #463053).
@@ -308,7 +308,7 @@
 ;;  - Add `emacs-bug-web-bug', `emacs-bug-get-bug-as-email':
 ;;     New commands to interface with Emacs BTS
 ;; V1.71 19Dec2009 Peter S Galbraith <psg@debian.org>
-;;  - Emacs BTS moved to debbugs.gnu.org 
+;;  - Emacs BTS moved to debbugs.gnu.org
 ;; V1.72 27Apr2010 Peter S Galbraith <psg@debian.org>
 ;;  - debian-bug-build-bug-menu takes optional SOURCE argument to create a
 ;;    menu for source package.  The problem comes from the BTS that no longer
@@ -327,6 +327,15 @@
 ;;     debian-bug-run-bug-script, debian-bug-insert-bug-script-temp-file,
 ;;     debian-bug-compose-report
 ;;   Patch debian-bug-package to use them.
+;; V1.74 07May2010 H. Stordahl <hakon@stordahl.org>
+;;   Support "Bugs:" control field for unofficial packages (Closes #222392)
+;;    New variable `debian-bug-bts-address'
+;;    New functions:
+;;     debian-bug-read-control-file-field
+;;     debian-bug-read-bug-control-file-field
+;;     debian-bug-find-bts-address
+;;     debian-bug-bts-mail
+;;    Patch debian-bug-prefill-report to use them
 ;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -499,7 +508,7 @@ Otherwise, simply use the menu entry to generate it."
   "URL of the Bug Tracking System to query.")
 
 (defvar debian-bts-control-for-emacs nil
-  "Whether debian-bts-control is being called for Emacs BTS.")
+  "Whether `debian-bts-control' is being called for Emacs BTS.")
 
 (defvar debian-bug-mail-address
   "Debian Bug Tracking System <submit@bugs.debian.org>"
@@ -558,6 +567,10 @@ Used to determine if internal list is uptodate.")
 (defvar debian-bug-package-name nil
   "Buffer-local variable holding the package name for this submission.")
 (make-variable-buffer-local 'debian-bug-package-name)
+
+(defvar debian-bug-bts-address "bugs.debian.org"
+  "Name of BTS to which the bug report will be submitted.")
+(make-variable-buffer-local 'debian-bug-bts-address)
 
 (defvar debian-bug-easymenu-list nil
   "Holds the dynamically built easymenu list.")
@@ -645,6 +658,62 @@ This can be removed at some point since `bug' is not released in sarge."
        (t
         'none))))
 
+(defun debian-bug-read-control-file-field (package field)
+  "In the control file of PACKAGE, return the value of FIELD.
+This is achieved by parsing the output of dpkg -s.  If the field
+doesn't exist, nil is returned."
+  (let ((case-fold-search t))
+    (with-temp-buffer
+      (call-process "dpkg" nil '(t nil) nil "-s" package)
+      (goto-char (point-min))
+      (if (re-search-forward
+           (concat "^" field " *: *\\(.+\\)$") nil t)
+          (match-string 1)))))
+
+(defun debian-bug-read-bug-control-file-field (package field)
+  "In the bug control file of PACKAGE, return the value of FIELD if it exists.
+Otherwise nil is returned."
+  (let ((control (concat "/usr/share/bug/" package "/control"))
+        (case-fold-search t))
+    (if (file-readable-p control)
+        (with-temp-buffer
+          (insert-file-contents-literally control)
+          (goto-char (point-min))
+          (if (re-search-forward
+               (concat "^" field " *: *\\(.+\\)$") nil t)
+              (match-string 1))))))
+
+(defun debian-bug-find-bts-address (package)
+  "Return address of BTS where bug reports on PACKAGE should be submitted.
+This is specified by either the Bugs field in the control file for PACKAGE,
+or the Send-To field in the file /usr/share/bug/PACKAGE/control.  If neither
+of these fields have been specified, the address of the Debian BTS is
+returned.  Note that the address returned can be either a complete e-mail
+address or the host address of the BTS.  In the latter case the address
+must be expanded, by prepending \"submit\", \"maintonly\" or \"quiet\", as
+appropriate, followed by the at-sign, before it can be used to submit bug
+reports."
+  (let ((bugs-field (debian-bug-read-control-file-field
+                     package "Bugs"))
+        (send-to-field (debian-bug-read-bug-control-file-field
+                        package "Send-To")))
+    (cond
+     ((and bugs-field (string-match "^\\(debbugs://\\|mailto:\\)\\(.+\\)$"
+                                    bugs-field))
+      (match-string 2 bugs-field))
+     (send-to-field send-to-field)
+     (t "bugs.debian.org"))))
+
+(defun debian-bug-bts-mail (type bts-address)
+  "Return the complete e-mail address which should be used to submit the bug.
+The TYPE parameter is typically either of the strings \"submit\",
+\"quiet\" or \"maintonly\".  However, if BTS-ADDRESS is already a
+complete e-mail address, the TYPE parameter is ignored, and this
+function simply returns BTS-ADDRESS."
+  (if (string-match "@" bts-address)
+      bts-address
+    (concat type "@" bts-address)))
+
 (defun debian-bug-prefill-report (package severity)
   "Prefill bug report for PACKAGE at SEVERITY, calling bug or reportbug."
   (cond
@@ -677,7 +746,9 @@ Reportbug may have sent an empty report!")))
    ;; neither reportbug nor bug
    (t
     (insert
-     "\nPackage: " package
+     "Package: " (or (debian-bug-read-bug-control-file-field
+                      package "Submit-As")
+                     package)
      "\nVersion: " (let ((sym (intern-soft package debian-bug-packages-obarray)))
 		     (or (if (boundp sym) (symbol-value sym))
 			 (format-time-string "+N/A; reported %Y-%m-%d")))
@@ -703,14 +774,14 @@ Reportbug may have sent an empty report!")))
             (insert-file-contents presubj))))))
 
 (defun debian-bug-file-is-executable (file)
-  "Return non-nil if FILE is executable. Otherwise nil is returned."
+  "Return non-nil if FILE is executable.  Otherwise nil is returned."
   (and
-   (file-regular-p file) 
+   (file-regular-p file)
    (string-match "-..x..x..x" (nth 8 (file-attributes file)))))
 
 (defun debian-bug-find-bug-script (package)
-  "Return the full path name of the bug script of PACKAGE, if such
-script exists. Otherwise nil is returned."
+  "Return the full path name of the bug script of PACKAGE.
+If such script exists, otherwise nil is returned."
   (let ((script-alt1 (concat "/usr/share/bug/" package "/script"))
         (script-alt2 (concat "/usr/share/bug/" package)))
     (cond
@@ -720,8 +791,8 @@ script exists. Otherwise nil is returned."
 (defun debian-bug-script-sentinel
   (process event package severity subject filename
            bug-script-temp-file win-config)
-  "This function is the process sentinel for bug script processes,'
-and when called, if the process has terminated, this function cleans
+  "This function is the process sentinel for bug script processes.
+When called, if the process has terminated, this function cleans
 up the buffer used by the process and proceeds to the next step in the
 bug reporting process by calling `debian-bug-compose-report'. Note that
 this process sentinel is different from regular process sentinels in
@@ -767,10 +838,10 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
                                    bug-script-temp-file))))
 
 (defun debian-bug-run-bug-script (package severity subject filename)
-  "Run a script, if provided by PACKAGE, to collect information
-about the package which should be supplied with the bug report,
-and then proceed to the next step in the bug reporting process by
-calling `debian-bug-compose-report'."
+  "Run a script, if provided by PACKAGE, to collect information.
+The information about the package which should be supplied with
+the bug report, and then proceed to the next step in the bug
+reporting process by calling `debian-bug-compose-report'."
   (let ((handler "/usr/share/reportbug/handle_bugscript")
         (bug-script (debian-bug-find-bug-script package)))
     (if (and bug-script
@@ -851,8 +922,7 @@ calling `debian-bug-compose-report'."
       (debian-bug-compose-report package severity subject filename))))
 
 (defun debian-bug-insert-bug-script-temp-file (temp-file)
-  "Insert the output from the bug script, if any, into the current
-buffer in the appropriate place."
+  "Insert the output from the bug script, if any, into the current buffer."
   (when (and temp-file (file-readable-p temp-file))
     (save-excursion
       (next-line 1)
@@ -914,8 +984,8 @@ buffer in the appropriate place."
 
 (defun debian-bug-compose-report
   (package severity subject filename &optional bug-script-temp-file)
-"Compose the initial contents of the bug report and present it in
-a buffer to be completed by the user."
+  "Compose the initial contents of the bug report and present it in a buffer.
+The buffer will be completed by the user."
 ;;; (require 'reporter)
   (reporter-compose-outgoing)
   (if (and (equal mail-user-agent 'gnus-user-agent)
@@ -925,6 +995,8 @@ a buffer to be completed by the user."
   (when (re-search-forward "^cc:" nil t)
     (delete-region (match-beginning 0)(match-end 0))
     (insert "X-Debbugs-CC:"))
+  (setq debian-bug-bts-address
+        (debian-bug-find-bts-address package))
   (goto-char (point-min))
   (cond
    ((re-search-forward "To: " nil t)
@@ -934,7 +1006,10 @@ a buffer to be completed by the user."
    (t
     (insert "To: " debian-bug-mail-address)))
   (if (string-equal severity "minor")
-      (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
+      (debian-bug--set-bts-address
+       (debian-bug-bts-mail "maintonly" debian-bug-bts-address))
+    (debian-bug--set-bts-address
+     (debian-bug-bts-mail "submit" debian-bug-bts-address)))
   (goto-char (point-min))
   (cond
    ((re-search-forward "Subject: " nil t)
@@ -1400,10 +1475,10 @@ Feb 8th 2002, checked Apr 22 2003.")))
     from third parties is needed in diagnosing the cause of the problem.
 
  help
-    The maintainer is requesting help with dealing with this bug. 
+    The maintainer is requesting help with dealing with this bug.
 
  pending
-    A solution to this bug has been found and an upload will be made soon. 
+    A solution to this bug has been found and an upload will be made soon.
 
  fixed
     This bug is fixed or worked around (by a non-maintainer upload, for
@@ -1418,7 +1493,7 @@ Feb 8th 2002, checked Apr 22 2003.")))
     security bugs should also be set at critical or grave severity.
 
  upstream
-    This bug applies to the upstream part of the package. 
+    This bug applies to the upstream part of the package.
 
  confirmed
     The maintainer has looked at, understands, and basically agrees with
@@ -1441,22 +1516,22 @@ Feb 8th 2002, checked Apr 22 2003.")))
     installer itself.
 
  ipv6
-    This bug affects support for Internet Protocol version 6. 
+    This bug affects support for Internet Protocol version 6.
 
  lfs
-    This bug affects support for large files (over 2 gigabytes). 
+    This bug affects support for large files (over 2 gigabytes).
 
  l10n
-    This bug is relevant to the localisation of the package. 
+    This bug is relevant to the localisation of the package.
 
  potato
-    This bug particularly applies to the potato release of Debian. 
+    This bug particularly applies to the potato release of Debian.
 
  woody
-    This bug particularly applies to the woody distribution. 
+    This bug particularly applies to the woody distribution.
 
  sarge
-    This bug should not be archived until it is fixed in sarge. 
+    This bug should not be archived until it is fixed in sarge.
 
  sarge-ignore
     This release-critical bug is to be ignored for the purposes of
@@ -1464,7 +1539,7 @@ Feb 8th 2002, checked Apr 22 2003.")))
     not set it yourself without explicit authorization from them.
 
  etch
-    This bug should not be archived until it is fixed in etch. 
+    This bug should not be archived until it is fixed in etch.
 
  etch-ignore
     This release-critical bug is to be ignored for the purposes of
@@ -1472,10 +1547,10 @@ Feb 8th 2002, checked Apr 22 2003.")))
     not set it yourself without explicit authorization from them.
 
  sid
-    This bug should not be archived until it is fixed in sid. 
+    This bug should not be archived until it is fixed in sid.
 
  experimental
-    This bug should not be archived until it is fixed in experimental. 
+    This bug should not be archived until it is fixed in experimental.
 
 The meanings of the latter 6 tags have changed recently, the ignore tags
 ignore the bug for the purpose of a testing propagation. The release tags,
@@ -1513,7 +1588,7 @@ Sep 22, 2006")))
  upgrade-reports — Reports of upgrade problems for stable & testing
  wiki.debian.org — Problems with the Debian wiki
  wnpp — Work-Needing and Prospective Packages list
- www.debian.org — Problems with the WWW site 
+ www.debian.org — Problems with the WWW site
 
 from http://www.debian.org/Bugs/pseudo-packages, May 12th 2009.
 Copyright 1999 Darren O. Benham, 1997, 2003 nCipher Corporation Ltd,
@@ -1549,17 +1624,23 @@ Aug 10th 2001
       :selected (debian-bug--is-custom-From)]
      "--"
      ["To BTS, Maintainer and Mailing Lists"
-      (debian-bug--set-bts-address "submit@bugs.debian.org")
+      (debian-bug--set-bts-address
+       (debian-bug-bts-mail "submit" debian-bug-bts-address))
       :style radio
-      :selected (debian-bug--is-bts-address debian-bug-mail-address)]
+      :selected (debian-bug--is-bts-address
+                 (debian-bug-bts-mail "submit" debian-bug-bts-address))]
      ["To BTS and Maintainer Only"
-     (debian-bug--set-bts-address "maintonly@bugs.debian.org")
+      (debian-bug--set-bts-address
+       (debian-bug-bts-mail "maintonly" debian-bug-bts-address))
      :style radio
-     :selected (debian-bug--is-bts-address debian-bug-mail-maintonly-address)]
+     :selected (debian-bug--is-bts-address
+                (debian-bug-bts-mail "maintonly" debian-bug-bts-address))]
      ["To BTS Only"
-      (debian-bug--set-bts-address "quiet@bugs.debian.org")
+      (debian-bug--set-bts-address
+       (debian-bug-bts-mail "quiet" debian-bug-bts-address))
       :style radio
-      :selected (debian-bug--is-bts-address debian-bug-mail-quiet-address)]
+      :selected (debian-bug--is-bts-address
+                 (debian-bug-bts-mail "quiet" debian-bug-bts-address))]
      "--"
      ["CC debian-devel" (debian-bug--toggle-CC-devel)
       :style toggle
