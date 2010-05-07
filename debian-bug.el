@@ -320,6 +320,13 @@
 ;; V1.73 28Apr2010 H. Stordahl <hakon@stordahl.org>
 ;;    As of version 4.12 reportbug has a --no-bug-script option which can
 ;;    be used to work around bug #502317.
+;; V1.74 07May2010 H. Stordahl <hakon@stordahl.org>
+;;    A better way to run bug scripts... (Closes #422506)
+;;    New functions: debian-bug-help-presubj, debian-bug-file-is-executable,
+;;     debian-bug-find-bug-script, debian-bug-script-sentinel,
+;;     debian-bug-run-bug-script, debian-bug-insert-bug-script-temp-file,
+;;     debian-bug-compose-report
+;;   Patch debian-bug-package to use them.
 ;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -687,7 +694,193 @@ Reportbug may have sent an empty report!")))
     (call-process "uname" nil '(t t) nil "-a")
     (forward-line -5))))
 
-(defun debian-bug-package (&optional package)
+(defun debian-bug-help-presubj (package)
+  "Display contents of /usr/share/bug/PACKAGE/presubj."
+  (let ((presubj (concat "/usr/share/bug/" package "/presubj")))
+    (if (file-readable-p presubj)
+        (with-output-to-temp-buffer "*Help*"
+          (with-current-buffer "*Help*"
+            (insert-file-contents presubj))))))
+
+(defun debian-bug-file-is-executable (file)
+  "Return non-nil if FILE is executable. Otherwise nil is returned."
+  (and
+   (file-regular-p file) 
+   (string-match "-..x..x..x" (nth 8 (file-attributes file)))))
+
+(defun debian-bug-find-bug-script (package)
+  "Return the full path name of the bug script of PACKAGE, if such
+script exists. Otherwise nil is returned."
+  (let ((script-alt1 (concat "/usr/share/bug/" package "/script"))
+        (script-alt2 (concat "/usr/share/bug/" package)))
+    (cond
+     ((debian-bug-file-is-executable script-alt1) script-alt1)
+     ((debian-bug-file-is-executable script-alt2) script-alt2))))
+
+(defun debian-bug-script-sentinel
+  (process event package severity subject filename
+           bug-script-temp-file win-config)
+  "This function is the process sentinel for bug script processes,'
+and when called, if the process has terminated, this function cleans
+up the buffer used by the process and proceeds to the next step in the
+bug reporting process by calling `debian-bug-compose-report'. Note that
+this process sentinel is different from regular process sentinels in
+that it requires more arguments. So, it cannot be assigned to a process
+with `set-process-sentinel' directly, but requires some tweaking instead."
+  (if (memq (process-status process) '(exit signal))
+      (let* ((bug-script-buffer
+              (process-buffer process))
+             (bug-script-buffer-empty
+              (= (buffer-size bug-script-buffer) 0)))
+
+        ;; Call the process sentinel provided by the term module, to
+        ;; clean up the terminal buffer. The sentinel will print a
+        ;; message in the buffer, so we have been careful to check
+        ;; whether the buffer is empty above, before this call.
+        ;; Note, XEmacs' term module doesn't provide this sentinel.
+        (if (fboundp 'term-sentinel)
+            (term-sentinel process event))
+
+        ;; The reportbug program doesn't seem to care about the exit
+        ;; status of a bug script, so we won't do it either.
+        ;; (if (/= (process-exit-status process) 0)
+        ;;    (error (concat "Error occured while collecting"
+        ;;                    " information about the package")))
+
+        ;; If there is a window displaying the bug script buffer,
+        ;; restore the original window configuration, because it
+        ;; might have been changed when the bug script buffer was
+        ;; displayed. Otherwise, if the buffer isn't visible,
+        ;; assume that the window configuration hasn't changed, so
+        ;; don't restore anything.
+        (if (get-buffer-window bug-script-buffer)
+            (set-window-configuration win-config))
+
+        ;; If the process output buffer still exists, kill it if it's
+        ;; empty, otherwise bury it.
+        (if (buffer-name bug-script-buffer)
+            (if bug-script-buffer-empty
+                (kill-buffer bug-script-buffer)
+              (bury-buffer bug-script-buffer)))
+
+        (debian-bug-compose-report package severity subject filename
+                                   bug-script-temp-file))))
+
+(defun debian-bug-run-bug-script (package severity subject filename)
+  "Run a script, if provided by PACKAGE, to collect information
+about the package which should be supplied with the bug report,
+and then proceed to the next step in the bug reporting process by
+calling `debian-bug-compose-report'."
+  (let ((handler "/usr/share/reportbug/handle_bugscript")
+        (bug-script (debian-bug-find-bug-script package)))
+    (if (and bug-script
+             (debian-bug-file-is-executable handler)
+             (if (featurep 'xemacs)
+                 (or (featurep 'term) (load "term" 'noerror))
+               (require 'term nil 'noerror)))
+        (let ((bug-script-buffer
+               (get-buffer-create "*debian-bug-script*"))
+              (bug-script-temp-file
+               (cond ((fboundp 'make-temp-file)       ;; XEmacs doesn't know
+                      (make-temp-file "debian-bug-")) ;; make-temp-file.
+                     ((fboundp 'temp-directory)
+                      (make-temp-name (expand-file-name
+                                       "debian-bug-" (temp-directory))))
+                     (t (error "Cannot create temporary file"))))
+              (bug-script-process)
+
+              ;; XEmacs' term module doesn't set the appropriate
+              ;; coding system for process output from term-exec.
+              ;; Thus the following workaround, otherwise the terminal
+              ;; displayed by XEmacs can get messed up.
+              (coding-system-for-read 'binary))
+
+          (message (concat "Collecting information about the package."
+                           " This may take some time."))
+          (with-current-buffer bug-script-buffer
+            (erase-buffer)
+            (term-mode)
+            (term-exec bug-script-buffer "debian-bug-script" handler nil
+                       (list bug-script bug-script-temp-file))
+            (setq bug-script-process
+                  (get-buffer-process bug-script-buffer))
+
+            ;; The process sentinel should handle process termination.
+            ;; Note that we need to pass more information to the
+            ;; process sentinel than just the process object and event
+            ;; type. Ideally, the process property list seems suitable
+            ;; for this purpose, but that is only supported in GNU
+            ;; Emacs 22 and later. So, a hack is used to construct the
+            ;; process sentinel with the required data on the fly.
+            ;; However, I suspect there are better ways to do this,
+            ;; perhaps to use lexical-let.
+            (set-process-sentinel
+             bug-script-process
+             (list 'lambda '(process event)
+                   (list 'debian-bug-script-sentinel 'process 'event
+                         package severity subject filename
+                         bug-script-temp-file
+                         (current-window-configuration))))
+
+            (term-char-mode)
+
+            ;; The function set-process-query-on-exit-flag is only
+            ;; available in GNU Emacs version 22 and later.
+            (if (fboundp 'set-process-query-on-exit-flag)
+                (set-process-query-on-exit-flag bug-script-process nil)))
+
+          ;; Delay switching to the process output buffer by waiting
+          ;; for output from the process, the process to terminate or
+          ;; 200 seconds, because ideally we don't want to display the
+          ;; buffer unless the process will be requesting input, but
+          ;; it's no way to tell that in advance. If the process
+          ;; prints to stdout, it's likely it will be expecting input,
+          ;; so we display the buffer. If the process terminates with
+          ;; no output, we simply don't do anything; the process
+          ;; sentinel will kill the buffer, and proceed, upon process
+          ;; termination.
+          (accept-process-output bug-script-process 200)
+
+          ;; Short wait required here for the process-status to be
+          ;; updated. (Maybe a bug in Emacs?)
+          (sleep-for 0.050)
+          (if (not (memq (process-status bug-script-process)
+                         '(exit signal)))
+              (switch-to-buffer-other-window bug-script-buffer)))
+
+      (debian-bug-compose-report package severity subject filename))))
+
+(defun debian-bug-insert-bug-script-temp-file (temp-file)
+  "Insert the output from the bug script, if any, into the current
+buffer in the appropriate place."
+  (when (and temp-file (file-readable-p temp-file))
+    (save-excursion
+      (next-line 1)
+      (insert "\n")
+      (insert "-- Package-specific info:\n")
+      (let ((beg (point))
+            (end (+ (point)
+                    (nth 1 (insert-file-contents temp-file)))))
+        (save-restriction
+          (narrow-to-region beg end)
+          (goto-char (point-max))
+          (beginning-of-line)
+          (when (not (looking-at "$"))
+            (end-of-line)
+            (insert "\n"))
+          (when (or (and (boundp 'mml-mode) mml-mode)
+                    (memq mail-user-agent '(mh-e-user-agent
+                                            message-user-agent
+                                            gnus-user-agent)))
+            (mml-quote-region (point-min) (point-max))
+            (goto-char (point-min))
+            (insert "<#part type=\"text/plain\" disposition=attachment"
+                    " description=\"Bug script output\">\n")
+            (goto-char (point-max))
+            (insert "<#/part>\n"))))
+      (delete-file temp-file))))
+
+(defun debian-bug-package (&optional package filename)
   "Submit a Debian bug report about PACKAGE."
   (if (or (not package) (string= "" package))
       (save-window-excursion
@@ -714,50 +907,63 @@ Reportbug may have sent an empty report!")))
                       (completing-read "Severity (default normal): "
                                        debian-bug-severity-alist
                                        nil t nil nil "normal")))
-          (subject (read-string "(Very) brief summary of problem: ")))
-;;;   (require 'reporter)
-      (reporter-compose-outgoing)
-      (if (and (equal mail-user-agent 'gnus-user-agent)
-               (string-equal " *nntpd*" (buffer-name)))
-          (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
-      (goto-char (point-min))
-      (when (re-search-forward "^cc:" nil t)
-        (delete-region (match-beginning 0)(match-end 0))
-        (insert "X-Debbugs-CC:"))
-      (goto-char (point-min))
-      (cond
-       ((re-search-forward "To: " nil t)
-        (insert debian-bug-mail-address))
-       ((re-search-forward "To:" nil t)
-        (insert " " debian-bug-mail-address))
-       (t
-        (insert "To: " debian-bug-mail-address)))
-      (if (string-equal severity "minor")
-          (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
-      (goto-char (point-min))
-      (cond
-       ((re-search-forward "Subject: " nil t)
-        (insert package ": " subject))
-       ((re-search-forward "Subject:" nil t)
-        (insert " " package ": " subject))
-       (t
-        (insert "Subject: " package ": " subject)))
-      (require 'sendmail)
-      (goto-char (mail-header-end))
-      (forward-line 1)
-      (if (looking-at "^<#secure")      ;Skip over mml directives
-          (forward-line 1))
-      (message "Getting package information from reportbug...")
-      (debian-bug-prefill-report package severity)
-      (message "Getting package information from reportbug...done")
-      (if debian-bug-use-From-address
-          (debian-bug--set-custom-From))
-      (if debian-bug-always-CC-myself
-          (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
-      (set-window-start (selected-window) (point-min) t)
-      (setq debian-bug-package-name package)
-      (debian-bug-minor-mode 1)
-      (set-buffer-modified-p nil))))
+          (subject (save-window-excursion
+                     (debian-bug-help-presubj package)
+                     (read-string "(Very) brief summary of problem: "))))
+      (debian-bug-run-bug-script package severity subject filename))))
+
+(defun debian-bug-compose-report
+  (package severity subject filename &optional bug-script-temp-file)
+"Compose the initial contents of the bug report and present it in
+a buffer to be completed by the user."
+;;; (require 'reporter)
+  (reporter-compose-outgoing)
+  (if (and (equal mail-user-agent 'gnus-user-agent)
+           (string-equal " *nntpd*" (buffer-name)))
+      (set-buffer "*mail*"))   ; Bug in emacs21.1?  Moves to " *nntpd*"
+  (goto-char (point-min))
+  (when (re-search-forward "^cc:" nil t)
+    (delete-region (match-beginning 0)(match-end 0))
+    (insert "X-Debbugs-CC:"))
+  (goto-char (point-min))
+  (cond
+   ((re-search-forward "To: " nil t)
+    (insert debian-bug-mail-address))
+   ((re-search-forward "To:" nil t)
+    (insert " " debian-bug-mail-address))
+   (t
+    (insert "To: " debian-bug-mail-address)))
+  (if (string-equal severity "minor")
+      (debian-bug--set-bts-address "maintonly@bugs.debian.org"))
+  (goto-char (point-min))
+  (cond
+   ((re-search-forward "Subject: " nil t)
+    (insert package ": " subject))
+   ((re-search-forward "Subject:" nil t)
+    (insert " " package ": " subject))
+   (t
+    (insert "Subject: " package ": " subject)))
+  (require 'sendmail)
+  (goto-char (mail-header-end))
+  (forward-line 1)
+  (if (looking-at "^<#secure")      ;Skip over mml directives
+      (forward-line 1))
+  (message "Getting package information from reportbug...")
+  (debian-bug-prefill-report package severity)
+  (message "Getting package information from reportbug...done")
+  (if debian-bug-use-From-address
+      (debian-bug--set-custom-From))
+  (if debian-bug-always-CC-myself
+      (debian-bug--set-CC debian-bug-From-address "X-Debbugs-CC:"))
+  (when filename
+    (forward-char -1)
+    (insert "File: " filename "\n")
+    (forward-char 1))
+  (debian-bug-insert-bug-script-temp-file bug-script-temp-file)
+  (set-window-start (selected-window) (point-min) t)
+  (setq debian-bug-package-name package)
+  (debian-bug-minor-mode 1)
+  (set-buffer-modified-p nil))
 
 ;;; ---------
 ;;; WNPP interface by Peter S Galbraith <psg@debian.org>, August 4th 2001
@@ -2086,10 +2292,7 @@ Call this function from the mode setup with MINOR-MODE-MAP."
             (let ((answer (y-or-n-p (format "File is in package %s; continue? "
                                             package))))
               (when answer
-                (debian-bug-package package)
-                (save-excursion
-                  (forward-char -1)
-                  (insert "File: " filename "\n"))))))))))
+                (debian-bug-package package filename)))))))))
 
 ;;;###autoload
 (defun debian-bug ()

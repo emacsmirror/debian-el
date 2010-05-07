@@ -83,7 +83,7 @@ easily repeat a `deb-find' command.
 ;;;;;;  debian-bug-web-this-bug-under-mouse emacs-bug-web-bug debian-bug-web-bug
 ;;;;;;  debian-bug-web-developer-page debian-bug-web-bugs debian-bug-intent-to-package
 ;;;;;;  debian-bug-request-for-package debian-bug-wnpp) "debian-bug"
-;;;;;;  "debian-bug.el" (19244 61921))
+;;;;;;  "debian-bug.el" (19428 36210))
 ;;; Generated autoloads from debian-bug.el
 
 (autoload 'debian-bug-wnpp "debian-bug" "\
@@ -161,8 +161,8 @@ Submit a Debian bug report.
 
 ;;;***
 
-;;;### (autoloads nil nil ("debian-el.el" "gnus-BTS.el") (19244 63389
-;;;;;;  446049))
+;;;### (autoloads nil nil ("debian-el.el" "gnus-BTS.el") (19428 36483
+;;;;;;  329733))
 
 ;;;***
 
