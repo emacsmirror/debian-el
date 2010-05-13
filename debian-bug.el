@@ -336,6 +336,8 @@
 ;;     debian-bug-find-bts-address
 ;;     debian-bug-bts-mail
 ;;    Patch debian-bug-prefill-report to use them
+;; V1.75 13Mar2010 Peter S Galbraith <psg@debian.org>
+;;   Updated `debian-bug-pseudo-packages'.
 ;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -549,11 +551,13 @@ Debian maintainers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "bugs.debian.org" "buildd.debian.org" "buildd.emdebian.org"
-    "cdimage.debian.org" "cdrom" "debian-i18n" "ftp.debian.org" "general"
-    "installation-reports" "lists.debian.org" "mirrors" "nm.debian.org"
-    "press" "project" "qa.debian.org" "release-notes" "release.debian.org"
-    "security-tracker" "security.debian.org" "tech-ctte" "upgrade-reports"
-    "wiki.debian.org" "wnpp" "www.debian.org")
+  "cdimage.debian.org" "cdrom" "debian-i18n" "debian-maintainers"
+  "ftp.debian.org" "general" "installation-reports" "lists.debian.org"
+  "mirrors" "nm.debian.org" "press" "project" "qa.debian.org" "release-notes"
+  "release.debian.org" "security-tracker" "security.debian.org"
+  "snapshot.debian.org" "tech-ctte" "upgrade-reports" "wiki.debian.org"
+  "wnpp""www.debian.org"
+
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
 
@@ -1563,7 +1567,6 @@ Sep 22, 2006")))
   "Display pseudo-packages help."
   (with-output-to-temp-buffer "*Help*"
     (princ "List of Debian pseudo packages
-
  base — Base system general bugs
  bugs.debian.org — The bug tracking system, @bugs.debian.org
  buildd.debian.org — Problems and requests related to the Debian Buildds
@@ -1571,6 +1574,7 @@ Sep 22, 2006")))
  cdimage.debian.org — CD Image issues
  cdrom — Installation system
  debian-i18n — Requests regarding Internationalization (i18n) of the distribution
+ debian-maintainers — Problems and requests related to Debian Maintainers
  ftp.debian.org — Problems with the FTP site
  general — General problems (e.g. \"many manpages are mode 755\")
  installation-reports — Reports of installation problems with stable & testing
@@ -1584,13 +1588,14 @@ Sep 22, 2006")))
  release.debian.org — Requests regarding Debian releases and release team tools
  security-tracker — The Debian Security Bug Tracker
  security.debian.org — The Debian Security Team
+ snapshot.debian.org — Issues with the snapshot.debian.org service
  tech-ctte — The Debian Technical Committee (see the Constitution)
  upgrade-reports — Reports of upgrade problems for stable & testing
  wiki.debian.org — Problems with the Debian wiki
  wnpp — Work-Needing and Prospective Packages list
- www.debian.org — Problems with the WWW site
+ www.debian.org — Problems with the WWW site 
 
-from http://www.debian.org/Bugs/pseudo-packages, May 12th 2009.
+from http://www.debian.org/Bugs/pseudo-packages, May 13th 2010.
 Copyright 1999 Darren O. Benham, 1997, 2003 nCipher Corporation Ltd,
 1994-1997 Ian Jackson.
 ")))
