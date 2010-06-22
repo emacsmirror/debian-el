@@ -556,7 +556,7 @@ Debian maintainers.")
   "mirrors" "nm.debian.org" "press" "project" "qa.debian.org" "release-notes"
   "release.debian.org" "security-tracker" "security.debian.org"
   "snapshot.debian.org" "tech-ctte" "upgrade-reports" "wiki.debian.org"
-  "wnpp""www.debian.org"
+  "wnpp" "www.debian.org")
 
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
