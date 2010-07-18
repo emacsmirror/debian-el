@@ -1851,7 +1851,7 @@ The tokens that can be replaced are:
     (save-excursion                     ; for normal package type
       (with-temp-buffer
         (cond
-         ((eq type 'normal)
+         ((memq type '(normal normal-installed))
           (set-buffer buffer))
          ((eq type 'normal-showpkg)
           (call-process apt-utils-apt-cache-program nil '(t nil) nil "show" package)))
