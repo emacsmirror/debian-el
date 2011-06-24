@@ -1455,7 +1455,7 @@ indicated in `mode-name'."
               (apt-utils-insert-installed-info package))
             (skip-chars-forward ", |\n")
             (setq packages (cdr packages)))))
-       ((equal match "Description")
+       ((string-match-p "Description\\(-..\\)?" match)
         (add-text-properties (point)
                              (save-excursion
                                (or
