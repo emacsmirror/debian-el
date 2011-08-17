@@ -230,6 +230,9 @@
 ;; 1.15 2009-11-02  Peter S. Galbraith <psg@debian.org>
 ;;    Fixed stupid bug "deb-view.el fails on own debian-el_30.9-1_all.deb",
 ;;    thanks to Kevin Ryde (Closes: #554039).
+
+;; 1.16 2011-08-16  Peter S. Galbraith <psg@debian.org>
+;;    Added support for data.tar.xz deb files (Closes: #637579).
 
 ;;; Code:
 
@@ -438,6 +441,15 @@ at the prompt."
           (kill-buffer info-buffer)        
           (error "%s: Not a valid package file" deb-view-buffer-name))
         (call-process-region (point-min) (point-max) "bzip2" t t nil "-cd"))))
+       ((and (goto-char 1)(re-search-forward "data.tar.xz" nil t))
+        (erase-buffer)
+        (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.xz")
+        (goto-char (point-max))
+        (when (search-backward "is not a valid archive" nil t)
+          (kill-buffer data-buffer)
+          (kill-buffer info-buffer)        
+          (error "%s: Not a valid package file" deb-view-buffer-name))
+        (call-process-region (point-min) (point-max) "xz" t t nil "-cd"))))
      (t      
       (call-process shell-file-name nil t nil shell-command-switch
                     (concat "dpkg-deb --fsys-tarfile " debfile))))
