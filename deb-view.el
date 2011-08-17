@@ -440,7 +440,7 @@ at the prompt."
           (kill-buffer data-buffer)
           (kill-buffer info-buffer)        
           (error "%s: Not a valid package file" deb-view-buffer-name))
-        (call-process-region (point-min) (point-max) "bzip2" t t nil "-cd"))))
+        (call-process-region (point-min) (point-max) "bzip2" t t nil "-cd"))
        ((and (goto-char 1)(re-search-forward "data.tar.xz" nil t))
         (erase-buffer)
         (call-process "ar" nil '(t t) nil "-p" debfile "data.tar.xz")
