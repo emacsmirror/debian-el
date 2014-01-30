@@ -338,6 +338,8 @@
 ;;    Patch debian-bug-prefill-report to use them
 ;; V1.75 13Mar2010 Peter S Galbraith <psg@debian.org>
 ;;   Updated `debian-bug-pseudo-packages'.
+;; V1.76 30Jan2014 Peter S Galbraith <psg@debian.org>
+;;   Finally applied patch from Sven Joachim to fix Bug #679390.  Sorry!
 ;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -781,7 +783,7 @@ Reportbug may have sent an empty report!")))
   "Return non-nil if FILE is executable.  Otherwise nil is returned."
   (and
    (file-regular-p file)
-   (string-match "-..x..x..x" (nth 8 (file-attributes file)))))
+   (file-executable-p file)))
 
 (defun debian-bug-find-bug-script (package)
   "Return the full path name of the bug script of PACKAGE.
