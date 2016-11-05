@@ -1,4 +1,4 @@
-`;;; debian-el.el --- startup file for the debian-el package
+;;; debian-el.el --- startup file for the debian-el package
 
 ;;; Commentary:
 ;; 
