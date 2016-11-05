@@ -6,7 +6,7 @@
 ;; $Source:
 
 ;; Author: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
-;; Mantainer: Peter S. Galbraith <psg@debian.org>
+;; Maintainer: Peter S. Galbraith <psg@debian.org>
 ;;            (I can't find Dr. Rafael Sepúlveda)
 
 ;; Copyright (C) 2001-2003, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
@@ -515,7 +515,8 @@ This function will rise an error if we are not on a source line."
 
 
 (run-hooks 'apt-sources-load-hook)
-(add-to-list 'auto-mode-alist '("sources.list$" . apt-sources-mode))
+(add-to-list 'auto-mode-alist '("sources\\.list\\'" . apt-sources-mode))
+(add-to-list 'auto-mode-alist '("sources\\.list\\.d/.*\\.list\\'" . apt-sources-mode))
 (provide 'apt-sources)
 
 ;;; apt-sources.el ends here
