@@ -41,6 +41,7 @@
 
 (require 'browse-url)
 (require 'jka-compr)
+(require 'thingatpt)
 
 (defalias 'apt-utils-puthash 'puthash)
 
@@ -1332,7 +1333,7 @@ indicated in `mode-name'."
                             (text-properties-at (point))))))
         (PC-word-delimiters "-"))
     (when (not (stringp package))
-      (setq package nil))
+      (setq package (word-at-point)))
     (completing-read (if package
                          (format "Choose Debian package (%s): " package)
                        "Choose Debian package: ")
