@@ -310,8 +310,9 @@ of the format."
 					 ("frozen" 3)
 					 ("stable" 4)
 					 ("sid" 5)
-					 ("sarge" 6)
-					 ("woody" 7)) nil t))
+					 ("squeeze" 6)
+					 ("wheezy" 7)) 
+					 ("jessie" 8)) nil t))
 	(components (completing-read "Components: " ;list of componenst used by APT.
 				     '(("main")
 				       ("main contrib")
@@ -456,8 +457,9 @@ This function will rise an error if we are not in a source line."
 					      ("frozen" 3)
 					      ("stable" 4)
 					      ("sid" 5)
-					      ("sarge" 6)
-					      ("woody" 7)) nil t)))
+					      ("squeeze" 6)
+					      ("wheezy" 7)
+					      ("jessie" 8)) nil t)))
 	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward ":/*[^ ]*." (line-end-position) t 1)
