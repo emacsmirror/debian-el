@@ -340,6 +340,10 @@
 ;;   Updated `debian-bug-pseudo-packages'.
 ;; V1.76 30Jan2014 Peter S Galbraith <psg@debian.org>
 ;;   Finally applied patch from Sven Joachim to fix Bug #679390.  Sorry!
+;; V1.77 06Nov2016 Peter S Galbraith <psg@debian.org>
+;; - Updated tags
+;; - Bug fix: "Missing ; in debian-bug.el first line header", thanks
+;;   to Antoine R. Dumont (Closes: #842566).
 ;;----------------------------------------------------------------------------
 
 ;;; Todo (Peter's list):
@@ -547,8 +551,8 @@ Debian maintainers.")
   '(("patch") ("wontfix") ("moreinfo") ("unreproducible") ("help") ("pending")
     ("fixed") ("fixed-in-experimental") ("fixed-upstream") ("security")
     ("upstream") ("confirmed") ("d-i") ("ipv6") ("lfs") ("l10n") ("potato")
-    ("woody") ("sarge") ("sarge-ignore") ("etch") ("etch-ignore") ("sid")
-    ("experimental"))
+    ("woody") ("sarge") ("sarge-ignore") ("etch") ("etch-ignore") ("lenny")
+    ("squeeze") ("wheezy") ("jessie") ("sid") ("experimental"))
   "Alist of all valid Tags, aimed at Debian developpers.")
 
 (defvar debian-bug-pseudo-packages
