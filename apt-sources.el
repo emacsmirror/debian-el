@@ -311,7 +311,7 @@ of the format."
 					 ("stable" 4)
 					 ("sid" 5)
 					 ("squeeze" 6)
-					 ("wheezy" 7)) 
+					 ("wheezy" 7)
 					 ("jessie" 8)) nil t))
 	(components (completing-read "Components: " ;list of componenst used by APT.
 				     '(("main")
