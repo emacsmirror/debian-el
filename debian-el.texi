@@ -1,7 +1,7 @@
 @c -*- mode: texinfo -*-
 \input texinfo
 
-@c $Id$
+@c $Id: debian-el.texi,v 1.7 2008-04-12 13:10:57 psg Exp $
 @c %**start of header
 @setfilename info/debian-el
 @settitle debian-el

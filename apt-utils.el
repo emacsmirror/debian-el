@@ -3,7 +3,7 @@
 ;;; Copyright (C) 2002-2010 Matthew P. Hodges
 
 ;; Author: Matthew P. Hodges <MPHodges@member.fsf.org>
-;;	$Id$
+;;	$Id: apt-utils.el,v 1.23 2016/11/05 22:18:48 psg Exp $
 
 ;; apt-utils.el is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
