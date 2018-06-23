@@ -1,5 +1,5 @@
-debian-el (36.5-1) unstable; urgency=medium
+debian-el (37.0) experimental; urgency=medium
 
   * Split from emacs-goodies-el source (36.4), and dh-elpafied.
 
- -- David Bremner <bremner@debian.org>  Sat, 9 Jun 2018 12:56:24 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 23 Jun 2018 19:50:03 -0300
