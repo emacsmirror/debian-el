@@ -18,7 +18,6 @@
   "Debian debian-el package customization."
   :group 'convenience)
 
-(require 'debian-el-loaddefs)
 ;;(require 'debian-el-custom)
 
 ;; apt-sources
