@@ -2,3 +2,6 @@
 
 %:
 	dh $@ --with elpa
+
+override_dh_auto_build:
+	makeinfo -o debian-el.info debian-el.texi
