@@ -4,7 +4,8 @@ Priority: optional
 Maintainer: David Bremner <bremner@debian.org>
 Build-Depends: debhelper (>= 10),
  dh-elpa,
- texinfo
+ texinfo,
+ install-info
 Standards-Version: 4.1.3
 
 Package: elpa-debian-el

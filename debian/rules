@@ -5,3 +5,4 @@
 
 override_dh_auto_build:
 	makeinfo -o debian-el.info debian-el.texi
+	install-info debian-el.info dir
