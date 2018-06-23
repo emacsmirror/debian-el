@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 10),
  dh-elpa
 Standards-Version: 4.1.3
 
-Package: elpa-debian
+Package: elpa-debian-el
 Architecture: all
 Depends: ${elpa:Depends}, ${misc:Depends}
 Recommends: emacs (>= 46.0)
