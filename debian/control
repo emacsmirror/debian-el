@@ -13,11 +13,11 @@ Recommends: emacs (>= 46.0)
 Enhances: emacs,
  emacs25
 Description: Emacs helpers specific to Debian users
-  This package contains:
-  .
-  apt-sources - major mode for editing Debian sources.list files;
-  apt-utils - interface to APT (Debian package management);
-  debian-bug - an Emacs command to submit a bug report;
-  deb-view - view contents of Debian package, similarly to tar-mode;
-  gnus-BTS - provides buttons for bug numbers seen in Gnus messages;
-  preseed - major mode for editing debian-installer preseed files.
+ This package contains:
+ .
+ apt-sources - major mode for editing Debian sources.list files;
+ apt-utils - interface to APT (Debian package management);
+ debian-bug - an Emacs command to submit a bug report;
+ deb-view - view contents of Debian package, similarly to tar-mode;
+ gnus-BTS - provides buttons for bug numbers seen in Gnus messages;
+ preseed - major mode for editing debian-installer preseed files.
