@@ -1,5 +1,5 @@
 (define-package
   "debian"
-  "36.5"
+  "37"
   "Emacs helpers specific to Debian users"
   nil)
