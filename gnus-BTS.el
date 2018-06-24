@@ -3,7 +3,6 @@
 ;; Copyright (C) 2001 Andreas Fuchs <asf@acm.org>
 
 ;; Author: Andreas Fuchs
-;; Maintainer: Andreas Fuchs <asf@acm.org>
 ;; Keywords: gnus, Debian, Bug
 ;; Status: Works in XEmacs (I think >=21)
 ;; Created: 2001-02-07
@@ -59,12 +58,25 @@
 ;;      Wrong regexp part of gnus-dbts-debian-bug-regexp called by
 ;;      gnus-dbts-buttonize-debian (Closes #363161, #442438).
 ;;      
+;; 2007-09-24 intrigeri <intrigeri@boum.org>
+;;            Peter S Galbraith <psg@debian.org>
+;;
+;;      Bug#218286: [Fwd: Re: [gnus-BTS] please make bug numbers in mail
+;;      clickable to read them as email.
+;;      Introduce `gnus-dbts-read-bugs-as-email'
+;;
 ;;; Code:
 
 
 ;; gnus-dbts = Gnus inerface to Debian Bug Tracking System
 
 (autoload 'thing-at-point "thingatpt")
+
+(defcustom gnus-dbts-read-bugs-as-email nil
+  "If t, highlighted Debian bug numbers' buttons call
+  `debian-bug-get-bug-as-email'; else, `browse-url' is used."
+  :type 'boolean
+  :group 'gnus-BTS)
 
 (defvar gnus-dbts-in-debian-group-p nil)
 
@@ -102,6 +114,9 @@
 (defvar gnus-dbts-debian-reassign-regexp
   "reassigned from package `\\([^']*\\)' to `\\([^']*\\)'")
 
+;; debian-bug-get-bug-as-email autoload
+(require 'debian-el-loaddefs)
+
 (defun gnus-dbts-browse-debpkg-or-bug (thing)
   (interactive "i")
   (let* ((the-thing (if (null thing)
@@ -118,7 +133,9 @@
 		(concat
 		 "http://bugs.debian.org/cgi-bin/bugreport.cgi"
 		 "?&searchon=names&version=all&release=all&keywords="))))
-    (browse-url (concat url bug-or-feature))))
+    (if (and bugp gnus-dbts-read-bugs-as-email)
+	(debian-bug-get-bug-as-email bug-or-feature)
+      (browse-url (concat url bug-or-feature)))))
 
 (defun gnus-dbts-buttonize-debian (regexp num predicate)
   (add-to-list 'gnus-button-alist
