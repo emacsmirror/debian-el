@@ -1,3 +1,10 @@
+debian-el (37.1) experimental; urgency=medium
+
+  * Set maintainer to debian-emacsen@lists.debian.org
+  * Add Vcs-* headers.
+
+ -- David Bremner <bremner@debian.org>  Sun, 24 Jun 2018 09:49:14 -0300
+
 debian-el (37.0) experimental; urgency=medium
 
   * Adopting emacs-goodies-el to the emacsen-team, see
