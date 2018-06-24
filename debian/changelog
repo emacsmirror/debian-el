@@ -1,5 +1,7 @@
 debian-el (37.0) experimental; urgency=medium
 
+  * Adopting emacs-goodies-el to the emacsen-team, see
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=901157#20
   * Split from emacs-goodies-el source (36.4), and dh-elpafied.
 
- -- David Bremner <bremner@debian.org>  Sat, 23 Jun 2018 19:50:03 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 24 Jun 2018 08:11:25 -0300
