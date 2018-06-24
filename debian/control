@@ -1,7 +1,8 @@
 Source: debian-el
 Section: lisp
 Priority: optional
-Maintainer: David Bremner <bremner@debian.org>
+Maintainer: Debian Emacsen team <debian-emacsen@lists.debian.org>
+Uploaders: David Bremner <bremner@debian.org>
 Build-Depends: debhelper (>= 10),
  dh-elpa,
  texinfo,
