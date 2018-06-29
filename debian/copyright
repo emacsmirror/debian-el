@@ -16,15 +16,15 @@ Comment:
  This covers the debian/* files, and various other glue files written
  specificially for this package.
 
-Files: elisp/debian-el/apt-sources.el
+Files: apt-sources.el
 Copyright: 2001-2002, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
 License: GPL-2+
 
-Files: elisp/debian-el/apt-utils.el
+Files: apt-utils.el
 Copyright: 2002, 03 Matthew P. Hodges
 License: GPL-2+
 
-Files: elisp/debian-el/debian-bug.el
+Files: debian-bug.el
 Copyright: 1998, 1999 Free Software Foundation, Inc.,
  2001, 2002 Peter S Galbraith <psg@debian.org>
 License: GPL-2+
@@ -32,17 +32,24 @@ Comment:
  Author (Up to version 1.7):           Francesco Potortì <pot@gnu.org>
  Maintainer from version 1.8 onwards:  Peter S Galbraith <psg@debian.org>
 
-Files: elisp/debian-el/deb-view.el
+Files: deb-view.el
 Copyright: Rick Macdonald <rickm@vsl.com>
 License: GPL-2+
 
-Files: elisp/debian-el/gnus-BTS.el
+Files: gnus-BTS.el
 Copyright: 2001 Andreas Fuchs <asf@acm.org>
 License: GPL-2+
 
-Files: elisp/debian-el/preseed.el
+Files: preseed.el
 Copyright: 2004 W. Borgert <debacle@debian.org>
 License: GPL-2+
+
+Files: debian/*
+Copyright: 2018 David Bremner <bremner@debian.org>
+License: GPL-2+
+Comment:
+ Packaging was completely re-done with 37.0, taking only debian/copyright
+ and (part of) debian/control from emacs-goodies-el.
 
 License: GPL-2+
  This program is free software; you can redistribute it and/or
