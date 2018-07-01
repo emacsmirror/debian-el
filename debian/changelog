@@ -1,3 +1,9 @@
+debian-el (37.3) experimental; urgency=medium
+
+  * Don't byte compile gnus-BTS.el (Closes: #902785).
+
+ -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 21:59:54 -0300
+
 debian-el (37.2) experimental; urgency=medium
 
   * Update debian/copyright for split package.
