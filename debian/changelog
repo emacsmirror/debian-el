@@ -3,8 +3,9 @@ debian-el (37.4) experimental; urgency=medium
   * Add missing depends on xz-utils; this was previously a Pre-Depends
     when this package was built from emacs-goodies-el but it doesn't need
     to be anymore.
+  * Update documentation for deb-view to note dependence on dpkg-deb
 
- -- David Bremner <bremner@debian.org>  Sun, 01 Jul 2018 06:21:57 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 01 Jul 2018 06:37:19 -0300
 
 debian-el (37.3) experimental; urgency=medium
 

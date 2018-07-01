@@ -222,13 +222,11 @@ tar-mode. See tar-mode for info.
 @table @samp
 @item nroff
 for formatting man pages.
-@item dpkg-deb
-for old-style binary .deb files.
 @item w3-mode
 for viewing HTML pages.
 @end table
 
-For new-style .deb files (2.0), dpkg-deb isn't used.
+@strong{Note:} Since version 37.3, dpkg-deb is required.
 
 @menu
 * deb-view configuration::      

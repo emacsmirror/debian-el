@@ -48,13 +48,7 @@
 
 ;; Required programs: ar, gzip.
 ;; Optionally required programs: nroff for formatting man pages.
-;; Optionally required programs: dpkg-deb for old-style binary .deb files.
 ;; Optionally required programs: w3-mode for viewing HTML pages.
-
-;; For new-style .deb files (2.0), dpkg-deb isn't used. Therefore
-;; deb-view should work on any platform with the ar command, although
-;; "ar -p" doesn't seem to work for .deb files on Solaris 2.4 and 2.5.
-;; It works on Solaris 2.6, SGI's IRIX 6.1 and 6.2, and Linux, of course.
 
 ;; Old-style .deb files require the dpkg-deb program. I don't know how to
 ;; extract control.tar.gz from these deb files, so you only get to see
@@ -62,6 +56,8 @@
 ;; If you know how to get the control.tar.gz file out, let me know!
 ;; The data file is still viewable thanks to the "dpkg-deb --fsys-tarfile"
 ;; option.
+
+;; For new-style .deb files (2.0), dpkg-deb is now used as well.
 
 ;;; Installation:
 
