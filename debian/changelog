@@ -3,8 +3,10 @@ debian-el (37.3) experimental; urgency=medium
   * Don't byte compile gnus-BTS.el (Closes: #902785).
   * Drop require of obsolete debian-el-loaddefs.el from gnus-BTS.el
   * Re-apply patches for gnus-BTS.el from emacs-goodies-el
+  * Use dpkg-deb's --ctrl-tarfile option to extract the control archive
+    (Closes: #878868).  Depend on dpkg (>= 1.17.14) for that feature.
 
- -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 22:24:51 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 22:33:54 -0300
 
 debian-el (37.2) experimental; urgency=medium
 

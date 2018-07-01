@@ -385,8 +385,7 @@ at the prompt."
      (new-archive-format
       ;; New deb format (archive)
       (call-process shell-file-name nil t nil shell-command-switch
-                    (concat "ar -p " debfile
-                            " control.tar.gz | gzip -cd"))
+                    (concat "dpkg-deb --ctrl-tarfile " debfile))
       (goto-char 1)
       (setq buffer-file-name (concat deb-view-file-name "-INFO"))
       (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
