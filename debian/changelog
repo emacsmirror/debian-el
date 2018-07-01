@@ -5,8 +5,10 @@ debian-el (37.3) experimental; urgency=medium
   * Re-apply patches for gnus-BTS.el from emacs-goodies-el
   * Use dpkg-deb's --ctrl-tarfile option to extract the control archive
     (Closes: #878868).  Depend on dpkg (>= 1.17.14) for that feature.
+  * Copy most of the dependencies back from emacs-goodies-el. Omit "file"
+    for now; let me know if this breaks something.
 
- -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 22:33:54 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 22:50:06 -0300
 
 debian-el (37.2) experimental; urgency=medium
 
