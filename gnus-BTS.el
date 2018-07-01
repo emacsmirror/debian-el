@@ -115,9 +115,6 @@
 (defvar gnus-dbts-debian-reassign-regexp
   "reassigned from package `\\([^']*\\)' to `\\([^']*\\)'")
 
-;; debian-bug-get-bug-as-email autoload
-(require 'debian-el-loaddefs)
-
 (defun gnus-dbts-browse-debpkg-or-bug (thing)
   (interactive "i")
   (let* ((the-thing (if (null thing)
