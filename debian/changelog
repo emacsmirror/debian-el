@@ -1,3 +1,9 @@
+debian-el (37.5) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- David Bremner <bremner@debian.org>  Sun, 29 Jul 2018 06:06:26 +0800
+
 debian-el (37.4) experimental; urgency=medium
 
   * Add missing depends on xz-utils; this was previously a Pre-Depends
