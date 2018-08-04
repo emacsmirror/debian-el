@@ -1,3 +1,9 @@
+debian-el (37.6) unstable; urgency=medium
+
+  * Require debian-el.el at startup (Closes: #905364)
+
+ -- David Bremner <bremner@debian.org>  Sat, 04 Aug 2018 15:30:42 -0400
+
 debian-el (37.5) unstable; urgency=medium
 
   * Upload to unstable
