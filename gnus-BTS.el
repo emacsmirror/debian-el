@@ -174,4 +174,4 @@
 
 (provide 'gnus-BTS)
 
-;; End of file
+;;; gnus-BTS.el ends here
