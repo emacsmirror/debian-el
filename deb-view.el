@@ -324,11 +324,6 @@ In dired, press ^d on the dired line of the .deb file to view.
 Or, execute: ESCAPE x deb-view RETURN, and enter the .deb file name
 at the prompt."
   (interactive "fdeb file to view: ")
-  (if (and (or (string-match "Lucid" emacs-version)
- 	       (string-match "XEmacs" emacs-version))
- 	   (>= emacs-major-version 21))
-      (require 'view-less)
-    (require 'view))
   (require 'view)
   (if (< (nth 1 (file-attributes debfile)) 0)
       (progn
