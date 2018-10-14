@@ -1,6 +1,6 @@
 ;;; apt-utils.el --- Emacs interface to APT (Debian package management)
 
-;;; Copyright (C) 2002-2010 Matthew P. Hodges
+;; Copyright (C) 2002-2010 Matthew P. Hodges
 
 ;; Author: Matthew P. Hodges <MPHodges@member.fsf.org>
 ;;	$Id: apt-utils.el,v 1.23 2016/11/05 22:18:48 psg Exp $
@@ -753,8 +753,8 @@ See also `apt-utils-toggle-package-info'."
     (let* ((package (caar apt-utils-package-history))
            (file (apt-utils-changelog-file package)))
       (if file
-        (apt-utils-view-file file)
-      (message "No ChangeLog file found for %s." package))))))
+          (apt-utils-view-file file)
+	(message "No ChangeLog file found for %s." package))))))
 
 (defun apt-utils-changelog-file (&optional package)
   "Find ChangeLog file for PACKAGE or the current package."
@@ -764,7 +764,7 @@ See also `apt-utils-toggle-package-info'."
           (format "/usr/share/doc/%s/" package)
           '("CHANGELOG" "ChangeLog" "Changelog" "changelog")
           '("" ".gz"))))
-        file))
+    file))
 
 ;; Find Debian ChangeLog files
 
@@ -791,7 +791,7 @@ See also `apt-utils-toggle-package-info'."
           (format "/usr/share/doc/%s/" package)
           '("changelog.Debian")
           '(".gz"))))
-        file))
+    file))
 
 ;; Find NEWS files
 
@@ -1181,7 +1181,7 @@ ARG may be negative to move backward."
          (not (eq (cdar apt-utils-package-history) 'search-file-names)))
     (goto-char (point-min))
     (goto-char (next-single-property-change (point)
-                                                 'apt-package)))
+                                            'apt-package)))
    (t
     (let ((old (apt-utils-package-at)))
       ;; Forward.
@@ -1436,8 +1436,8 @@ indicated in `mode-name'."
             ;; Add text properties
             (add-text-properties (point) (+ (point) length-no-version)
                                  `(,apt-utils-face-property ,face
-                                        mouse-face highlight
-                                        apt-package ,package))
+							    mouse-face highlight
+							    apt-package ,package))
             ;; Version?
             (when (> length length-no-version)
               (add-text-properties (+ (point) length-no-version 1)
@@ -1513,9 +1513,9 @@ indicated in `mode-name'."
               (apt-utils-current-links-add-package link)
               (add-text-properties (match-beginning 1) (match-end 1)
                                    `(,apt-utils-face-property ,face
-                                          mouse-face highlight
-                                          apt-package ,link)))
-          (forward-line))))
+							      mouse-face highlight
+							      apt-package ,link)))
+            (forward-line))))
       (setq keywords (cdr keywords))))
   (when (and apt-utils-display-installed-status
              (memq (apt-utils-package-type package t)
@@ -1567,8 +1567,8 @@ The type of search is specified by TYPE."
       (apt-utils-current-links-add-package link)
       (add-text-properties (match-beginning 1) (match-end 1)
                            `(,apt-utils-face-property ,face
-                                  mouse-face highlight
-                                  apt-package ,link))
+						      mouse-face highlight
+						      apt-package ,link))
       ;; Multiple fields separated by commas
       (when (eq type 'search-file-names)
         (if (eq (char-before) ?\:)
@@ -1697,11 +1697,11 @@ TYPE can be forward, backward, or toggle."
       ;; Make the key unique; we could visit the same package more
       ;; than once
       (apt-utils-puthash (format "%s/%s/%d"
-                       (caar apt-utils-package-history)
-                       (cdar apt-utils-package-history)
-                       (length apt-utils-package-history))
-               (list (point) (window-start (selected-window)))
-               apt-utils-buffer-positions))
+				 (caar apt-utils-package-history)
+				 (cdar apt-utils-package-history)
+				 (length apt-utils-package-history))
+			 (list (point) (window-start (selected-window)))
+			 apt-utils-buffer-positions))
      ((eq type 'backward)
       ;; Remove old values
       (remhash (format "%s/normal/%d"
@@ -1735,11 +1735,11 @@ TYPE can be forward, backward, or toggle."
                 new 'normal))
         ;; Set position for old entry
         (apt-utils-puthash (format "%s/%s/%d"
-                         package
-                         old
-                         (length apt-utils-package-history))
-                 (list (point) (window-start (selected-window)))
-                 apt-utils-buffer-positions)
+				   package
+				   old
+				   (length apt-utils-package-history))
+			   (list (point) (window-start (selected-window)))
+			   apt-utils-buffer-positions)
         ;; Get position for new entry
         (setq posns
               (gethash (format "%s/%s/%d"

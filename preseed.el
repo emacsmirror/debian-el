@@ -1,4 +1,4 @@
-;;; preseed.el --- a major mode for editing debian-installer preseed files
+;;; preseed.el --- a major-mode for editing debian-installer preseed files
 
 ;; Copyright (C) 2004 W. Borgert <debacle@debian.org>
 
@@ -12,7 +12,13 @@
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
+;;; Commentary:
+
+;; This library defines a major-mode for editing debian-installer
+;; preseed files.
+
 ;;; Code:
+
 (require 'font-lock)
 
 (defvar preseed-mode-abbrev-table nil

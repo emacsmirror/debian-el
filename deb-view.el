@@ -273,7 +273,7 @@ See also the variable deb-find-directory."
 (define-key debview-mode-map "u"    'undefined)
 (define-key debview-mode-map "x"    'undefined)
 (define-key debview-mode-map ""   'undefined)
-             
+
 (define-key debview-mode-map "?"    'deb-view-help)
 (define-key debview-mode-map "q"    'deb-view-dired-view-cleanup)
 (define-key debview-mode-map "N"    'deb-view-tar-man)
@@ -498,7 +498,7 @@ easily repeat a `deb-find' command."
   (interactive)
   (require 'compile)
   (let* ((deb-file-string (read-from-minibuffer "deb file to find: "
-                                         nil nil nil 'deb-find-history))
+						nil nil nil 'deb-find-history))
          (output-buffer-name "*deb-find*")
          (command (cond ((string-equal deb-find-method "locate")
                          (concat "locate '" deb-file-string

@@ -484,7 +484,7 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
 (defcustom debian-bug-menu-action-default 'browse
   "Default action enabled at startup in Bugs menu-bar."
   :group 'debian-bug
-;; :set 'debian-bug-menu-action-set
+  ;; :set 'debian-bug-menu-action-set
   :set (lambda (symbol value)
          (set-default symbol value)
          (setq-default debian-bug-menu-action debian-bug-menu-action-default)
@@ -542,7 +542,7 @@ when the shell commands \"bug\" and \"reportbug\" are not available")
 
 (defvar debian-bug-tags-alist
   '(("patch") ("security") ("upstream"))
-;;'(("patch") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid"))
+  ;;'(("patch") ("security") ("upstream") ("potato") ("woody") ("sarge") ("sid"))
   "Alist of valid Tags aimed at Debian users.
 The complete list of valid tags is longer, but the others are for use by
 Debian maintainers.")
@@ -557,12 +557,12 @@ Debian maintainers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "bugs.debian.org" "buildd.debian.org" "buildd.emdebian.org"
-  "cdimage.debian.org" "cdrom" "debian-i18n" "debian-maintainers"
-  "ftp.debian.org" "general" "installation-reports" "lists.debian.org"
-  "mirrors" "nm.debian.org" "press" "project" "qa.debian.org" "release-notes"
-  "release.debian.org" "security-tracker" "security.debian.org"
-  "snapshot.debian.org" "tech-ctte" "upgrade-reports" "wiki.debian.org"
-  "wnpp" "www.debian.org")
+    "cdimage.debian.org" "cdrom" "debian-i18n" "debian-maintainers"
+    "ftp.debian.org" "general" "installation-reports" "lists.debian.org"
+    "mirrors" "nm.debian.org" "press" "project" "qa.debian.org" "release-notes"
+    "release.debian.org" "security-tracker" "security.debian.org"
+    "snapshot.debian.org" "tech-ctte" "upgrade-reports" "wiki.debian.org"
+    "wnpp" "www.debian.org")
 
   "List of Debian pseudo-packages available for completion.
 See http://www.debian.org/Bugs/pseudo-packages")
@@ -799,8 +799,8 @@ If such script exists, otherwise nil is returned."
      ((debian-bug-file-is-executable script-alt2) script-alt2))))
 
 (defun debian-bug-script-sentinel
-  (process event package severity subject filename
-           bug-script-temp-file win-config)
+    (process event package severity subject filename
+             bug-script-temp-file win-config)
   "This function is the process sentinel for bug script processes.
 When called, if the process has terminated, this function cleans
 up the buffer used by the process and proceeds to the next step in the
@@ -993,7 +993,7 @@ reporting process by calling `debian-bug-compose-report'."
       (debian-bug-run-bug-script package severity subject filename))))
 
 (defun debian-bug-compose-report
-  (package severity subject filename &optional bug-script-temp-file)
+    (package severity subject filename &optional bug-script-temp-file)
   "Compose the initial contents of the bug report and present it in a buffer.
 The buffer will be completed by the user."
 ;;; (require 'reporter)
@@ -1643,9 +1643,9 @@ Aug 10th 2001
      ["To BTS and Maintainer Only"
       (debian-bug--set-bts-address
        (debian-bug-bts-mail "maintonly" debian-bug-bts-address))
-     :style radio
-     :selected (debian-bug--is-bts-address
-                (debian-bug-bts-mail "maintonly" debian-bug-bts-address))]
+      :style radio
+      :selected (debian-bug--is-bts-address
+                 (debian-bug-bts-mail "maintonly" debian-bug-bts-address))]
      ["To BTS Only"
       (debian-bug--set-bts-address
        (debian-bug-bts-mail "quiet" debian-bug-bts-address))
@@ -1863,7 +1863,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
             (error "This function requires the browse-url elisp package"))))
   (if (or (not bug-number) (string-equal bug-number "none"))
       (setq bug-number (completing-read "Bug number to lookup: "
-                                      debian-bug-alist nil nil)))
+					debian-bug-alist nil nil)))
   (if (string-equal bug-number "")
       (message "No bug number to look up")
     (browse-url (concat debian-bug-bts-URL "archive=yes&bug=" bug-number))
@@ -1907,11 +1907,11 @@ In a program, mouse location is in EVENT."
     (if (string-equal "" pkg-name)
         (message "No package name to look up")
       (browse-url (concat "http://packages.debian.org/" pkg-name))
-;; 2007-09-02 This URL is becoming obsolete...
-;;       (concat
-;;        "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
-;;        pkg-name
-;;        "&searchon=names&version=all&release=all")
+      ;; 2007-09-02 This URL is becoming obsolete...
+      ;;       (concat
+      ;;        "http://packages.debian.org/cgi-bin/search_packages.pl?keywords="
+      ;;        pkg-name
+      ;;        "&searchon=names&version=all&release=all")
       (message "Looking up web pages for package %s via browse-url" pkg-name))))
 
 (defvar debian-bug-archive-alist
@@ -2184,7 +2184,7 @@ Optionally, if SOURCE is t, make it a source package."
              "\\(<H2.*</a>\\(.+\\)</H2>\\)\\|\\(<a href=\"\\(bugreport.cgi\\?bug=\\([0-9]+\\)\\)\">\\([^#].+\\)</a>\\)"
              nil t)
           (let ((type (match-string 2))
-              ;;(URL (match-string 4))
+		;;(URL (match-string 4))
                 (bugnumber (match-string 5))
                 (description (match-string 6))
                 (shortdescription (match-string 6)))

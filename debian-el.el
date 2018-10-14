@@ -28,9 +28,9 @@
   :prefix "apt-sources-"
   :link '(custom-manual "(debian-el)apt-sources")
   :load 'apt-sources
-;;:require 'apt-sources
+  ;;:require 'apt-sources
   :group 'debian-el)
-  
+
 ;; apt-utils
 (defgroup apt-utils nil
   "Emacs interface to APT (Debian package management)"
@@ -38,7 +38,7 @@
   :link '(url-link "http://www.tc.bham.ac.uk/~matt/AptUtilsEl.html")
   :link '(custom-manual "(debian-el)apt-utils")
   :load 'apt-utils
-;;:require 'apt-utils
+  ;;:require 'apt-utils
   :group 'debian-el)
 
 ;; debian-bug.el
@@ -47,7 +47,7 @@
   :prefix "debian-bug-"
   :link '(custom-manual "(debian-el)debian-bug")
   :load 'debian-bug
-;;:require 'debian-bug
+  ;;:require 'debian-bug
   :group 'debian-el)
 
 ;; deb-view.el
@@ -69,7 +69,7 @@
   ;; The following from Kevin Ryde <user42@zip.com.au>
   ;; Closes: #484027
   (defun deb-view-control-coding (arg-list)
-  "Return coding system for the \"control\" file in a deb.
+    "Return coding system for the \"control\" file in a deb.
 This function is for use from `file-coding-system-alist'.
 
 ARG-LIST is arguments passed to `find-operation-coding-system'.
@@ -86,14 +86,14 @@ tell if it's from a deb.
 Note: This only works in emacs22, in emacs21 or xemacs21 tar-mode
 does something a bit different and doesn't reach here (and
 there's no buffer passed to coding system functions)."
-  (if (and (eq (car arg-list) 'insert-file-contents) ;; first arg
-           (consp (cadr arg-list)) ;; second arg like ("./control" . BUFFER)
-           (let ((buffer (cdr (cadr arg-list))))
-             (and (buffer-file-name buffer)
-                  (string-match "\\.deb-INFO!\\./control\\'"
-                                (buffer-file-name buffer))
-                  'utf-8)))
-      'undecided))
+    (if (and (eq (car arg-list) 'insert-file-contents) ;; first arg
+             (consp (cadr arg-list)) ;; second arg like ("./control" . BUFFER)
+             (let ((buffer (cdr (cadr arg-list))))
+               (and (buffer-file-name buffer)
+                    (string-match "\\.deb-INFO!\\./control\\'"
+                                  (buffer-file-name buffer))
+                    'utf-8)))
+	'undecided))
 
   (add-to-list 'file-coding-system-alist
                '("\\'control\\'" . deb-view-control-coding)))
