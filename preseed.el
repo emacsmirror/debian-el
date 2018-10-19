@@ -44,9 +44,9 @@
   "Major mode for editing debian-installer preseed files colourfully."
   (interactive)
   (kill-all-local-variables)
-  (setq comment-start "#"
- 	comment-multi-line nil
-	comment-start-skip "#+[\t ]*")
+  (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-multi-line) nil)
+  (set (make-local-variable 'comment-start-skip) "#+[\t ]*")
   (setq major-mode 'preseed-mode
  	mode-name "Preseed"
  	local-abbrev-table preseed-mode-abbrev-table)

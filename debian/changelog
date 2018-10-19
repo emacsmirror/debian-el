@@ -1,9 +1,11 @@
-debian-el (37.7) UNRELEASED; urgency=medium
+debian-el (37.7) unstable; urgency=medium
 
   * Formatting fixes from Jonas Bernoulli
   * Drop conditional require of view.el, also from Jonas.
+  * Bug fix: "preseed.el buffer local comment-start", thanks to Kevin Ryde
+    (Closes: #710334).
 
- -- David Bremner <bremner@debian.org>  Sun, 14 Oct 2018 12:02:50 -0300
+ -- David Bremner <bremner@debian.org>  Fri, 19 Oct 2018 08:25:02 -0300
 
 debian-el (37.6) unstable; urgency=medium
 
