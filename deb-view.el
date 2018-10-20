@@ -641,7 +641,9 @@ If the file is from the INFO buffer, then open in the other (larger) window."
                    ("\\.Z$"  . deb-view-tar-uncompress-while-visiting)
                    ) auto-mode-alist)))
     (if (string-match "INFO$" buffer-file-name)
-        (tar-extract-other-window)
+        (progn
+          (tar-extract-other-window)
+          (view-buffer (current-buffer) 'kill-buffer-if-not-modified))
       (tar-extract 'view))))
 
 (defun deb-view-tar-w3 ()

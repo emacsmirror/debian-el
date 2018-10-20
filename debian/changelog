@@ -1,8 +1,9 @@
-debian-el (37.8) UNRELEASED; urgency=medium
+debian-el (37.8) unstable; urgency=medium
 
   * Do not use shell in call-process (Closes: #905308).
+  * Use view mode for files from INFO buffer (Closes: #623684).
 
- -- David Bremner <bremner@debian.org>  Sat, 20 Oct 2018 11:39:43 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 20 Oct 2018 12:13:04 -0300
 
 debian-el (37.7) unstable; urgency=medium
 
