@@ -359,8 +359,7 @@ at the prompt."
           (save-excursion
             (set-buffer file-buffer)
             (erase-buffer)
-            (call-process shell-file-name nil t nil shell-command-switch
-                          (concat "file " debfile))
+            (call-process "file" nil '(t t) debfile)
             (goto-char 1)
             (if (string-match "archive" (buffer-string))
                 t
@@ -373,8 +372,7 @@ at the prompt."
     (cond
      (new-archive-format
       ;; New deb format (archive)
-      (call-process shell-file-name nil t nil shell-command-switch
-                    (concat "dpkg-deb --ctrl-tarfile " debfile))
+      (call-process "dpkg-deb" nil '(t t) nil "--ctrl-tarfile" debfile)
       (goto-char 1)
       (setq buffer-file-name (concat deb-view-file-name "-INFO"))
       (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
@@ -392,8 +390,7 @@ at the prompt."
      (t
       ;; Old deb format
       (message "deb-view old dpkg binary format")
-      (call-process shell-file-name nil t nil shell-command-switch
-                    (concat "dpkg-deb -I " debfile))
+      (call-process "dpkg-deb" nil '(t t) nil "-I"  debfile)
       (setq buffer-read-only t)
       (set-buffer-modified-p nil)
       (goto-char 1)
@@ -439,8 +436,7 @@ at the prompt."
           (error "%s: Not a valid package file" deb-view-buffer-name))
         (call-process-region (point-min) (point-max) "xz" t t nil "-cd"))))
      (t      
-      (call-process shell-file-name nil t nil shell-command-switch
-                    (concat "dpkg-deb --fsys-tarfile " debfile))))
+      (call-process "dpkg-deb" '(t t) nil "--fsys-tarfile " debfile)))
     (goto-char 1)
     (setq buffer-file-name (concat deb-view-file-name "-DATA"))
     (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
