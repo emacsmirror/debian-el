@@ -1,3 +1,10 @@
+debian-el (37.9) unstable; urgency=medium
+
+  * Team upload.
+  * Rebuild with current dh-elpa
+
+ -- David Bremner <bremner@debian.org>  Sat, 24 Aug 2019 16:03:02 -0300
+
 debian-el (37.8) unstable; urgency=medium
 
   * Do not use shell in call-process (Closes: #905308).
