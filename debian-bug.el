@@ -557,8 +557,11 @@ Debian maintainers.")
     ("fixed") ("fixed-in-experimental") ("fixed-upstream") ("security")
     ("upstream") ("confirmed") ("d-i") ("ipv6") ("lfs") ("l10n") ("potato")
     ("woody") ("sarge") ("sarge-ignore") ("etch") ("etch-ignore") ("lenny")
-    ("squeeze") ("wheezy") ("jessie") ("sid") ("experimental"))
-  "Alist of all valid Tags, aimed at Debian developpers.")
+    ("lenny-ignore") ("squeeze") ("squeeze-ignore") ("wheezy") ("wheezy-ignore")
+    ("jessie") ("jessie-ignore") ("stretch") ("stretch-ignore") ("buster")
+    ("buster-ignore") ("bullseye") ("bullseye-ignore") ("bookworm")
+    ("bookworm-ignore") ("sid") ("experimental"))
+  "Alist of all valid Tags, aimed at Debian developers.")
 
 (defvar debian-bug-pseudo-packages
   '("base" "bugs.debian.org" "buildd.debian.org" "buildd.emdebian.org"
@@ -1561,6 +1564,70 @@ Feb 8th 2002, checked Apr 22 2003.")))
     releasing etch. This tag should only be used by the release manager, do
     not set it yourself without explicit authorization from them.
 
+ lenny
+    This bug should not be archived until it is fixed in lenny.
+
+ lenny-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing lenny. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ squeeze
+    This bug should not be archived until it is fixed in squeeze.
+
+ squeeze-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing squeeze. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ wheezy
+    This bug should not be archived until it is fixed in wheezy.
+
+ wheezy-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing wheezy. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ jessie
+    This bug should not be archived until it is fixed in jessie.
+
+ jessie-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing jessie. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ stretch
+    This bug should not be archived until it is fixed in stretch.
+
+ stretch-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing stretch. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ buster
+    This bug should not be archived until it is fixed in buster.
+
+ buster-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing buster. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ bullseye
+    This bug should not be archived until it is fixed in bullseye.
+
+ bullseye-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing bullseye. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
+ bookworm
+    This bug should not be archived until it is fixed in bookworm.
+
+ bookworm-ignore
+    This release-critical bug is to be ignored for the purposes of
+    releasing bookworm. This tag should only be used by the release manager, do
+    not set it yourself without explicit authorization from them.
+
  sid
     This bug should not be archived until it is fixed in sid.
 
@@ -1604,7 +1671,7 @@ Sep 22, 2006")))
  upgrade-reports — Reports of upgrade problems for stable & testing
  wiki.debian.org — Problems with the Debian wiki
  wnpp — Work-Needing and Prospective Packages list
- www.debian.org — Problems with the WWW site 
+ www.debian.org — Problems with the WWW site
 
 from http://www.debian.org/Bugs/pseudo-packages, May 13th 2010.
 Copyright 1999 Darren O. Benham, 1997, 2003 nCipher Corporation Ltd,
