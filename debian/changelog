@@ -1,3 +1,9 @@
+debian-el (37.10) UNRELEASED; urgency=medium
+
+  * debian-bug.el: Add missing release tags
+
+ -- Lev Lamberov <dogsleg@debian.org>  Wed, 01 Apr 2020 21:24:38 +0500
+
 debian-el (37.9) unstable; urgency=medium
 
   * Team upload.
