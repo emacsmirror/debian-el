@@ -596,7 +596,9 @@ search is specified by PROMPT."
       (apt-utils-sort-result)
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
-      (display-buffer (current-buffer)))))
+      (if apt-utils-use-current-window
+        (switch-to-buffer (current-buffer))
+        (select-window (display-buffer (current-buffer)))))))
 
 (defun apt-utils-search-grep-dctrl ()
   "Search Debian packages for regular expression using grep-dctrl."
