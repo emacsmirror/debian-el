@@ -5,11 +5,11 @@
 ;; $Id:
 ;; $Source:
 
-;; Author: Dr. Rafael Sepúlveda. <drs@gnulinux.org.mx>
+;; Author: Dr. Rafael SepÃºlveda. <drs@gnulinux.org.mx>
 ;; Maintainer: Peter S. Galbraith <psg@debian.org>
-;;            (I can't find Dr. Rafael Sepúlveda)
+;;            (I can't find Dr. Rafael SepÃºlveda)
 
-;; Copyright (C) 2001-2003, Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>
+;; Copyright (C) 2001-2003, Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>
 ;; Copyright (C) 2009  Peter S. Galbraith <psg@debian.org>
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -91,9 +91,9 @@
 ;;          `apt-sources-insert-local-vars'. (suggested by Peter S. Galbraith
 ;;           <psg@debian.org>)
 ;;       -- Change `apt-sources-change-components' to handle absence of
-;;           components. (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           components. (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 ;;       -- Change the web page address form where you can find the latest version.
-;;	     (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;	     (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 ;; 0.9.6 -- Added a better description to what is APT and file 'sources.list'.
 ;;           (Ole Laursen <olau@hardworking.dk>)
 ;; 0.9.5 -- Fixed typo in docstring of function `apt-sources-around-lines'.
@@ -102,12 +102,12 @@
 ;;       -- Added a description to apt and sources.list
 ;;           (David Combs <dkcombs@panix.com>)
 ;;       -- Added name and email from contributors. :)
-;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 ;; 0.9.4 -- Added a missing option in function `apt-sources-insert-source' to
 ;;           select 'ftp' type.
 ;;       -- Added URI-type 'https'.
 ;;       -- Fix some function's documentation mistakes.
-;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 ;; 0.9.3 -- Fix a recently introduced bug that prevents keybindings work under
 ;;           Xemacs.
 ;;           (John Paul Wallington <jpw@shootybangbang.com>)
@@ -116,14 +116,14 @@
 ;;       -- Change the keybinding zone to be more compact and portable.
 ;;           (John Paul Wallington <jpw@shootybangbang.com>)
 ;;       -- Change some keybindings.
-;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 ;;
 ;; 0.9.1 -- Corrected a bug in the 'cond' clauses that prevented to byte-compile.
 ;;           (Perkens-Golomb, Burkhard <burkhard.perkens-golomb@sdm.de>)'
 ;;       -- Make variable `comment-start-skip' buffer-local.
 ;;           (Stefan Monnier <monnier+gnu.emacs.sources/news/@flint.cs.yale.edu>)
 ;; 0.9   -- first release.
-;;           (Dr. Rafael Sepúlveda <drs@gnulinux.org.mx>)
+;;           (Dr. Rafael SepÃºlveda <drs@gnulinux.org.mx>)
 
 ;;; Code:
 
