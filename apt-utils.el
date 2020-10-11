@@ -54,8 +54,7 @@
 
 (defgroup apt-utils nil
   "Emacs interface to APT (Debian package management)."
-  :group 'tools
-  :link '(url-link "http://mph-emacs-pkgs.alioth.debian.org/AptUtilsEl.html"))
+  :group 'tools)
 
 (defcustom apt-utils-fill-packages t
   "*Fill APT package names if t."
