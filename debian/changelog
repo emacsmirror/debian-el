@@ -5,8 +5,9 @@ debian-el (37.10) unstable; urgency=medium
 
   [ David Bremner ]
   * Drop obsolete link in apt-utils.el (Closes: #971802).
+  * Re-encode apt-sources.el in utf8
 
- -- David Bremner <bremner@debian.org>  Sun, 11 Oct 2020 12:38:15 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 11 Oct 2020 12:44:21 -0300
 
 debian-el (37.9) unstable; urgency=medium
 
