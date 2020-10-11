@@ -1,8 +1,12 @@
-debian-el (37.10) UNRELEASED; urgency=medium
+debian-el (37.10) unstable; urgency=medium
 
+  [ Lev Lamberov ]
   * debian-bug.el: Add missing release tags
 
- -- Lev Lamberov <dogsleg@debian.org>  Wed, 01 Apr 2020 21:24:38 +0500
+  [ David Bremner ]
+  * Drop obsolete link in apt-utils.el (Closes: #971802).
+
+ -- David Bremner <bremner@debian.org>  Sun, 11 Oct 2020 12:38:15 -0300
 
 debian-el (37.9) unstable; urgency=medium
 
