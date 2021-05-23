@@ -23,7 +23,7 @@
 ;;; Commentary:
 ;;
 ;; Package to interface Emacs with APT.  Start things off using e.g.:
-;; M-x apt-utils-show-package RET emacs21 RET
+;; M-x apt-utils-show-package RET emacs RET
 ;;
 ;; Other packages (dependencies, conflicts etc.) can be navigated
 ;; using apt-utils-{next,previous}-package,
@@ -2032,7 +2032,7 @@ The tokens that can be replaced are:
 
 Start things off with, for example:
 
-    M-x apt-utils-show-package RET emacs21 RET
+    M-x apt-utils-show-package RET emacs RET
 
 Other packages (dependencies, conflicts etc.) can be navigated
 using:

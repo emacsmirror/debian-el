@@ -1,3 +1,9 @@
+debian-el (37.11) UNRELEASED; urgency=medium
+
+  * apt-utils.el: fix broken example, replace emacs21 with emacs
+
+ -- Salman Mohammadi <salman@smoha.org>  Sun, 23 May 2021 19:40:40 +0200
+
 debian-el (37.10) unstable; urgency=medium
 
   [ Lev Lamberov ]
