@@ -20,8 +20,7 @@ Depends: bzip2,
          ${elpa:Depends},
          ${misc:Depends}
 Recommends: emacs (>= 46.0), wget
-Enhances: emacs,
- emacs25
+Enhances: emacs
 Description: Emacs helpers specific to Debian users
  This package contains:
  .
