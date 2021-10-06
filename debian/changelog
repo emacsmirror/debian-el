@@ -1,5 +1,9 @@
 debian-el (37.11) UNRELEASED; urgency=medium
 
+  [ Salman Mohammadi ]
+  * apt-utils.el: fix broken example, replace emacs21 with emacs
+
+  [ Nicholas D Steeves ]
   * Drop emacs25 from Enhances (package does not exist in bullseye).
 
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
