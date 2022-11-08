@@ -14,12 +14,11 @@ Vcs-Git: https://salsa.debian.org/emacsen-team/debian-el.git
 Package: elpa-debian-el
 Architecture: all
 Depends: bzip2,
-         dpkg (>= 1.17.14),
-         reportbug (>= 4.12),
+         reportbug,
          xz-utils,
          ${elpa:Depends},
          ${misc:Depends}
-Recommends: emacs (>= 46.0), wget
+Recommends: emacs, wget
 Enhances: emacs
 Description: Emacs helpers specific to Debian users
  This package contains:
