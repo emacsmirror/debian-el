@@ -356,8 +356,7 @@ at the prompt."
     ;; info
     (setq file-buffer (get-buffer-create " *file-data*"))
     (setq new-archive-format
-          (save-excursion
-            (set-buffer file-buffer)
+          (with-current-buffer file-buffer
             (erase-buffer)
             (call-process "file" nil '(t t) debfile)
             (goto-char 1)
@@ -538,8 +537,7 @@ When called interactively, displays the version."
          (debfile (substring bufname 0 (- (length bufname) 5)))
          (info-buffer (get-buffer (concat debfile "-INFO")))
          (data-buffer (get-buffer (concat debfile "-DATA")))
-         (ddir-buffer (save-excursion
-                        (set-buffer quit-buffer)
+         (ddir-buffer (with-current-buffer quit-buffer
                         deb-view-dired-view-return-buffer)))
     (delete-other-windows)
     (and (buffer-live-p info-buffer)
@@ -562,8 +560,7 @@ C-c C-c - view the deb file on this line with deb-view.
 mouse-2 - view the deb file on this line with deb-view.
 ? - show deb-find-help.
 q - quit deb-find.")
-    (save-excursion
-      (set-buffer standard-output)
+    (with-current-buffer standard-output
       (help-mode))
     (print-help-return-message)))
 
@@ -598,8 +595,7 @@ when deb-view is loaded.
 To view files not supported by deb-view, such as graphics, use the
 copy command in tar-mode (\"c\") to copy the file to a temp directory.
 You can then do what you want to the file.")
-    (save-excursion
-      (set-buffer standard-output)
+    (with-current-buffer standard-output
       (help-mode))
     (print-help-return-message)))
 
