@@ -649,8 +649,8 @@ The obarray associates each package with the installed version of the package."
 	      (make-vector (1- (ash 4 (logb packages))) 0)
 	      debian-bug-packages-date
 	      (nth 5 (file-attributes debian-bug-status-file)))
-	(mapcar 'debian-bug-intern (mapcar 'list debian-bug-pseudo-packages))
-	(mapcar 'debian-bug-intern real-pkgs)
+	(mapc 'debian-bug-intern (mapcar 'list debian-bug-pseudo-packages))
+	(mapc 'debian-bug-intern real-pkgs)
 	(message "Building list of installed packages...done")))
   (if debian-bts-control-for-emacs
       '(("bzr") ("debbugs.gnu.org") ("gnus") ("octave")
