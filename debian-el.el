@@ -84,11 +84,8 @@
   :link '(custom-manual "(debian-el)deb-view")
   :load 'deb-view
   :group 'debian-el)
-(add-hook
- 'dired-load-hook
- (function (lambda ()
-             (eval-and-compile (require 'dired))
-             (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
+(with-eval-after-load 'dired
+  (define-key dired-mode-map "\C-d" 'deb-view-dired-view))
 
 (when (member 'utf-8 (coding-system-list))
   ;; The following from Kevin Ryde <user42@zip.com.au>

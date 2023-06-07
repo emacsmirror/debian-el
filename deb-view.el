@@ -295,12 +295,8 @@ See also the variable deb-find-directory."
   "The file name being processed by `deb-view'.")
 
 ;; You might not like the key bindings that I chose:
-(if (featurep 'dired)
-    (define-key dired-mode-map "\C-d" 'deb-view-dired-view)
-  (add-hook
-   'dired-load-hook
-   (function (lambda ()
-               (define-key dired-mode-map "\C-d" 'deb-view-dired-view)))))
+(with-eval-after-load 'dired
+  (define-key dired-mode-map "\C-d" 'deb-view-dired-view))
 
 ;;;###autoload
 (defun deb-view-dired-view ()
