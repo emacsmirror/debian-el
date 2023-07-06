@@ -96,7 +96,7 @@ like this:
 This mode font-locks the file and add some things including new
 source lines and modifying existing source lines.
 
-This mode can be customized in diferent parts. You can (interactively)
+This mode can be customized in different parts. You can (interactively)
 change if you want blank lines around a new source line and comment
 with @code{apt-sources-around-lines}. Also you can change the way that
 this mode names each source line with the variable
@@ -200,7 +200,7 @@ specific bug number as well.
 
 deb-view presents the contents of debian package archive files for
 viewing. The viewing is done with the major mode "debview", which
-is derived from emacs tar-mode with a few enhancements for viewing
+is derived from Emacs tar-mode with a few enhancements for viewing
 compressed files, HTML files and formatted man pages.  The normal
 editing and saving features of tar-mode are not supported by
 deb-view.
@@ -215,7 +215,7 @@ external command. The find method passes your search specification to
 egrep, whereas the locate method uses your string directly.
 
 deb-view extracts the control.tar.gz and data.tar.gz files from
-debian package and presents two buffers in a derivitive of
+debian package and presents two buffers in a derivative of
 tar-mode. See tar-mode for info.
 
 @noindent Optionally required programs:
@@ -322,7 +322,7 @@ To enable this, add the following to your @file{~/.emacs} file:
 
 A simple major-mode for editing debian-installer preseed files.  Since
 such files don't always have the same extension, this mode is not
-autoloaded.  Enter it by using teh command line:
+autoloaded.  Enter it by using the command line:
 
 @example
 M-x preseed-mode
