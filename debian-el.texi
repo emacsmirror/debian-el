@@ -79,7 +79,7 @@ APT is a package retrieval tool for Debian; for example you could
 install Emacs with the command:
 
 @example
-  apt-get install emacs21
+  apt-get install emacs
 @end example
 
 and APT will then retrieve the package and install it for you. The
@@ -114,7 +114,7 @@ line, an identical 'deb-src' source line will be created.
 
 Start things off using e.g.:
 @example
-@kbd{M-x} apt-utils-show-package @key{RET} emacs21 @key{RET}
+@kbd{M-x} apt-utils-show-package @key{RET} emacs @key{RET}
 @end example
 
 Other packages (dependencies, conflicts etc) can be navigated using
@@ -280,7 +280,7 @@ You are shown two tar files in debview-mode (see tar-mode for help).
 In the case of old .deb format files, the control info is shown
 but not the other files of control.tar, such as install scripts.
 Note that regular tar-mode commands @key{e}, @key{f} and @key{RETURN} show raw files
-without any special uncompressing or formatting.
+without any special decompressing or formatting.
 Additional features that deb-view adds to tar-mode:
 
 @table @samp
@@ -289,10 +289,10 @@ kill both view buffers (INFO and DATA) and return to the
 dired buffer if that's where you executed deb-mode.
 @item v
 executes deb-view-tar-view instead of tar-view, with the
-additional smarts to uncompress .gz and .Z files for viewing.
+additional smarts to decompress .gz and .Z files for viewing.
 @item N
 Like in dired, formats man pages for viewing, with the
-additional smarts to uncompress .gz and .Z man files for viewing.
+additional smarts to decompress .gz and .Z man files for viewing.
 @item W 
 use w3-mode to view an HTML file.
 @end table
