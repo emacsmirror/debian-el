@@ -855,6 +855,18 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
         (debian-bug-compose-report package severity subject filename
                                    bug-script-temp-file))))
 
+(defun debian-bug--safe-term-exec (buffer name command startfile switches)
+  "Runs term-exec without any hooks.
+
+This protects the term-exec session from potentially being
+affected by user installed hooks when the command may ask for
+user input."
+  (let ((old-term-exec-hook term-exec-hook)
+        (term-exec-hook nil))
+    (unwind-protect
+        (term-exec buffer name command startfile switches)
+      (setq term-exec-hook old-term-exec-hook))))
+
 (defun debian-bug-run-bug-script (package severity subject filename)
   "Run a script, if provided by PACKAGE, to collect information.
 The information about the package which should be supplied with
@@ -889,8 +901,9 @@ reporting process by calling `debian-bug-compose-report'."
           (with-current-buffer bug-script-buffer
             (erase-buffer)
             (term-mode)
-            (term-exec bug-script-buffer "debian-bug-script" handler nil
-                       (list bug-script bug-script-temp-file))
+            (debian-bug--safe-term-exec
+             bug-script-buffer "debian-bug-script" handler nil
+             (list bug-script bug-script-temp-file))
             (setq bug-script-process
                   (get-buffer-process bug-script-buffer))
 
