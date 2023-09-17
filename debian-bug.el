@@ -903,20 +903,25 @@ reporting process by calling `debian-bug-compose-report'."
             ;; process sentinel with the required data on the fly.
             ;; However, I suspect there are better ways to do this,
             ;; perhaps to use lexical-let.
-            (set-process-sentinel
-             bug-script-process
-             (list 'lambda '(process event)
-                   (list 'debian-bug-script-sentinel 'process 'event
-                         package severity subject filename
-                         bug-script-temp-file
-                         (current-window-configuration))))
+            (if bug-script-process
+                (progn
+                  (set-process-sentinel
+                   bug-script-process
+                   (list 'lambda '(process event)
+                         (list 'debian-bug-script-sentinel 'process 'event
+                               package severity subject filename
+                               bug-script-temp-file
+                               (current-window-configuration))))
 
-            (term-char-mode)
+                  (term-char-mode)
 
-            ;; The function set-process-query-on-exit-flag is only
-            ;; available in GNU Emacs version 22 and later.
-            (if (fboundp 'set-process-query-on-exit-flag)
-                (set-process-query-on-exit-flag bug-script-process nil)))
+                  ;; The function set-process-query-on-exit-flag is only
+                  ;; available in GNU Emacs version 22 and later.
+                  (if (fboundp 'set-process-query-on-exit-flag)
+                      (set-process-query-on-exit-flag bug-script-process
+                                                      nil)))
+              (message "Trying to get package related info failed.  Generated "
+                       "bug report may be missing some information.")))
 
           ;; Delay switching to the process output buffer by waiting
           ;; for output from the process, the process to terminate or
