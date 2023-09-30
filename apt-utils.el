@@ -596,7 +596,7 @@ search is specified by PROMPT."
       (set-buffer-modified-p nil)
       (setq buffer-read-only t)
       (if apt-utils-use-current-window
-        (switch-to-buffer (current-buffer))
+          (switch-to-buffer (current-buffer))
         (select-window (display-buffer (current-buffer)))))))
 
 (defun apt-utils-search-grep-dctrl ()
