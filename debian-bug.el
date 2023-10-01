@@ -1185,6 +1185,9 @@ Optional argument ACTION can be provided in programs."
     ("^ *\\(Tags:\\).*\\(security\\)"
      (1 font-lock-keyword-face)
      (2 font-lock-warning-face nil t))
+    ("^ *\\(Control:\\) *\\(.+\n\\)?"
+     (1 font-lock-keyword-face)
+     (2 font-lock-string-face nil t))
     ("^ *\\(Severity:\\) *\\(\\(critical\\|grave\\|serious\\)\\|\\(important\\)\\|\\(normal\\)\\|\\(\\(minor\\)\\|\\(wishlist\\)\\)\\)"
      (1 font-lock-keyword-face)
      (3 font-lock-warning-face nil t)
