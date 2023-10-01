@@ -12,6 +12,9 @@ debian-el (37.11) UNRELEASED; urgency=medium
       Depends.
     + elpa-debian-el: Drop versioned constraint on emacs in Recommends.
 
+  [ Hermógenes Oliveira ]
+  * Make apt-utils-search honour apt-utils-use-current-window.
+
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
 
 debian-el (37.10) unstable; urgency=medium
