@@ -15,6 +15,9 @@ debian-el (37.11) UNRELEASED; urgency=medium
   [ Hermógenes Oliveira ]
   * Make apt-utils-search honour apt-utils-use-current-window.
 
+  [ Łukasz Stelmach ]
+  * debian-bug.el: Highlight Control: pseudo-header
+
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
 
 debian-el (37.10) unstable; urgency=medium
