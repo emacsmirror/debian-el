@@ -6,6 +6,12 @@ debian-el (37.11) UNRELEASED; urgency=medium
   [ Nicholas D Steeves ]
   * Drop emacs25 from Enhances (package does not exist in bullseye).
 
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster (oldstable):
+    + elpa-debian-el: Drop versioned constraint on dpkg and reportbug in
+      Depends.
+    + elpa-debian-el: Drop versioned constraint on emacs in Recommends.
+
   [ Hermógenes Oliveira ]
   * Make apt-utils-search honour apt-utils-use-current-window.
 
