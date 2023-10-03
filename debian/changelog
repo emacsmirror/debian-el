@@ -18,6 +18,10 @@ debian-el (37.11) UNRELEASED; urgency=medium
   [ Łukasz Stelmach ]
   * debian-bug.el: Highlight Control: pseudo-header
 
+  [ Fabrice Bauzac ]
+  * Fix Emacs 28.2 warnings about beginning/end-of-buffer.
+    + {beginning,end}-of-buffer functions are for interactive use only.
+
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
 
 debian-el (37.10) unstable; urgency=medium
