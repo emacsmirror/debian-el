@@ -22,6 +22,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Fix Emacs 28.2 warnings about beginning/end-of-buffer.
     + {beginning,end}-of-buffer functions are for interactive use only.
   * Fix warning about save-excursion+set-buffer.
+  * Fix warning about next-line.
 
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
 
