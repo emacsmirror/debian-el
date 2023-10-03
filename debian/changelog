@@ -23,6 +23,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + {beginning,end}-of-buffer functions are for interactive use only.
   * Fix warning about save-excursion+set-buffer.
   * Fix warning about next-line.
+  * Fix warning about mapcar's unused return value.
 
  -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
 
