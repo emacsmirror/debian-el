@@ -943,7 +943,7 @@ reporting process by calling `debian-bug-compose-report'."
   "Insert the output from the bug script, if any, into the current buffer."
   (when (and temp-file (file-readable-p temp-file))
     (save-excursion
-      (next-line 1)
+      (forward-line 1)
       (insert "\n")
       (insert "-- Package-specific info:\n")
       (let ((beg (point))
