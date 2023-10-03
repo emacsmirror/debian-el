@@ -513,7 +513,7 @@ easily repeat a `deb-find' command."
     (define-key deb-view-find-minor-mode-map "\M-p" 'undefined)
     (define-key deb-view-find-minor-mode-map "\M-{" 'undefined)
     (define-key deb-view-find-minor-mode-map "\M-}" 'undefined)
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (message "deb-view: ? for help. q to quit.")))
 
 
