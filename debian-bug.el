@@ -2225,8 +2225,7 @@ Optionally, if SOURCE is t, make it a source package."
         (is-changelog-mode
          (and (equal major-mode 'debian-changelog-mode)
               (boundp 'debian-changelog-close-bug-takes-arg))))
-    (save-excursion
-      (set-buffer debian-bug-tmp-buffer)
+    (with-current-buffer debian-bug-tmp-buffer
       (insert "(setq debian-bug-easymenu-list\n'(\"Bugs\"\n")
       (insert "[\"* Regenerate list *\" (debian-bug-build-bug-this-menu) t]
       \"--\"
@@ -2267,8 +2266,7 @@ Optionally, if SOURCE is t, make it a source package."
              ((string= type "-->"))                  ;Do nothing
              (type
               (setq bugs-are-open-flag (not (string-match "resolved" type)))
-              (save-excursion
-                (set-buffer debian-bug-tmp-buffer)
+              (with-current-buffer debian-bug-tmp-buffer
                 (insert "\"-\"\n\"" type "\"\n")))
              ((null description))                    ;Do nothing
              ((string-match "^#?[0-9]+$" description)) ;Do nothing
@@ -2302,8 +2300,7 @@ Optionally, if SOURCE is t, make it a source package."
                 (setq bug-open-alist
                       (cons
                        (list bugnumber shortdescription) bug-open-alist)))
-              (save-excursion
-                (set-buffer debian-bug-tmp-buffer)
+              (with-current-buffer debian-bug-tmp-buffer
                 (insert
                  "["
                  (format "%S" (concat "#" bugnumber " "
