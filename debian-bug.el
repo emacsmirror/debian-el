@@ -478,18 +478,12 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
   :group 'debian-bug
   :type 'boolean)
 
-;;(defvar debian-bug-menu-action)
-;;(defvar debian-bug-menu-action-default)
-;;(defun debian-bug-menu-action-set (symbol value)
-;;  "Set SYMBOL to VALUE for
-;;  (set-default symbol value)
-;;  (setq-default debian-bug-menu-action debian-bug-menu-action-default)
-;;  (setq debian-bug-menu-action debian-bug-menu-action-default))
+(defvar debian-bug-menu-action)
+(defvar debian-bug-menu-action-default)
 
 (defcustom debian-bug-menu-action-default 'browse
   "Default action enabled at startup in Bugs menu-bar."
   :group 'debian-bug
-  ;; :set 'debian-bug-menu-action-set
   :set (lambda (symbol value)
          (set-default symbol value)
          (setq-default debian-bug-menu-action debian-bug-menu-action-default)
@@ -899,6 +893,7 @@ reporting process by calling `debian-bug-compose-report'."
           (message (concat "Collecting information about the package."
                            " This may take some time."))
           (with-current-buffer bug-script-buffer
+            (eval-and-compile (require 'term))
             (erase-buffer)
             (term-mode)
             (debian-bug--safe-term-exec
@@ -978,6 +973,7 @@ reporting process by calling `debian-bug-compose-report'."
                     (memq mail-user-agent '(mh-e-user-agent
                                             message-user-agent
                                             gnus-user-agent)))
+            (eval-and-compile (require 'mml))
             (mml-quote-region (point-min) (point-max))
             (goto-char (point-min))
             (insert "<#part type=\"text/plain\" disposition=attachment"
@@ -1927,7 +1923,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
 
 (defun debian-bug-prompt-bug-number (prompt)
   "Prompt the user for a bug number using PROMPT."
-  (require 'thingatpt)
+  (eval-and-compile (require 'thingatpt))
   (let ((default-number)
         (item (word-at-point)))
     ;; First see if there's a number under point
@@ -2185,6 +2181,7 @@ If SUBMENU is t, then check for current sexp submenu only."
           (mh-inc-folder filename mh-e-folder)
           (delete-file filename)))))
    ((eq mail-user-agent 'gnus-user-agent)
+    (eval-and-compile (require 'gnus-group))
     (gnus-group-read-ephemeral-group
      bug-number `(nndoc "bug"
                         (nndoc-address ,(debian-bug-wget-mbox bug-number))

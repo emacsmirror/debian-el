@@ -316,21 +316,23 @@ These are stored in a hash table.  See also
   "Use font-lock-face if `add-text-properties' supports it.
 Otherwise, just use face.")
 
-(cond
- ;; Emacs 21
- ((fboundp 'replace-regexp-in-string)
-  (defalias 'apt-utils-replace-regexp-in-string 'replace-regexp-in-string))
- ;; Emacs 20
- ((and (require 'dired)
-       (fboundp 'dired-replace-in-string))
-  (defalias 'apt-utils-replace-regexp-in-string 'dired-replace-in-string))
- ;; XEmacs
- ((fboundp 'replace-in-string)
-  (defun apt-utils-replace-regexp-in-string (regexp rep string)
-    (replace-in-string string regexp rep)))
- ;; Bail out
- (t
-  (error "No replace in string function found")))
+(defalias 'apt-utils-replace-regexp-in-string
+  (cond
+   ;; Emacs 21
+   ((fboundp 'replace-regexp-in-string)
+    'replace-regexp-in-string)
+   ;; Emacs 20
+   ((and (require 'dired)
+         (fboundp 'dired-replace-in-string))
+    'dired-replace-in-string)
+   ;; XEmacs
+   ((fboundp 'replace-in-string)
+    (lambda (regexp rep string)
+      (replace-in-string string regexp rep)))
+   ;; Bail out
+   (t
+    (lambda (&rest rest)
+      (error "No replace in string function found")))))
 
 ;; Commands and functions
 

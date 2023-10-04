@@ -87,7 +87,8 @@
 (add-hook
  'dired-load-hook
  (function (lambda ()
-	     (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
+             (eval-and-compile (require 'dired))
+             (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
 
 (when (member 'utf-8 (coding-system-list))
   ;; The following from Kevin Ryde <user42@zip.com.au>
