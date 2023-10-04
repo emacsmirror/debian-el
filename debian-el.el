@@ -20,7 +20,7 @@
 ;; This package provides emacs helper libraries specific to Debian users.
 
 ;; This package contains the following libraries:
-;; 
+;;
 ;; `apt-sources' Major-mode for editing Debian sources.list files.
 ;; `apt-utils'   Interface to APT (Debian package management).
 ;; `debian-bug'  An Emacs command to submit a bug report.
@@ -118,7 +118,7 @@ there's no buffer passed to coding system functions)."
                     (string-match "\\.deb-INFO!\\./control\\'"
                                   (buffer-file-name buffer))
                     'utf-8)))
-	'undecided))
+        'undecided))
 
   (add-to-list 'file-coding-system-alist
                '("\\'control\\'" . deb-view-control-coding)))

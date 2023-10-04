@@ -156,7 +156,7 @@
 
 
 ;;; History:
-;; 
+;;
 
 ;; 1.3  - modified logic that determines old or new style Debian packages.
 ;;        On systems where the file command recognizes debian files, it
@@ -413,7 +413,7 @@ at the prompt."
         (goto-char (point-max))
         (when (search-backward "is not a valid archive" nil t)
           (kill-buffer data-buffer)
-          (kill-buffer info-buffer)        
+          (kill-buffer info-buffer)
           (error "%s: Not a valid package file" deb-view-buffer-name))
         (call-process-region (point-min) (point-max) "gzip" t t nil "-cd"))
        ((and (goto-char 1)(re-search-forward "data.tar.bz2" nil t))
@@ -422,7 +422,7 @@ at the prompt."
         (goto-char (point-max))
         (when (search-backward "is not a valid archive" nil t)
           (kill-buffer data-buffer)
-          (kill-buffer info-buffer)        
+          (kill-buffer info-buffer)
           (error "%s: Not a valid package file" deb-view-buffer-name))
         (call-process-region (point-min) (point-max) "bzip2" t t nil "-cd"))
        ((and (goto-char 1)(re-search-forward "data.tar.xz" nil t))
@@ -431,10 +431,10 @@ at the prompt."
         (goto-char (point-max))
         (when (search-backward "is not a valid archive" nil t)
           (kill-buffer data-buffer)
-          (kill-buffer info-buffer)        
+          (kill-buffer info-buffer)
           (error "%s: Not a valid package file" deb-view-buffer-name))
         (call-process-region (point-min) (point-max) "xz" t t nil "-cd"))))
-     (t      
+     (t
       (call-process "dpkg-deb" '(t t) nil "--fsys-tarfile " debfile)))
     (goto-char 1)
     (setq buffer-file-name (concat deb-view-file-name "-DATA"))
