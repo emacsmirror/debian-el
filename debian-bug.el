@@ -380,10 +380,10 @@
 
 (defcustom debian-bug-helper-program nil
   "Helper program to use to generate bug report background info.
-Possible values are 'bug, 'reportbug or nil (for neither).
-If not customized, it will get set to at runtime to 'reportbug if the command
-exists, or else to 'bug if that command exists, or else simply parse the
-status file."
+Possible values are \\='bug, \\='reportbug or nil (for neither).
+If not customized, it will get set to at runtime to \\='reportbug
+if the command exists, or else to \\='bug if that command exists,
+or else simply parse the status file."
   :group 'debian-bug
   :type '(radio (const :tag "reportbug" reportbug)
                 (const :tag "bug" bug)

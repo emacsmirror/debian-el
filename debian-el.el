@@ -99,7 +99,7 @@ This function is for use from `file-coding-system-alist'.
 ARG-LIST is arguments passed to `find-operation-coding-system'.
 The only operation handled here is `insert-file-contents' with a
 buffer filename \".deb-INFO!./control\", for which the return is
-'utf-8, and for anything else the return is nil (letting
+\\='utf-8, and for anything else the return is nil (letting
 `find-operation-coding-system' try other things).
 
 This is done as a function because the filename passed to
