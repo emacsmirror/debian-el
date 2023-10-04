@@ -25,7 +25,13 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Fix warning about next-line.
   * Fix warning about mapcar's unused return value.
 
- -- Nicholas D Steeves <sten@debian.org>  Wed, 28 Jul 2021 19:27:31 -0400
+  [ Xiyue Deng ]
+  * Documentation fixes.
+    + Fixes a few typos.
+    + Revise some wording.
+    + Stop using obsoleted versioned emacs21 in examples.
+
+  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
 debian-el (37.10) unstable; urgency=medium
 
