@@ -31,7 +31,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Revise some wording.
     + Stop using obsoleted versioned emacs21 in examples.
 
-  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
 debian-el (37.10) unstable; urgency=medium
 
