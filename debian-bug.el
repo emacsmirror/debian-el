@@ -1805,8 +1805,7 @@ argument turn sit off."
    (debian-bug-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
         (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
-    (debian-bug-bug-menu-init debian-bug-minor-mode-map)
-    (easy-menu-add debian-bug-menu))))
+    (debian-bug-bug-menu-init debian-bug-minor-mode-map))))
 
 ;; Install ourselves:
 (or (assq 'debian-bug-minor-mode minor-mode-alist)
@@ -1856,8 +1855,7 @@ argument turn sit off."
   (cond
    (debian-bug-wnpp-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
-        (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
-    (easy-menu-add debian-bug-wnpp-menu))))
+        (font-lock-add-keywords nil debian-bug-font-lock-keywords t)))))
 
 ;; Install ourselves:
 (or (assq 'debian-bug-wnpp-minor-mode minor-mode-alist)
@@ -2369,24 +2367,12 @@ Optionally, if SOURCE is t, make it a source package."
       (easy-menu-define
         debian-bug-bugs-menu
         debian-changelog-mode-map "Debian Bug Mode Bugs Menu"
-        debian-bug-easymenu-list)
-      (cond
-       ((string-match "XEmacs" emacs-version)
-        (easy-menu-remove debian-bug-bugs-menu)
-        (easy-menu-remove debian-changelog-menu)
-        (easy-menu-add debian-bug-bugs-menu)
-        (easy-menu-add debian-changelog-menu))))
+        debian-bug-easymenu-list))
      (t
       (easy-menu-define
         debian-bug-bugs-menu
         debian-bug-minor-mode-map "Debian Bug Mode Bugs Menu"
-        debian-bug-easymenu-list)
-      (cond
-       ((string-match "XEmacs" emacs-version)
-        (easy-menu-remove debian-bug-bugs-menu)
-        (easy-menu-remove debian-bug-menu)
-        (easy-menu-add debian-bug-bugs-menu)
-        (easy-menu-add debian-bug-menu)))))))
+        debian-bug-easymenu-list)))))
 
 (defun debian-bug-build-bug-this-menu ()
   "Regenerate Bugs list menu for this buffer's package."
@@ -2407,8 +2393,7 @@ Call this function from the mode setup with MINOR-MODE-MAP."
       "Debian Bug Mode Bugs Menu"
       '("Bugs"
         ["* Generate menu *" (debian-bug-build-bug-this-menu)
-         (debian-bug-check-for-program "wget")])))
-  (easy-menu-add debian-bug-bugs-menu))
+         (debian-bug-check-for-program "wget")]))))
 
 ;;;-------------
 ;;; debian-bug-filename - Peter Galbraith, July 2002.
