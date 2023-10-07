@@ -855,6 +855,18 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
         (debian-bug-compose-report package severity subject filename
                                    bug-script-temp-file))))
 
+(defun debian-bug--safe-term-exec (buffer name command startfile switches)
+  "Runs term-exec without any hooks.
+
+This protects the term-exec session from potentially being
+affected by user installed hooks when the command may ask for
+user input."
+  (let ((old-term-exec-hook term-exec-hook)
+        (term-exec-hook nil))
+    (unwind-protect
+        (term-exec buffer name command startfile switches)
+      (setq term-exec-hook old-term-exec-hook))))
+
 (defun debian-bug-run-bug-script (package severity subject filename)
   "Run a script, if provided by PACKAGE, to collect information.
 The information about the package which should be supplied with
@@ -889,8 +901,9 @@ reporting process by calling `debian-bug-compose-report'."
           (with-current-buffer bug-script-buffer
             (erase-buffer)
             (term-mode)
-            (term-exec bug-script-buffer "debian-bug-script" handler nil
-                       (list bug-script bug-script-temp-file))
+            (debian-bug--safe-term-exec
+             bug-script-buffer "debian-bug-script" handler nil
+             (list bug-script bug-script-temp-file))
             (setq bug-script-process
                   (get-buffer-process bug-script-buffer))
 
@@ -903,20 +916,25 @@ reporting process by calling `debian-bug-compose-report'."
             ;; process sentinel with the required data on the fly.
             ;; However, I suspect there are better ways to do this,
             ;; perhaps to use lexical-let.
-            (set-process-sentinel
-             bug-script-process
-             (list 'lambda '(process event)
-                   (list 'debian-bug-script-sentinel 'process 'event
-                         package severity subject filename
-                         bug-script-temp-file
-                         (current-window-configuration))))
+            (if bug-script-process
+                (progn
+                  (set-process-sentinel
+                   bug-script-process
+                   (list 'lambda '(process event)
+                         (list 'debian-bug-script-sentinel 'process 'event
+                               package severity subject filename
+                               bug-script-temp-file
+                               (current-window-configuration))))
 
-            (term-char-mode)
+                  (term-char-mode)
 
-            ;; The function set-process-query-on-exit-flag is only
-            ;; available in GNU Emacs version 22 and later.
-            (if (fboundp 'set-process-query-on-exit-flag)
-                (set-process-query-on-exit-flag bug-script-process nil)))
+                  ;; The function set-process-query-on-exit-flag is only
+                  ;; available in GNU Emacs version 22 and later.
+                  (if (fboundp 'set-process-query-on-exit-flag)
+                      (set-process-query-on-exit-flag bug-script-process
+                                                      nil)))
+              (message "Trying to get package related info failed.  Generated "
+                       "bug report may be missing some information.")))
 
           ;; Delay switching to the process output buffer by waiting
           ;; for output from the process, the process to terminate or

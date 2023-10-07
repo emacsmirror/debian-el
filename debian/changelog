@@ -30,6 +30,8 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Fixes a few typos.
     + Revise some wording.
     + Stop using obsoleted versioned emacs21 in examples.
+  * Handle process error more gracefully (Closes: #1050685).
+  * Run term-exec without hooks to be more robust.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
