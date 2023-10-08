@@ -170,7 +170,7 @@ inserted."
 
 ;;Regexps for identifying source line parts for font-lock.
 (defvar apt-sources-font-lock-deb-regexp "\\(deb\\|deb-src\\)"
-  "A regexp that matches 'deb' or 'deb-src' at the begining of line.")
+  "A regexp that matches `deb' or `deb-src' at the begining of line.")
 
 (defvar apt-sources-font-lock-uri-regexp
   "\\([^ ]+\\)"
@@ -375,7 +375,7 @@ ARG is the prefix argument."
 
 (defun apt-sources-change-source-type ()
   "Change the type of the source line.
-TYPE is either 'd' or 's' to change the type to 'deb' or 'deb-src'.
+TYPE is either `d' or `s' to change the type to `deb' or `deb-src'.
 
 This function will rise an error if we are not in a source line."
   (interactive)
@@ -412,7 +412,7 @@ This function will rise an error if we are not in a source line."
 (defun apt-sources-change-uri-address (uri-address)
   "Change the URI address of the source line.
 String URI-ADDRESS is the address (without the type of address,
-ex: 'http://').
+ex: `http://').
 
 This function will rise an error if we are not in a source line."
   (interactive "sURI address: ")
@@ -468,7 +468,7 @@ This function will rise an error if we are not in a source line."
 	   (insert components)))))
 
 (defun apt-sources-deb-or-src-replicate ()
-  "Copy the source line and change the 'deb' to 'deb-src' or viceversa.
+  "Copy the source line and change the `deb' to `deb-src' or vice versa.
 
 This function will rise an error if we are not on a source line."
   (interactive)

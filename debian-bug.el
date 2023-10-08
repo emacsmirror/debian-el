@@ -380,10 +380,10 @@
 
 (defcustom debian-bug-helper-program nil
   "Helper program to use to generate bug report background info.
-Possible values are 'bug, 'reportbug or nil (for neither).
-If not customized, it will get set to at runtime to 'reportbug if the command
-exists, or else to 'bug if that command exists, or else simply parse the
-status file."
+Possible values are \\='bug, \\='reportbug or nil (for neither).
+If not customized, it will get set to at runtime to \\='reportbug
+if the command exists, or else to \\='bug if that command exists,
+or else simply parse the status file."
   :group 'debian-bug
   :type '(radio (const :tag "reportbug" reportbug)
                 (const :tag "bug" bug)
@@ -478,18 +478,12 @@ Will only actually do it if the variable `debian-bug-From-address' is set."
   :group 'debian-bug
   :type 'boolean)
 
-;;(defvar debian-bug-menu-action)
-;;(defvar debian-bug-menu-action-default)
-;;(defun debian-bug-menu-action-set (symbol value)
-;;  "Set SYMBOL to VALUE for
-;;  (set-default symbol value)
-;;  (setq-default debian-bug-menu-action debian-bug-menu-action-default)
-;;  (setq debian-bug-menu-action debian-bug-menu-action-default))
+(defvar debian-bug-menu-action)
+(defvar debian-bug-menu-action-default)
 
 (defcustom debian-bug-menu-action-default 'browse
   "Default action enabled at startup in Bugs menu-bar."
   :group 'debian-bug
-  ;; :set 'debian-bug-menu-action-set
   :set (lambda (symbol value)
          (set-default symbol value)
          (setq-default debian-bug-menu-action debian-bug-menu-action-default)
@@ -899,6 +893,7 @@ reporting process by calling `debian-bug-compose-report'."
           (message (concat "Collecting information about the package."
                            " This may take some time."))
           (with-current-buffer bug-script-buffer
+            (eval-and-compile (require 'term))
             (erase-buffer)
             (term-mode)
             (debian-bug--safe-term-exec
@@ -978,6 +973,7 @@ reporting process by calling `debian-bug-compose-report'."
                     (memq mail-user-agent '(mh-e-user-agent
                                             message-user-agent
                                             gnus-user-agent)))
+            (eval-and-compile (require 'mml))
             (mml-quote-region (point-min) (point-max))
             (goto-char (point-min))
             (insert "<#part type=\"text/plain\" disposition=attachment"
@@ -1809,8 +1805,7 @@ argument turn sit off."
    (debian-bug-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
         (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
-    (debian-bug-bug-menu-init debian-bug-minor-mode-map)
-    (easy-menu-add debian-bug-menu))))
+    (debian-bug-bug-menu-init debian-bug-minor-mode-map))))
 
 ;; Install ourselves:
 (or (assq 'debian-bug-minor-mode minor-mode-alist)
@@ -1860,8 +1855,7 @@ argument turn sit off."
   (cond
    (debian-bug-wnpp-minor-mode                 ;Setup the minor-mode
     (if (fboundp 'font-lock-add-keywords)
-        (font-lock-add-keywords nil debian-bug-font-lock-keywords t))
-    (easy-menu-add debian-bug-wnpp-menu))))
+        (font-lock-add-keywords nil debian-bug-font-lock-keywords t)))))
 
 ;; Install ourselves:
 (or (assq 'debian-bug-wnpp-minor-mode minor-mode-alist)
@@ -1927,7 +1921,7 @@ With optional argument prefix ARCHIVED, display archived bugs."
 
 (defun debian-bug-prompt-bug-number (prompt)
   "Prompt the user for a bug number using PROMPT."
-  (require 'thingatpt)
+  (eval-and-compile (require 'thingatpt))
   (let ((default-number)
         (item (word-at-point)))
     ;; First see if there's a number under point
@@ -2185,6 +2179,7 @@ If SUBMENU is t, then check for current sexp submenu only."
           (mh-inc-folder filename mh-e-folder)
           (delete-file filename)))))
    ((eq mail-user-agent 'gnus-user-agent)
+    (eval-and-compile (require 'gnus-group))
     (gnus-group-read-ephemeral-group
      bug-number `(nndoc "bug"
                         (nndoc-address ,(debian-bug-wget-mbox bug-number))
@@ -2372,24 +2367,12 @@ Optionally, if SOURCE is t, make it a source package."
       (easy-menu-define
         debian-bug-bugs-menu
         debian-changelog-mode-map "Debian Bug Mode Bugs Menu"
-        debian-bug-easymenu-list)
-      (cond
-       ((string-match "XEmacs" emacs-version)
-        (easy-menu-remove debian-bug-bugs-menu)
-        (easy-menu-remove debian-changelog-menu)
-        (easy-menu-add debian-bug-bugs-menu)
-        (easy-menu-add debian-changelog-menu))))
+        debian-bug-easymenu-list))
      (t
       (easy-menu-define
         debian-bug-bugs-menu
         debian-bug-minor-mode-map "Debian Bug Mode Bugs Menu"
-        debian-bug-easymenu-list)
-      (cond
-       ((string-match "XEmacs" emacs-version)
-        (easy-menu-remove debian-bug-bugs-menu)
-        (easy-menu-remove debian-bug-menu)
-        (easy-menu-add debian-bug-bugs-menu)
-        (easy-menu-add debian-bug-menu)))))))
+        debian-bug-easymenu-list)))))
 
 (defun debian-bug-build-bug-this-menu ()
   "Regenerate Bugs list menu for this buffer's package."
@@ -2410,8 +2393,7 @@ Call this function from the mode setup with MINOR-MODE-MAP."
       "Debian Bug Mode Bugs Menu"
       '("Bugs"
         ["* Generate menu *" (debian-bug-build-bug-this-menu)
-         (debian-bug-check-for-program "wget")])))
-  (easy-menu-add debian-bug-bugs-menu))
+         (debian-bug-check-for-program "wget")]))))
 
 ;;;-------------
 ;;; debian-bug-filename - Peter Galbraith, July 2002.

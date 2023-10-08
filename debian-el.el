@@ -20,7 +20,7 @@
 ;; This package provides emacs helper libraries specific to Debian users.
 
 ;; This package contains the following libraries:
-;; 
+;;
 ;; `apt-sources' Major-mode for editing Debian sources.list files.
 ;; `apt-utils'   Interface to APT (Debian package management).
 ;; `debian-bug'  An Emacs command to submit a bug report.
@@ -87,7 +87,8 @@
 (add-hook
  'dired-load-hook
  (function (lambda ()
-	     (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
+             (eval-and-compile (require 'dired))
+             (define-key dired-mode-map "\C-d" 'deb-view-dired-view))))
 
 (when (member 'utf-8 (coding-system-list))
   ;; The following from Kevin Ryde <user42@zip.com.au>
@@ -99,7 +100,7 @@ This function is for use from `file-coding-system-alist'.
 ARG-LIST is arguments passed to `find-operation-coding-system'.
 The only operation handled here is `insert-file-contents' with a
 buffer filename \".deb-INFO!./control\", for which the return is
-'utf-8, and for anything else the return is nil (letting
+\\='utf-8, and for anything else the return is nil (letting
 `find-operation-coding-system' try other things).
 
 This is done as a function because the filename passed to
@@ -117,7 +118,7 @@ there's no buffer passed to coding system functions)."
                     (string-match "\\.deb-INFO!\\./control\\'"
                                   (buffer-file-name buffer))
                     'utf-8)))
-	'undecided))
+        'undecided))
 
   (add-to-list 'file-coding-system-alist
                '("\\'control\\'" . deb-view-control-coding)))
