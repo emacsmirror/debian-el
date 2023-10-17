@@ -495,8 +495,7 @@ easily repeat a `deb-find' command."
                                  deb-file-string "' | egrep '\.deb$'"))
                         (t
                          (concat deb-find-method " '" deb-file-string "'")))))
-    (compile-internal command "Not applicable in deb-find" "deb-find" nil nil
-                      (function (lambda (mode) output-buffer-name)))
+    (compilation-start command nil (lambda (mode) output-buffer-name))
     (switch-to-buffer-other-window output-buffer-name)
     (make-local-variable 'deb-view-find-minor-mode-map)
     (setq deb-view-find-minor-mode-map
