@@ -375,7 +375,8 @@ at the prompt."
       (if (fboundp 'set-buffer-multibyte) (set-buffer-multibyte nil))
       (debview-mode)
       ;; Turn off view-mode in this buffer:
-      (make-variable-buffer-local 'view-mode-hook)
+      (make-local-variable 'view-mode-hook)
+      (make-local-variable 'view-exit-action)
       (add-hook
        'view-mode-hook
        (function (lambda ()
@@ -497,6 +498,7 @@ easily repeat a `deb-find' command."
     (compile-internal command "Not applicable in deb-find" "deb-find" nil nil
                       (function (lambda (mode) output-buffer-name)))
     (switch-to-buffer-other-window output-buffer-name)
+    (make-local-variable 'deb-view-find-minor-mode-map)
     (setq deb-view-find-minor-mode-map
           (copy-keymap compilation-minor-mode-map))
     (use-local-map deb-view-find-minor-mode-map)
