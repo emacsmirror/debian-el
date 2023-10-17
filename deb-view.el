@@ -525,7 +525,7 @@ easily repeat a `deb-find' command."
   "Return string describing the version of `deb-view'.
 When called interactively, displays the version."
   (interactive)
-  (if (interactive-p)
+  (if (called-interactively-p 'interactive)
       (message "deb-view version %s" (deb-view-version))
     deb-view-version))
 
