@@ -24,6 +24,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Fix warning about save-excursion+set-buffer.
   * Fix warning about next-line.
   * Fix warning about mapcar's unused return value.
+  * Fix byte-compilation warning about dired-load-hook.
 
   [ Xiyue Deng ]
   * Documentation fixes.
