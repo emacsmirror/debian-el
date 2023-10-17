@@ -230,6 +230,9 @@
 
 ;;; Code:
 
+(require 'tar-mode)
+(require 'dired)
+
 (defgroup deb-view nil
   "View Debian package files with tar-mode"
   :group 'tools
@@ -295,7 +298,6 @@ See also the variable deb-find-directory."
   "The file name being processed by `deb-view'.")
 
 ;; You might not like the key bindings that I chose:
-(eval-and-compile (require 'dired))
 (define-key dired-mode-map "\C-d" 'deb-view-dired-view)
 
 ;;;###autoload
