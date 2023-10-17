@@ -255,7 +255,7 @@ See also the variable deb-find-directory."
   :group 'deb-view
   :type '(radio (const "find") (const "locate")))
 
-(defcustom deb-find-directory "/usr/local/src/debian"
+(defcustom deb-find-directory "/var/cache/apt/archives"
   "Directory to run find in when deb-find-method is \"find\"."
   :group 'deb-view
   :type 'directory)
