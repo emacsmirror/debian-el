@@ -562,7 +562,7 @@ mouse-2 - view the deb file on this line with deb-view.
 q - quit deb-find.")
     (with-current-buffer standard-output
       (help-mode))
-    (print-help-return-message)))
+    (help-print-return-message)))
 
 (defun deb-view-help ()
   "Show help information for `deb-view'."
@@ -597,7 +597,7 @@ copy command in tar-mode (\"c\") to copy the file to a temp directory.
 You can then do what you want to the file.")
     (with-current-buffer standard-output
       (help-mode))
-    (print-help-return-message)))
+    (help-print-return-message)))
 
 (defun deb-view-tar-man ()
   "*In Tar mode, view the tar file entry on this line as a man page."
