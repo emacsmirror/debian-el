@@ -482,7 +482,7 @@ output in a buffer.  See also the variable deb-find-directory.
 This command uses a special history list, so you can
 easily repeat a `deb-find' command."
   (interactive)
-  (require 'compile)
+  (eval-and-compile (require 'compile))
   (let* ((deb-file-string (read-from-minibuffer "deb file to find: "
 						nil nil nil 'deb-find-history))
          (output-buffer-name "*deb-find*")
@@ -600,7 +600,7 @@ You can then do what you want to the file.")
 (defun deb-view-tar-man ()
   "*In Tar mode, view the tar file entry on this line as a man page."
   (interactive)
-  (require 'man)
+  (eval-and-compile (require 'man))
   (let ((auto-mode-alist
          (append '(("\\.gz$" . deb-view-tar-uncompress-while-visiting)
                    ("\\.Z$"  . deb-view-tar-uncompress-while-visiting)
