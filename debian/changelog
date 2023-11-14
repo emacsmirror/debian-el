@@ -42,6 +42,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Migrate to debhelper-compat version 13.
   * Add "Rules-Requires-Root: no" in d/control.
   * Update year in d/copyright.
+  * Add team as Upstream-Contact in d/copyright.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
