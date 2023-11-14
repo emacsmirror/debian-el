@@ -37,6 +37,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Fix install status detection of "Multi-Arch:same" packages
     (Closes: #664083).
   * Update Standards-Version to 4.6.2.  No change needed.
+  * Use secure URI in d/copyright.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 

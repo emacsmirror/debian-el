@@ -1,4 +1,4 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Comment:
  This collection of files was assembled by Roland Mas <lolando@debian.org>
  from various messages posted on the gnu.emacs.sources newsgroup, as well as
