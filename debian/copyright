@@ -45,7 +45,7 @@ Copyright: 2004 W. Borgert <debacle@debian.org>
 License: GPL-2+
 
 Files: debian/*
-Copyright: 2018 David Bremner <bremner@debian.org>
+Copyright: 2018-2023 David Bremner <bremner@debian.org>
 License: GPL-2+
 Comment:
  Packaging was completely re-done with 37.0, taking only debian/copyright
