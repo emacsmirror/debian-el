@@ -34,7 +34,8 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Handle process error more gracefully (Closes: #1050685).
   * Run term-exec without hooks to be more robust.
   * Resolve comp warnings (Closes: #1024695, #1034734, #1037179, #1051478).
-  * Fix install status detection of "Multi-Arch:same" packages (Closes: #664083).
+  * Fix install status detection of "Multi-Arch:same" packages
+    (Closes: #664083).
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
