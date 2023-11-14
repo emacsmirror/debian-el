@@ -1,0 +1,2 @@
+# The info pages are installed to elpa directories.
+package-contains-documentation-outside-usr-share-doc
