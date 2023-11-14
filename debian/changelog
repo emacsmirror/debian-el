@@ -39,6 +39,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Update Standards-Version to 4.6.2.  No change needed.
   * Use secure URI in d/copyright.
   * Add lintian override for info page outside of /usr/share/doc.
+  * Migrate to debhelper-compat version 13.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 

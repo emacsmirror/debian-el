@@ -3,7 +3,7 @@ Section: lisp
 Priority: optional
 Maintainer: Debian Emacsen team <debian-emacsen@lists.debian.org>
 Uploaders: David Bremner <bremner@debian.org>
-Build-Depends: debhelper (>= 10),
+Build-Depends: debhelper-compat (= 13),
  dh-elpa,
  texinfo,
  install-info
