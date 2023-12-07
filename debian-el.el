@@ -28,6 +28,10 @@
 ;; `gnus-BTS'    Provides buttons for bug numbers seen in Gnus messages.
 ;; `preseed'     Major-mode for editing debian-installer preseed files.
 
+;; Author: Debian Emacsen Team <debian-emacsen@lists.debian.org>
+;; Version: 37.11
+;; Keywords: debian apt elisp
+
 ;;; History:
 ;;
 ;; 2008-04-12 - Géraud Meyer

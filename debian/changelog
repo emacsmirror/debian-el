@@ -43,6 +43,10 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Add "Rules-Requires-Root: no" in d/control.
   * Update year in d/copyright.
   * Add team as Upstream-Contact in d/copyright.
+  * Use dh_elpa to handle *-{autoloads,pkg}.el generations.
+    + Add package info comments to debian-el.el.
+    + Drop debian-autoloads.el and debian-el-pkg.el in favor of dh_elpa
+      generated ones.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
