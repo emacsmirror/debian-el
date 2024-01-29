@@ -49,6 +49,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Add package info comments to debian-el.el.
     + Drop debian-autoloads.el and debian-el-pkg.el in favor of dh_elpa
       generated ones.
+  * Add a dummy test to force byte-compiling addons to help detect issues.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
