@@ -43,9 +43,6 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Use toplevel require for general dependencies.
     + Use eval-and-compile for non-toplevel requires.
     + Use make-local-variable as necessary.
-    + Use toplevel require for general dependencies.
-    + Use eval-and-compile for non-toplevel requires.
-    + Use make-local-variable as necessary.
     + Use "help-print-return-message" to replace the obsolete
       "print-help-return-message"
     + Use "called-interactively-p" to replace the obsolete
