@@ -1,7 +1,5 @@
 debian-el (37.11) UNRELEASED; urgency=medium
 
-  * Team upload.
-
   [ Salman Mohammadi ]
   * apt-utils.el: fix broken example, replace emacs21 with emacs
 
