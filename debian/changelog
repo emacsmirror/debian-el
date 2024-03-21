@@ -35,7 +35,26 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Stop using obsoleted versioned emacs21 in examples.
   * Handle process error more gracefully (Closes: #1050685).
   * Run term-exec without hooks to be more robust.
-  * Resolve comp warnings (Closes: #1024695, #1034734, #1037179, #1051478).
+  * Resolve comp warnings (Closes: #1024695, #1034734, #1037179,
+    #1051478).
+    + Drop usage of obsolete easy-menu-{add,remove} functions.
+    + Fix warning on docstring has wrong usage of unescaped single quotes.
+    + Fix warnings on undefined variables and functions.
+    + Fix byte-compilation warning about dired-load-hook.
+    + Use eval-and-compile to avoid unused variable warnings.
+    + Use toplevel require for general dependencies.
+    + Use eval-and-compile for non-toplevel requires.
+    + Use make-local-variable as necessary.
+    + Use toplevel require for general dependencies.
+    + Use eval-and-compile for non-toplevel requires.
+    + Use make-local-variable as necessary.
+    + Use "help-print-return-message" to replace the obsolete
+      "print-help-return-message"
+    + Use "called-interactively-p" to replace the obsolete
+      "interactive-p".
+    + Use "compilation-start" to replace the obsolete "compile-internal".
+  * Ensure consistent spacing.
+  * Change default deb-find-directory to "/var/cache/apt/archives".
   * Fix install status detection of "Multi-Arch:same" packages
     (Closes: #664083).
   * Update Standards-Version to 4.6.2.  No change needed.
@@ -50,6 +69,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Drop debian-autoloads.el and debian-el-pkg.el in favor of dh_elpa
       generated ones.
   * Add a dummy test to force byte-compiling addons to help detect issues.
+  * Add myself to Uploaders with permission from Sean.
 
  -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
 
