@@ -53,7 +53,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Fix install status detection of "Multi-Arch:same" packages
     (Closes: #664083).
   * Update Standards-Version to 4.6.2.  No change needed.
-  * Use secure URI in d/copyright.
+  * Use https URI in d/copyright.
   * Add lintian override for info page outside of /usr/share/doc.
   * Migrate to debhelper-compat version 13.
   * Add "Rules-Requires-Root: no" in d/control.
