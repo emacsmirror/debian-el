@@ -28,13 +28,12 @@ debian-el (37.11) UNRELEASED; urgency=medium
 
   [ Xiyue Deng ]
   * Documentation fixes.
-    + Fixes a few typos.
+    + Fix typos.
     + Revise some wording.
     + Stop using obsoleted versioned emacs21 in examples.
   * Handle process error more gracefully (Closes: #1050685).
   * Run term-exec without hooks to be more robust.
-  * Resolve comp warnings (Closes: #1024695, #1034734, #1037179,
-    #1051478).
+  * Resolve comp warnings (Closes: #1024695, #1034734, #1037179, #1051478).
     + Drop usage of obsolete easy-menu-{add,remove} functions.
     + Fix warning on docstring has wrong usage of unescaped single quotes.
     + Fix warnings on undefined variables and functions.
@@ -43,12 +42,8 @@ debian-el (37.11) UNRELEASED; urgency=medium
     + Use toplevel require for general dependencies.
     + Use eval-and-compile for non-toplevel requires.
     + Use make-local-variable as necessary.
-    + Use "help-print-return-message" to replace the obsolete
-      "print-help-return-message"
-    + Use "called-interactively-p" to replace the obsolete
-      "interactive-p".
-    + Use "compilation-start" to replace the obsolete "compile-internal".
-  * Ensure consistent spacing.
+    + Replace usage of some now-obsolete symbols.
+  * Fix some trailing whitespace & untabify.
   * Change default deb-find-directory to "/var/cache/apt/archives".
   * Fix install status detection of "Multi-Arch:same" packages
     (Closes: #664083).
@@ -59,7 +54,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Add "Rules-Requires-Root: no" in d/control.
   * Update year in d/copyright.
   * Add team as Upstream-Contact in d/copyright.
-  * Use dh_elpa to handle *-{autoloads,pkg}.el generations.
+  * Use dh_elpa to handle *-{autoloads,pkg}.el generation.
     + Add package info comments to debian-el.el.
     + Drop debian-autoloads.el and debian-el-pkg.el in favor of dh_elpa
       generated ones.
