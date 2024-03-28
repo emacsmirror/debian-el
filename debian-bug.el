@@ -855,6 +855,7 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
 This protects the term-exec session from potentially being
 affected by user installed hooks when the command may ask for
 user input."
+  (eval-and-compile (require 'term))
   (let ((old-term-exec-hook term-exec-hook)
         (term-exec-hook nil))
     (unwind-protect
@@ -928,8 +929,9 @@ reporting process by calling `debian-bug-compose-report'."
                   (if (fboundp 'set-process-query-on-exit-flag)
                       (set-process-query-on-exit-flag bug-script-process
                                                       nil)))
-              (message "Trying to get package related info failed.  Generated "
-                       "bug report may be missing some information.")))
+              (message (concat "Trying to get package related info failed.  "
+                               "Generated bug report may be missing some "
+                               "information."))))
 
           ;; Delay switching to the process output buffer by waiting
           ;; for output from the process, the process to terminate or
