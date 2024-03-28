@@ -1,4 +1,4 @@
-debian-el (37.11) UNRELEASED; urgency=medium
+debian-el (37.11) unstable; urgency=medium
 
   [ Salman Mohammadi ]
   * apt-utils.el: fix broken example, replace emacs21 with emacs
@@ -61,7 +61,7 @@ debian-el (37.11) UNRELEASED; urgency=medium
   * Add a dummy test to force byte-compiling addons to help detect issues.
   * Add myself to Uploaders.
 
- -- Xiyue Deng <manphiz@gmail.com>  Sun, 09 Jul 2023 04:10:14 -0700
+ -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 28 Mar 2024 10:13:38 +0800
 
 debian-el (37.10) unstable; urgency=medium
 
