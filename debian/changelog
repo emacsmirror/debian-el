@@ -1,4 +1,4 @@
-debian-el (37.12) UNRELEASED; urgency=medium
+debian-el (37.12) unstable; urgency=medium
 
   * Bring back debian-autoloads.el (Closes: #1067902)
   * Fix comp warnings in debian-bug.el (Closes: #1067922)
