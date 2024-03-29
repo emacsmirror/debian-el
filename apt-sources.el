@@ -306,10 +306,10 @@ of the format."
 	(components (completing-read "Components: " ;list of componenst used by APT.
 				     '(("main")
 				       ("main contrib")
-				       ("main contrib non-free")
+				       ("main contrib non-free non-free-firmware")
 				       ("contrib")
-				       ("contrib non-free")
-				       ("non-free"))))
+				       ("contrib non-free non-free-firmware")
+				       ("non-free non-free-firmware"))))
 	(blank-line (if apt-sources-around-lines "\n" "")))
     (save-excursion
       (beginning-of-line)
@@ -453,10 +453,10 @@ This function will rise an error if we are not in a source line."
        (let ((components (completing-read "Components: " ;list of componenst used by APT.
 					  '(("main")
 					    ("main contrib")
-					    ("main contrib non-free")
+					    ("main contrib non-free non-free-firmware")
 					    ("contrib")
-					    ("contrib non-free")
-					    ("non-free")))))
+					    ("contrib non-free non-free-firmware")
+					    ("non-free non-free-firmware")))))
 	 (save-excursion
 	   (beginning-of-line)
 	   (delete-region (re-search-forward ":/*[^ ]* [^ ]*." (line-end-position) t 1)
