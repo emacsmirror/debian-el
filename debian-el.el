@@ -1,7 +1,7 @@
 ;;; debian-el.el --- startup file for the debian-el package
 
 ;; Author: Debian Emacsen Team <debian-emacsen@lists.debian.org>
-;; Version: 37.11
+;; Version: 37.12
 ;; Keywords: debian apt elisp
 
 ;; This file is not part of GNU Emacs.
