@@ -1148,10 +1148,11 @@ Optional argument ACTION can be provided in programs."
           (debian-bug--set-CC "debian-devel@lists.debian.org"
                               "X-Debbugs-CC:")))
     (insert "Package: wnpp\n")
+    (insert (format "Severity: %s\n" severity))
     (when (and (string-equal tag "ITP")
                debian-bug-From-address)
       (insert (format "Owner: %s\n" debian-bug-From-address)))
-    (insert (format "Severity: %s\n\n" severity))
+    (insert "\n")
     (when (or (string-equal tag "ITP")
 	      (string-equal tag "RFP"))
       (insert
@@ -1161,6 +1162,7 @@ Optional argument ACTION can be provided in programs."
        "  Upstream Author : \n"
        "* URL or Web page : \n"
        "* License         : \n"
+       "  Programming lang: \n"
        "  Description     : " description "\n")
       (forward-line -1))
     (set-window-start (selected-window) (point-min) t)
