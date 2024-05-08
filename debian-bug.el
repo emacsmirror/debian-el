@@ -741,8 +741,7 @@ function simply returns BTS-ADDRESS."
     (save-excursion
       (call-process "reportbug" nil '(t t) nil
 		    "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
-                    "--list-cc=none" "--no-bug-script"
-                    "-q" package)
+                    "--no-bug-script" "-q" package)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
     (delete-region
