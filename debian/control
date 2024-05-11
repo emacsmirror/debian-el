@@ -19,6 +19,7 @@ Architecture: all
 Depends: bzip2,
          reportbug,
          xz-utils,
+         zstd,
          ${elpa:Depends},
          ${misc:Depends}
 Recommends: emacs, wget
