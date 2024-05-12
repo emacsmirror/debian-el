@@ -11,8 +11,10 @@ debian-el (37.12) UNRELEASED; urgency=medium
     - Add `Programming lang' after `License' in email template
   * Update Standards-Version to 4.7.0; no change needed
   * Stop passing "--list-cc=none" to reportbug (Closes: #1069908)
+  * Add zstd to debian/control
+  * Add deb-view support for zstd compressed deb files (Closes: #1032662)
 
- -- Xiyue Deng <manphiz@gmail.com>  Wed, 08 May 2024 15:58:12 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Sat, 11 May 2024 23:03:18 -0700
 
 debian-el (37.11) unstable; urgency=medium
 
