@@ -741,7 +741,7 @@ function simply returns BTS-ADDRESS."
     (save-excursion
       ;; Unset $HOME to avoid reportbug from loading user options in
       ;; ~/.reportbugrc which may potentially change reportbug's behavior and
-      ;; hence broken the generated template.  Suggested by suggested by Nis
+      ;; hence break the generated template.  Suggested by suggested by Nis
       ;; Martensen <nis.martensen@mailbox.org> in
       ;; https://bugs.debian.org/1070881.
       (with-environment-variables (("HOME" ""))
