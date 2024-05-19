@@ -739,9 +739,15 @@ function simply returns BTS-ADDRESS."
    ;; reportbug
    ((eq (debian-bug-helper-program) 'reportbug)
     (save-excursion
-      (call-process "reportbug" nil '(t t) nil
-		    "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
-                    "--no-bug-script" "-q" package)
+      ;; Unset $HOME to avoid reportbug from loading user options in
+      ;; ~/.reportbugrc which may potentially change reportbug's behavior and
+      ;; hence broken the generated template.  Suggested by suggested by Nis
+      ;; Martensen <nis.martensen@mailbox.org> in
+      ;; https://bugs.debian.org/1070881.
+      (with-environment-variables (("HOME" ""))
+        (call-process "reportbug" nil '(t t) nil
+                      "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
+                      "--no-bug-script" "-q" package))
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
     (delete-region
