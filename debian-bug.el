@@ -2488,6 +2488,44 @@ Call this function from the mode setup with MINOR-MODE-MAP."
      (t
       (message "Sorry, try that again")))))
 
+;;;###autoload
+(defun debian-bug-request-for-sponsor (mentors-template-url)
+  "Prepare a RFS bug email based on the RFS template on mentors.d.n.
+One should provide a URL to an RFS template which will be used to
+generate the mail content.  It will then compose a mail based on
+the RFS template that is ready to send.  If a name can be
+detected through environmental variables `DEBFULLNAME',
+`DEBNAME', or `NAME', or can be retrieved
+from `(user-full-name)', a signature will also be appended to the
+end of the mail.
+
+Throws an error if MENTORS-TEMPLATE-URL does not point to a
+mentors RFS template page."
+  (interactive "sRFS template link: ")
+  (unless (string-match-p "^https://mentors.debian.net/sponsors/rfs-howto/[^/]+/?"
+                          mentors-template-url)
+    (error (concat "Invalid URL.  It should be of the form "
+                   "\"https://mentors.debian.net/sponsors/rfs-howto/"
+                   "<package-name>/\".")))
+  (browse-url-mail
+   (with-temp-buffer
+     (url-insert-file-contents mentors-template-url)
+     (goto-char (point-min))
+     (unless (re-search-forward "<a\\s-+href=\"\\(mailto.+\\)\">" nil t)
+       (error "The RFS template page is ill-formed.  Please try again."))
+     (let ((mailto-string (buffer-substring (match-beginning 1)
+                                            (match-end 1)))
+           (fullname (or (getenv "DEBFULLNAME")
+                         (getenv "DEBNAME")  ;; reportbug
+                         (getenv "NAME")  ;;  reportbug
+                         (user-full-name))))
+       (when fullname
+         (setq mailto-string
+               (concat mailto-string
+                       (url-hexify-string (concat "\n-- \n" fullname "\n")))))
+       mailto-string))))
+(defalias 'debian-bug-RFS 'debian-bug-request-for-sponsor)
+
 (provide 'debian-bug)
 
 ;;; debian-bug.el ends here
