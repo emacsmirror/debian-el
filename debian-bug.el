@@ -726,7 +726,7 @@ function simply returns BTS-ADDRESS."
       bts-address
     (concat type "@" bts-address)))
 
-(defun debian-bug-prefill-report (package severity)
+(defun debian-bug-prefill-report (package version severity)
   "Prefill bug report for PACKAGE at SEVERITY, calling bug or reportbug."
   (cond
    ;; bug
@@ -748,6 +748,7 @@ function simply returns BTS-ADDRESS."
         (call-process "reportbug" nil '(t t) nil
                       "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
                       "--no-bug-script" "-q" package))
+      (debian-bug--set-version version)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
     (delete-region
@@ -867,7 +868,7 @@ user input."
         (term-exec buffer name command startfile switches)
       (setq term-exec-hook old-term-exec-hook))))
 
-(defun debian-bug-run-bug-script (package severity subject filename)
+(defun debian-bug-run-bug-script (package severity version subject filename)
   "Run a script, if provided by PACKAGE, to collect information.
 The information about the package which should be supplied with
 the bug report, and then proceed to the next step in the bug
@@ -923,7 +924,7 @@ reporting process by calling `debian-bug-compose-report'."
                    bug-script-process
                    (list 'lambda '(process event)
                          (list 'debian-bug-script-sentinel 'process 'event
-                               package severity subject filename
+                               package severity version subject filename
                                bug-script-temp-file
                                (current-window-configuration))))
 
@@ -957,7 +958,7 @@ reporting process by calling `debian-bug-compose-report'."
                          '(exit signal)))
               (switch-to-buffer-other-window bug-script-buffer)))
 
-      (debian-bug-compose-report package severity subject filename))))
+      (debian-bug-compose-report package severity version subject filename))))
 
 (defun debian-bug-insert-bug-script-temp-file (temp-file)
   "Insert the output from the bug script, if any, into the current buffer."
@@ -1016,13 +1017,16 @@ reporting process by calling `debian-bug-compose-report'."
                       (completing-read "Severity (default normal): "
                                        debian-bug-severity-alist
                                        nil t nil nil "normal")))
+          (version (save-window-excursion
+                     (debian-bug-help-presubj package)
+                     (read-string "Version (optional): ")))
           (subject (save-window-excursion
                      (debian-bug-help-presubj package)
                      (read-string "(Very) brief summary of problem: "))))
-      (debian-bug-run-bug-script package severity subject filename))))
+      (debian-bug-run-bug-script package severity version subject filename))))
 
 (defun debian-bug-compose-report
-    (package severity subject filename &optional bug-script-temp-file)
+    (package severity version subject filename &optional bug-script-temp-file)
   "Compose the initial contents of the bug report and present it in a buffer.
 The buffer will be completed by the user."
 ;;; (require 'reporter)
@@ -1063,7 +1067,7 @@ The buffer will be completed by the user."
   (if (looking-at "^<#secure")      ;Skip over mml directives
       (forward-line 1))
   (message "Getting package information from reportbug...")
-  (debian-bug-prefill-report package severity)
+  (debian-bug-prefill-report package version severity)
   (message "Getting package information from reportbug...done")
   (if debian-bug-use-From-address
       (debian-bug--set-custom-From))
@@ -1326,6 +1330,26 @@ Non-nil optional argument NOCLEANUP means remove empty field."
     (if (re-search-forward "^ *Severity: +\\([a-zA-Z]+\\)" nil t)
 	(let ((actualSeverity (match-string-no-properties 1)))
 	  (string= actualSeverity severity)))))
+
+(defun debian-bug--set-version (version)
+  "Set bug VERSION."
+  (interactive (list (read-string "Version: ")))
+  (if (or (not version)
+          (string= version ""))
+      nil
+    (save-excursion
+      (goto-char (point-min))
+      (cond
+       ((re-search-forward "^\\s-*Version:\\s-*\\(\\S-+\\)\n" nil t)
+        (goto-char (match-beginning 1))
+        (delete-region (match-beginning 1) (match-end 1))
+        (insert version))
+       ((re-search-forward "^\\s-*Package:.*\n")
+        (insert "Version: " version "\n"))
+       (t
+        (while (not (eolp))
+          (forward-line))
+        (insert "\nVersion: " version "\n"))))))
 
 (defun debian-bug--set-severity (severity)
   "Set bug SEVERITY level."
