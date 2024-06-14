@@ -1,11 +1,11 @@
-debian-el (37.13) UNRELEASED; urgency=medium
+debian-el (37.13) unstable; urgency=medium
 
   * Add Homepage in d/control
   * Add Source in d/copyright
   * Implement debian-bug-request-for-sponsor (Closes: #1072787)
   * Add prompt for version when reporting bugs (Closes: #529611)
 
- -- Xiyue Deng <manphiz@gmail.com>  Thu, 13 Jun 2024 23:14:21 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 14 Jun 2024 00:43:37 -0700
 
 debian-el (37.12) unstable; urgency=medium
 
