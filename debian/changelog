@@ -1,0 +1,181 @@
+debian-el (37.13) unstable; urgency=medium
+
+  * Add Homepage in d/control
+  * Add Source in d/copyright
+  * Implement debian-bug-request-for-sponsor (Closes: #1072787)
+  * Add prompt for version when reporting bugs (Closes: #529611)
+
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 14 Jun 2024 00:43:37 -0700
+
+debian-el (37.12) unstable; urgency=medium
+
+  * Bring back debian-autoloads.el (Closes: #1067902)
+  * Fix comp warnings in debian-bug.el (Closes: #1067922)
+  * Update distribution code names to recent releases
+  * Append non-free-firmware to non-free when handling components
+  * Move package info above copyright notice following existing practices
+  * Bump package version to prepare for release
+  * Make ITP/RFP template more aligned with reportbug
+    - Move `Severity' above `Owner' in headers
+    - Add `Programming lang' after `License' in email template
+  * Update Standards-Version to 4.7.0; no change needed
+  * Fix duplicates and broken entries in X-Debbugs-Cc (Closes: #1069908)
+    - Stop passing "--list-cc=none" to reportbug
+    - Unset $HOME to prevent reportbug from loading ~/.reportbugrc
+  * Add zstd to depends of elpa-debian-el in debian/control
+  * Add deb-view support for zstd compressed deb files (Closes: #1032662)
+
+ -- Xiyue Deng <manphiz@gmail.com>  Sun, 19 May 2024 02:44:17 -0700
+
+debian-el (37.11) unstable; urgency=medium
+
+  [ Salman Mohammadi ]
+  * apt-utils.el: fix broken example, replace emacs21 with emacs
+
+  [ Nicholas D Steeves ]
+  * Drop emacs25 from Enhances (package does not exist in bullseye).
+
+  [ Debian Janitor ]
+  * Remove constraints unnecessary since buster (oldstable):
+    + elpa-debian-el: Drop versioned constraint on dpkg and reportbug in
+      Depends.
+    + elpa-debian-el: Drop versioned constraint on emacs in Recommends.
+
+  [ Hermógenes Oliveira ]
+  * Make apt-utils-search honour apt-utils-use-current-window.
+
+  [ Łukasz Stelmach ]
+  * debian-bug.el: Highlight Control: pseudo-header
+
+  [ Fabrice Bauzac ]
+  * Fix Emacs 28.2 warnings about beginning/end-of-buffer.
+    + {beginning,end}-of-buffer functions are for interactive use only.
+  * Fix warning about save-excursion+set-buffer.
+  * Fix warning about next-line.
+  * Fix warning about mapcar's unused return value.
+  * Fix byte-compilation warning about dired-load-hook.
+
+  [ Xiyue Deng ]
+  * Documentation fixes.
+    + Fix typos.
+    + Revise some wording.
+    + Stop using obsoleted versioned emacs21 in examples.
+  * Handle process error more gracefully (Closes: #1050685).
+  * Run term-exec without hooks to be more robust.
+  * Resolve comp warnings (Closes: #1024695, #1034734, #1037179, #1051478).
+    + Drop usage of obsolete easy-menu-{add,remove} functions.
+    + Fix warning on docstring has wrong usage of unescaped single quotes.
+    + Fix warnings on undefined variables and functions.
+    + Fix byte-compilation warning about dired-load-hook.
+    + Use eval-and-compile to avoid unused variable warnings.
+    + Use toplevel require for general dependencies.
+    + Use eval-and-compile for non-toplevel requires.
+    + Use make-local-variable as necessary.
+    + Replace usage of some now-obsolete symbols.
+  * Fix some trailing whitespace & untabify.
+  * Change default deb-find-directory to "/var/cache/apt/archives".
+  * Fix install status detection of "Multi-Arch:same" packages
+    (Closes: #664083).
+  * Update Standards-Version to 4.6.2.  No change needed.
+  * Use https URI in d/copyright.
+  * Add lintian override for info page outside of /usr/share/doc.
+  * Migrate to debhelper-compat version 13.
+  * Add "Rules-Requires-Root: no" in d/control.
+  * Update year in d/copyright.
+  * Add team as Upstream-Contact in d/copyright.
+  * Use dh_elpa to handle *-{autoloads,pkg}.el generation.
+    + Add package info comments to debian-el.el.
+    + Drop debian-autoloads.el and debian-el-pkg.el in favor of dh_elpa
+      generated ones.
+  * Add a dummy test to force byte-compiling addons to help detect issues.
+  * Add myself to Uploaders.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 28 Mar 2024 10:13:38 +0800
+
+debian-el (37.10) unstable; urgency=medium
+
+  [ Lev Lamberov ]
+  * debian-bug.el: Add missing release tags
+
+  [ David Bremner ]
+  * Drop obsolete link in apt-utils.el (Closes: #971802).
+  * Re-encode apt-sources.el in utf8
+
+ -- David Bremner <bremner@debian.org>  Sun, 11 Oct 2020 12:44:21 -0300
+
+debian-el (37.9) unstable; urgency=medium
+
+  * Team upload.
+  * Rebuild with current dh-elpa
+
+ -- David Bremner <bremner@debian.org>  Sat, 24 Aug 2019 16:03:02 -0300
+
+debian-el (37.8) unstable; urgency=medium
+
+  * Do not use shell in call-process (Closes: #905308).
+  * Use view mode for files from INFO buffer (Closes: #623684).
+
+ -- David Bremner <bremner@debian.org>  Sat, 20 Oct 2018 12:13:04 -0300
+
+debian-el (37.7) unstable; urgency=medium
+
+  * Formatting fixes from Jonas Bernoulli
+  * Drop conditional require of view.el, also from Jonas.
+  * Bug fix: "preseed.el buffer local comment-start", thanks to Kevin Ryde
+    (Closes: #710334).
+
+ -- David Bremner <bremner@debian.org>  Fri, 19 Oct 2018 08:25:02 -0300
+
+debian-el (37.6) unstable; urgency=medium
+
+  * Require debian-el.el at startup (Closes: #905364)
+
+ -- David Bremner <bremner@debian.org>  Sat, 04 Aug 2018 15:30:42 -0400
+
+debian-el (37.5) unstable; urgency=medium
+
+  * Upload to unstable
+
+ -- David Bremner <bremner@debian.org>  Sun, 29 Jul 2018 06:06:26 +0800
+
+debian-el (37.4) experimental; urgency=medium
+
+  * Add missing depends on xz-utils; this was previously a Pre-Depends
+    when this package was built from emacs-goodies-el but it doesn't need
+    to be anymore.
+  * Update documentation for deb-view to note dependence on dpkg-deb
+
+ -- David Bremner <bremner@debian.org>  Sun, 01 Jul 2018 06:37:19 -0300
+
+debian-el (37.3) experimental; urgency=medium
+
+  * Don't byte compile gnus-BTS.el (Closes: #902785).
+  * Drop require of obsolete debian-el-loaddefs.el from gnus-BTS.el
+  * Re-apply patches for gnus-BTS.el from emacs-goodies-el
+  * Use dpkg-deb's --ctrl-tarfile option to extract the control archive
+    (Closes: #878868).  Depend on dpkg (>= 1.17.14) for that feature.
+  * Copy most of the dependencies back from emacs-goodies-el. Omit "file"
+    for now; let me know if this breaks something.
+
+ -- David Bremner <bremner@debian.org>  Sat, 30 Jun 2018 22:50:06 -0300
+
+debian-el (37.2) experimental; urgency=medium
+
+  * Update debian/copyright for split package.
+
+ -- David Bremner <bremner@debian.org>  Fri, 29 Jun 2018 13:25:21 -0300
+
+debian-el (37.1) experimental; urgency=medium
+
+  * Set maintainer to debian-emacsen@lists.debian.org
+  * Add Vcs-* headers.
+
+ -- David Bremner <bremner@debian.org>  Sun, 24 Jun 2018 09:49:14 -0300
+
+debian-el (37.0) experimental; urgency=medium
+
+  * Adopting emacs-goodies-el to the emacsen-team, see
+    https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=901157#20
+  * Split from emacs-goodies-el source (36.4), and dh-elpafied.
+
+ -- David Bremner <bremner@debian.org>  Sun, 24 Jun 2018 08:11:25 -0300
