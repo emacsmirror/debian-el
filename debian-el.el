@@ -1,5 +1,9 @@
 ;;; debian-el.el --- startup file for the debian-el package
 
+;; Author: Debian Emacsen Team <debian-emacsen@lists.debian.org>
+;; Version: 37.13
+;; Keywords: debian apt elisp
+
 ;; This file is not part of GNU Emacs.
 
 ;; debian-el is free software: you can redistribute it and/or modify
@@ -27,10 +31,6 @@
 ;; `deb-view'    View contents of Debian package, similarly to tar-mode.
 ;; `gnus-BTS'    Provides buttons for bug numbers seen in Gnus messages.
 ;; `preseed'     Major-mode for editing debian-installer preseed files.
-
-;; Author: Debian Emacsen Team <debian-emacsen@lists.debian.org>
-;; Version: 37.11
-;; Keywords: debian apt elisp
 
 ;;; History:
 ;;

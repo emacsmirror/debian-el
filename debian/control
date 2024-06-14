@@ -9,7 +9,8 @@ Build-Depends: debhelper-compat (= 13),
  dh-elpa,
  texinfo,
  install-info
-Standards-Version: 4.6.2
+Standards-Version: 4.7.0
+Homepage: https://salsa.debian.org/emacsen-team/debian-el
 Vcs-Browser: https://salsa.debian.org/emacsen-team/debian-el
 Vcs-Git: https://salsa.debian.org/emacsen-team/debian-el.git
 Rules-Requires-Root: no
@@ -19,6 +20,7 @@ Architecture: all
 Depends: bzip2,
          reportbug,
          xz-utils,
+         zstd,
          ${elpa:Depends},
          ${misc:Depends}
 Recommends: emacs, wget

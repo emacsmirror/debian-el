@@ -726,7 +726,7 @@ function simply returns BTS-ADDRESS."
       bts-address
     (concat type "@" bts-address)))
 
-(defun debian-bug-prefill-report (package severity)
+(defun debian-bug-prefill-report (package version severity)
   "Prefill bug report for PACKAGE at SEVERITY, calling bug or reportbug."
   (cond
    ;; bug
@@ -739,10 +739,16 @@ function simply returns BTS-ADDRESS."
    ;; reportbug
    ((eq (debian-bug-helper-program) 'reportbug)
     (save-excursion
-      (call-process "reportbug" nil '(t t) nil
-		    "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
-                    "--list-cc=none" "--no-bug-script"
-                    "-q" package)
+      ;; Unset $HOME to avoid reportbug from loading user options in
+      ;; ~/.reportbugrc which may potentially change reportbug's behavior and
+      ;; hence break the generated template.  Suggested by suggested by Nis
+      ;; Martensen <nis.martensen@mailbox.org> in
+      ;; https://bugs.debian.org/1070881.
+      (with-environment-variables (("HOME" ""))
+        (call-process "reportbug" nil '(t t) nil
+                      "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
+                      "--no-bug-script" "-q" package))
+      (debian-bug--set-version version)
       (debian-bug--set-severity severity))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
     (delete-region
@@ -855,13 +861,14 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
 This protects the term-exec session from potentially being
 affected by user installed hooks when the command may ask for
 user input."
+  (eval-and-compile (require 'term))
   (let ((old-term-exec-hook term-exec-hook)
         (term-exec-hook nil))
     (unwind-protect
         (term-exec buffer name command startfile switches)
       (setq term-exec-hook old-term-exec-hook))))
 
-(defun debian-bug-run-bug-script (package severity subject filename)
+(defun debian-bug-run-bug-script (package severity version subject filename)
   "Run a script, if provided by PACKAGE, to collect information.
 The information about the package which should be supplied with
 the bug report, and then proceed to the next step in the bug
@@ -917,7 +924,7 @@ reporting process by calling `debian-bug-compose-report'."
                    bug-script-process
                    (list 'lambda '(process event)
                          (list 'debian-bug-script-sentinel 'process 'event
-                               package severity subject filename
+                               package severity version subject filename
                                bug-script-temp-file
                                (current-window-configuration))))
 
@@ -928,8 +935,9 @@ reporting process by calling `debian-bug-compose-report'."
                   (if (fboundp 'set-process-query-on-exit-flag)
                       (set-process-query-on-exit-flag bug-script-process
                                                       nil)))
-              (message "Trying to get package related info failed.  Generated "
-                       "bug report may be missing some information.")))
+              (message (concat "Trying to get package related info failed.  "
+                               "Generated bug report may be missing some "
+                               "information."))))
 
           ;; Delay switching to the process output buffer by waiting
           ;; for output from the process, the process to terminate or
@@ -950,7 +958,7 @@ reporting process by calling `debian-bug-compose-report'."
                          '(exit signal)))
               (switch-to-buffer-other-window bug-script-buffer)))
 
-      (debian-bug-compose-report package severity subject filename))))
+      (debian-bug-compose-report package severity version subject filename))))
 
 (defun debian-bug-insert-bug-script-temp-file (temp-file)
   "Insert the output from the bug script, if any, into the current buffer."
@@ -1009,13 +1017,16 @@ reporting process by calling `debian-bug-compose-report'."
                       (completing-read "Severity (default normal): "
                                        debian-bug-severity-alist
                                        nil t nil nil "normal")))
+          (version (save-window-excursion
+                     (debian-bug-help-presubj package)
+                     (read-string "Version (optional): ")))
           (subject (save-window-excursion
                      (debian-bug-help-presubj package)
                      (read-string "(Very) brief summary of problem: "))))
-      (debian-bug-run-bug-script package severity subject filename))))
+      (debian-bug-run-bug-script package severity version subject filename))))
 
 (defun debian-bug-compose-report
-    (package severity subject filename &optional bug-script-temp-file)
+    (package severity version subject filename &optional bug-script-temp-file)
   "Compose the initial contents of the bug report and present it in a buffer.
 The buffer will be completed by the user."
 ;;; (require 'reporter)
@@ -1056,7 +1067,7 @@ The buffer will be completed by the user."
   (if (looking-at "^<#secure")      ;Skip over mml directives
       (forward-line 1))
   (message "Getting package information from reportbug...")
-  (debian-bug-prefill-report package severity)
+  (debian-bug-prefill-report package version severity)
   (message "Getting package information from reportbug...done")
   (if debian-bug-use-From-address
       (debian-bug--set-custom-From))
@@ -1146,10 +1157,11 @@ Optional argument ACTION can be provided in programs."
           (debian-bug--set-CC "debian-devel@lists.debian.org"
                               "X-Debbugs-CC:")))
     (insert "Package: wnpp\n")
+    (insert (format "Severity: %s\n" severity))
     (when (and (string-equal tag "ITP")
                debian-bug-From-address)
       (insert (format "Owner: %s\n" debian-bug-From-address)))
-    (insert (format "Severity: %s\n\n" severity))
+    (insert "\n")
     (when (or (string-equal tag "ITP")
 	      (string-equal tag "RFP"))
       (insert
@@ -1159,6 +1171,7 @@ Optional argument ACTION can be provided in programs."
        "  Upstream Author : \n"
        "* URL or Web page : \n"
        "* License         : \n"
+       "  Programming lang: \n"
        "  Description     : " description "\n")
       (forward-line -1))
     (set-window-start (selected-window) (point-min) t)
@@ -1317,6 +1330,26 @@ Non-nil optional argument NOCLEANUP means remove empty field."
     (if (re-search-forward "^ *Severity: +\\([a-zA-Z]+\\)" nil t)
 	(let ((actualSeverity (match-string-no-properties 1)))
 	  (string= actualSeverity severity)))))
+
+(defun debian-bug--set-version (version)
+  "Set bug VERSION."
+  (interactive (list (read-string "Version: ")))
+  (if (or (not version)
+          (string= version ""))
+      nil
+    (save-excursion
+      (goto-char (point-min))
+      (cond
+       ((re-search-forward "^\\s-*Version:\\s-*\\(\\S-+\\)\n" nil t)
+        (goto-char (match-beginning 1))
+        (delete-region (match-beginning 1) (match-end 1))
+        (insert version))
+       ((re-search-forward "^\\s-*Package:.*\n")
+        (insert "Version: " version "\n"))
+       (t
+        (while (not (eolp))
+          (forward-line))
+        (insert "\nVersion: " version "\n"))))))
 
 (defun debian-bug--set-severity (severity)
   "Set bug SEVERITY level."
@@ -2478,6 +2511,44 @@ Call this function from the mode setup with MINOR-MODE-MAP."
       (debian-bug-filename))
      (t
       (message "Sorry, try that again")))))
+
+;;;###autoload
+(defun debian-bug-request-for-sponsor (mentors-template-url)
+  "Prepare a RFS bug email based on the RFS template on mentors.d.n.
+One should provide a URL to an RFS template which will be used to
+generate the mail content.  It will then compose a mail based on
+the RFS template that is ready to send.  If a name can be
+detected through environmental variables `DEBFULLNAME',
+`DEBNAME', or `NAME', or can be retrieved
+from `(user-full-name)', a signature will also be appended to the
+end of the mail.
+
+Throws an error if MENTORS-TEMPLATE-URL does not point to a
+mentors RFS template page."
+  (interactive "sRFS template link: ")
+  (unless (string-match-p "^https://mentors.debian.net/sponsors/rfs-howto/[^/]+/?"
+                          mentors-template-url)
+    (error (concat "Invalid URL.  It should be of the form "
+                   "\"https://mentors.debian.net/sponsors/rfs-howto/"
+                   "<package-name>/\".")))
+  (browse-url-mail
+   (with-temp-buffer
+     (url-insert-file-contents mentors-template-url)
+     (goto-char (point-min))
+     (unless (re-search-forward "<a\\s-+href=\"\\(mailto.+\\)\">" nil t)
+       (error "The RFS template page is ill-formed.  Please try again."))
+     (let ((mailto-string (buffer-substring (match-beginning 1)
+                                            (match-end 1)))
+           (fullname (or (getenv "DEBFULLNAME")
+                         (getenv "DEBNAME")  ;; reportbug
+                         (getenv "NAME")  ;;  reportbug
+                         (user-full-name))))
+       (when fullname
+         (setq mailto-string
+               (concat mailto-string
+                       (url-hexify-string (concat "\n-- \n" fullname "\n")))))
+       mailto-string))))
+(defalias 'debian-bug-RFS 'debian-bug-request-for-sponsor)
 
 (provide 'debian-bug)
 
