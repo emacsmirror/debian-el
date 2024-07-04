@@ -1,3 +1,10 @@
+debian-el (37.14) UNRELEASED; urgency=medium
+
+  * Add missing version parameter for debian-bug-script-sentinel (Closes:
+    #1075767)
+
+ -- Xiyue Deng <manphiz@gmail.com>  Thu, 04 Jul 2024 14:36:00 -0700
+
 debian-el (37.13) unstable; urgency=medium
 
   * Add Homepage in d/control
