@@ -807,7 +807,7 @@ If such script exists, otherwise nil is returned."
      ((debian-bug-file-is-executable script-alt2) script-alt2))))
 
 (defun debian-bug-script-sentinel
-    (process event package severity subject filename
+    (process event package severity version subject filename
              bug-script-temp-file win-config)
   "This function is the process sentinel for bug script processes.
 When called, if the process has terminated, this function cleans
@@ -852,7 +852,7 @@ with `set-process-sentinel' directly, but requires some tweaking instead."
                 (kill-buffer bug-script-buffer)
               (bury-buffer bug-script-buffer)))
 
-        (debian-bug-compose-report package severity subject filename
+        (debian-bug-compose-report package severity version subject filename
                                    bug-script-temp-file))))
 
 (defun debian-bug--safe-term-exec (buffer name command startfile switches)
