@@ -1,9 +1,18 @@
-debian-el (37.14) UNRELEASED; urgency=medium
+debian-el (37.15) UNRELEASED; urgency=medium
 
   * Add missing version parameter for debian-bug-script-sentinel (Closes:
     #1075767)
 
  -- Xiyue Deng <manphiz@gmail.com>  Thu, 04 Jul 2024 14:36:00 -0700
+
+debian-el (37.14) unstable; urgency=medium
+
+  * Team upload.
+  * Rebuild against dh-elpa 2.1.3.
+    Upload pushed to dgit-repos but not salsa.
+    See <https://lists.debian.org/debian-emacsen/2024/07/msg00077.html>.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Wed, 24 Jul 2024 21:43:05 +0900
 
 debian-el (37.13) unstable; urgency=medium
 
