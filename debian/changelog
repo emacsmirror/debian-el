@@ -1,3 +1,12 @@
+debian-el (37.15) unstable; urgency=medium
+
+  * Team upload.
+  * Rebuild against dh-elpa 2.1.5.
+    Upload pushed to dgit-repos but not salsa.
+    See <https://lists.debian.org/debian-emacsen/2024/07/msg00077.html>.
+
+ -- Sean Whitton <spwhitton@spwhitton.name>  Thu, 25 Jul 2024 17:55:02 +0900
+
 debian-el (37.14) unstable; urgency=medium
 
   * Team upload.
