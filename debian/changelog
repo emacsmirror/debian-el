@@ -1,4 +1,4 @@
-debian-el (37.16) UNRELEASED; urgency=medium
+debian-el (37.16) unstable; urgency=medium
 
   * Add missing version parameter for debian-bug-script-sentinel
     (Closes: #1075767)
