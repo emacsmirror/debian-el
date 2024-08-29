@@ -502,6 +502,13 @@ Otherwise, simply use the menu entry to generate it."
   :group 'debian-bug
   :type 'boolean)
 
+(defcustom debian-bug-request-for-sponsor-add-signature nil
+  "Whether to add a signature to the end of the mail template.
+This requires a user name can be detected through DEBFULLNAME,
+DEBNAME, NAME, or `user-full-name'"
+  :group 'debian-bug
+  :type 'boolean)
+
 ;; hooks
 (defcustom debian-bug-get-bug-as-email-hook nil
   "Hook run when getting a bug through `mail-user-agent'."
@@ -2517,8 +2524,9 @@ Call this function from the mode setup with MINOR-MODE-MAP."
   "Prepare a RFS bug email based on the RFS template on mentors.d.n.
 One should provide a URL to an RFS template which will be used to
 generate the mail content.  It will then compose a mail based on
-the RFS template that is ready to send.  If a name can be
-detected through environmental variables `DEBFULLNAME',
+the RFS template that is ready to send.  If
+`debian-bug-request-for-sponsor-add-signature' is set and a name
+can be detected through environmental variables `DEBFULLNAME',
 `DEBNAME', or `NAME', or can be retrieved
 from `(user-full-name)', a signature will also be appended to the
 end of the mail.
@@ -2538,15 +2546,17 @@ mentors RFS template page."
      (unless (re-search-forward "<a\\s-+href=\"\\(mailto.+\\)\">" nil t)
        (error "The RFS template page is ill-formed.  Please try again."))
      (let ((mailto-string (buffer-substring (match-beginning 1)
-                                            (match-end 1)))
-           (fullname (or (getenv "DEBFULLNAME")
-                         (getenv "DEBNAME")  ;; reportbug
-                         (getenv "NAME")  ;;  reportbug
-                         (user-full-name))))
-       (when fullname
-         (setq mailto-string
-               (concat mailto-string
-                       (url-hexify-string (concat "\n-- \n" fullname "\n")))))
+                                            (match-end 1))))
+       (when debian-bug-request-for-sponsor-add-signature
+         (let ((fullname (or (getenv "DEBFULLNAME")
+                             (getenv "DEBNAME")  ;; reportbug
+                             (getenv "NAME")  ;; reportbug
+                             (user-full-name))))
+           (when fullname
+             (setq mailto-string
+                   (concat mailto-string
+                           (url-hexify-string (concat "\n-- \n"
+                                                      fullname "\n")))))))
        mailto-string))))
 (defalias 'debian-bug-RFS 'debian-bug-request-for-sponsor)
 
