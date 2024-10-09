@@ -7,8 +7,7 @@ Uploaders:
  Xiyue Deng <manphiz@gmail.com>,
 Build-Depends: debhelper-compat (= 13),
  dh-elpa,
- texinfo,
- install-info
+ texinfo
 Standards-Version: 4.7.0
 Homepage: https://salsa.debian.org/emacsen-team/debian-el
 Vcs-Browser: https://salsa.debian.org/emacsen-team/debian-el
