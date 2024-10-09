@@ -1,3 +1,16 @@
+debian-el (37.17~1.gbp7a9554) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @7a955451f923c05eba40b56488dacff9f0fcc893 **
+
+  * Rework info page handling
+    - Remove install-info from Build-Depends and stop invoking it in
+      d/rules as per policy 12.2.
+    - Use d/info to include generated info pages to let dh_installinfo
+      handle them.
+  * Add info documentation for debian-bug-request-for-sponsor
+
+ -- Xiyue Deng <manphiz@gmail.com>  Wed, 09 Oct 2024 15:40:07 -0700
+
 debian-el (37.16) unstable; urgency=medium
 
   * Add missing version parameter for debian-bug-script-sentinel
