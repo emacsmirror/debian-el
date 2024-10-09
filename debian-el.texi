@@ -156,6 +156,11 @@ Shortcut for @code{debian-bug-wnpp} with RFP action.
 @item debian-bug-intent-to-package
 Shortcut for @code{debian-bug-wnpp} with ITP action (for Debian developers).
 
+@item debian-bug-request-for-sponsor
+Submit a request-for-sponsor (RFS) bug for a package prepared on
+mentors.debian.net, where you provide a link to the RFS template page
+and it will generate an ready-to-send email for you.
+
 @item debian-bug-web-bugs
 Browse the BTS for this package via @code{browse-url}."
 
