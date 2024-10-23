@@ -745,18 +745,27 @@ function simply returns BTS-ADDRESS."
 
    ;; reportbug
    ((eq (debian-bug-helper-program) 'reportbug)
-    (save-excursion
-      ;; Unset $HOME to avoid reportbug from loading user options in
-      ;; ~/.reportbugrc which may potentially change reportbug's behavior and
-      ;; hence break the generated template.  Suggested by suggested by Nis
-      ;; Martensen <nis.martensen@mailbox.org> in
-      ;; https://bugs.debian.org/1070881.
-      (with-environment-variables (("HOME" ""))
-        (call-process "reportbug" nil '(t t) nil
-                      "--template" "-T" "none" "-s" "none" "-S" "normal" "-b"
-                      "--no-bug-script" "-q" package))
-      (debian-bug--set-version version)
-      (debian-bug--set-severity severity))
+    (let ((reportbug-cmd (list "reportbug" nil '(t t) nil
+                               "--template" "-T" "none" "-s" "none" "-S"
+                               "normal" "-b" "--no-bug-script" "-q")))
+      (save-window-excursion
+        (when debian-bug-display-help
+          (debian-bug-help-including-configuration-files))
+        (when (not
+               (y-or-n-p
+                "Do you want to include configuration files in the bug report?"))
+          (add-to-list 'reportbug-cmd "--no-config-files" t)))
+      (setq reportbug-cmd (append reportbug-cmd (list package)))
+      (save-excursion
+        ;; Unset $HOME to avoid reportbug from loading user options in
+        ;; ~/.reportbugrc which may potentially change reportbug's behavior and
+        ;; hence break the generated template.  Suggested by suggested by Nis
+        ;; Martensen <nis.martensen@mailbox.org> in
+        ;; https://bugs.debian.org/1070881.
+        (with-environment-variables (("HOME" ""))
+          (apply 'call-process reportbug-cmd))
+        (debian-bug--set-version version)
+        (debian-bug--set-severity severity)))
     ;; delete the mail headers, leaving only the BTS pseudo-headers
     (delete-region
      (point)
@@ -1753,6 +1762,22 @@ Aug 10th 2001
 
  Bugs sent to maintonly@bugs or to quiet@bugs are *still* posted to
  the Debian Bug Tracking System web site (--psg).")))
+
+(defun debian-bug-help-including-configuration-files ()
+  "Display help about including configuration files."
+  (with-output-to-temp-buffer "*Help*"
+    (princ "Including configuration files usually helps debugging.
+
+Some configuration files may contain sensitive information like
+user name, password, host names, etc.  Even if you choose to
+include configuration files which contains sensitive information,
+you still have a chance to review included information before
+sending the bug report, so it is generally advised to include
+configuration files.
+
+Note that some package has configured a bug script that includes
+various settings of the package separately.  Be sure to check the
+generated email template and remove any sensitive information.")))
 
 
 (easy-menu-define debian-bug-menu debian-bug-minor-mode-map
