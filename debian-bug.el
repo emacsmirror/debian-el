@@ -897,7 +897,18 @@ reporting process by calling `debian-bug-compose-report'."
                  (or (featurep 'term) (load "term" 'noerror))
                (require 'term nil 'noerror)))
         (let ((bug-script-buffer
-               (get-buffer-create "*debian-bug-script*"))
+               ;; Sometimes the previous bug script run left the
+               ;; bug-script-buffer buried, and when the next time bug script
+               ;; runs it will try to get that buffer to operate again but it's
+               ;; read-only.  Doing a clean up here first.  We could make the
+               ;; bug script sentinel kill the buffer unconditionally, but the
+               ;; buffer contents may help debugging so it's worth to keep it
+               ;; around.
+               (let ((bug-script-buffer-name "*debian-bug-script*"))
+                 (when-let* ((bug-script-existing-buffer
+                              (get-buffer bug-script-buffer-name)))
+                   (kill-buffer bug-script-existing-buffer))
+                 (get-buffer-create bug-script-buffer-name)))
               (bug-script-temp-file
                (cond ((fboundp 'make-temp-file)       ;; XEmacs doesn't know
                       (make-temp-file "debian-bug-")) ;; make-temp-file.
