@@ -17,7 +17,7 @@ debian-el (37.17) unstable; urgency=medium
     - Kill any existing bug-script-buffer and create a new one on
       subsequent runs.
 
- -- Xiyue Deng <manphiz@gmail.com>  Fri, 25 Oct 2024 22:54:51 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 25 Oct 2024 23:37:59 -0700
 
 debian-el (37.16) unstable; urgency=medium
 
