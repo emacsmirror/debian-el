@@ -173,7 +173,7 @@ inserted."
   "A regexp that matches `deb' or `deb-src' at the begining of line.")
 
 (defvar apt-sources-font-lock-uri-regexp
-  "\\([^ ]+\\)"
+  "\\(\\w+:\\[.+\\]/?\\|[^ ]+\\)"
   "A regexp that matches the URI part of the source line.")
 
 (defvar apt-sources-font-lock-distribution-regexp
