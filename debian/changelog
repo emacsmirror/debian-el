@@ -1,3 +1,12 @@
+debian-el (37.18) UNRELEASED; urgency=medium
+
+  * Drop info handling from d/elpa
+    - They are now handled by d/info
+  * Drop obsolete d/elpa-debian-el.lintian-overrides
+  * Change section from lisp to editors in d/control
+
+ -- Xiyue Deng <manphiz@gmail.com>  Mon, 23 Dec 2024 21:07:32 -0800
+
 debian-el (37.17) unstable; urgency=medium
 
   * Rework info page handling
