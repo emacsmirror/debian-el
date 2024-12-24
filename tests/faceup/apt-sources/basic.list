@@ -1,0 +1,22 @@
+# default suites
+deb http://deb.debian.org/debian stable main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian stable main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian testing main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian testing main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian unstable main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian unstable main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian experimental main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian experimental main contrib non-free non-free-firmware
+
+# code name suites
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian sid main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian sid main contrib non-free non-free-firmware

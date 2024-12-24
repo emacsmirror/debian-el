@@ -1,0 +1,22 @@
+«m:# »«x:default suites
+»«c:deb» «v:http://deb.debian.org/debian» «t:stable» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:stable» «k:main contrib non-free non-free-firmware»
+
+«c:deb» «v:http://deb.debian.org/debian» «t:testing» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:testing» «k:main contrib non-free non-free-firmware»
+
+«c:deb» «v:http://deb.debian.org/debian» «t:unstable» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:unstable» «k:main contrib non-free non-free-firmware»
+
+«c:deb» «v:http://deb.debian.org/debian» «t:experimental» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:experimental» «k:main contrib non-free non-free-firmware»
+
+«m:# »«x:code name suites
+»«c:deb» «v:http://deb.debian.org/debian» «t:bookworm» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:bookworm» «k:main contrib non-free non-free-firmware»
+
+«c:deb» «v:http://deb.debian.org/debian» «t:trixie» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:trixie» «k:main contrib non-free non-free-firmware»
+
+«c:deb» «v:http://deb.debian.org/debian» «t:sid» «k:main contrib non-free non-free-firmware»
+«c:deb-src» «v:http://deb.debian.org/debian» «t:sid» «k:main contrib non-free non-free-firmware»
