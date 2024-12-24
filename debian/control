@@ -1,5 +1,5 @@
 Source: debian-el
-Section: lisp
+Section: editors
 Priority: optional
 Maintainer: Debian Emacsen team <debian-emacsen@lists.debian.org>
 Uploaders:
