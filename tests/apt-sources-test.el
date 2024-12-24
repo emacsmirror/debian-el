@@ -12,4 +12,6 @@
 
 (ert-deftest apt-sources-font-test ()
   (should (apt-sources-font-lock-test-apps
-           "faceup/apt-sources/basic.list")))
+           "faceup/apt-sources/basic.list"))
+  (should (apt-sources-font-lock-test-apps
+           "faceup/apt-sources/uri.list")))

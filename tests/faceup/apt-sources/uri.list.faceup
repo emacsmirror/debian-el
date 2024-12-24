@@ -1,0 +1,16 @@
+«m:# »«x:different URI types
+»«c:deb» «v:cdrom:[Debian GNU/Linux testing _Trixie_ - Official Snapshot amd64 NETINST with firmware 20240921-15:26]/» «t:trixie» «k:contrib main non-free-firmware contrib non-free»
+
+«c:deb» «v:copy:///copy_uri» «t:bullseye» «k:non-free»
+
+«c:deb» «v:file:///some/local/path» «t:frozen» «k:contrib»
+
+«c:deb» «v:ftp://ftp.uri/debian» «t:sid» «k:non-free-firmware»
+
+«c:deb» «v:http://http.uri/debian» «t:stable» «k:main»
+
+«c:deb» «v:https://https.uri/debian» «t:bookworm» «k:main»
+
+«c:deb» «v:rsh://rsh.uri/debian» «t:testing» «k:non-free»
+
+«c:deb» «v:ssh://ssh.uri/debian» «t:unstable» «k:main contrib»

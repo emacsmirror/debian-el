@@ -1,0 +1,16 @@
+# different URI types
+deb cdrom:[Debian GNU/Linux testing _Trixie_ - Official Snapshot amd64 NETINST with firmware 20240921-15:26]/ trixie contrib main non-free-firmware contrib non-free
+
+deb copy:///copy_uri bullseye non-free
+
+deb file:///some/local/path frozen contrib
+
+deb ftp://ftp.uri/debian sid non-free-firmware
+
+deb http://http.uri/debian stable main
+
+deb https://https.uri/debian bookworm main
+
+deb rsh://rsh.uri/debian testing non-free
+
+deb ssh://ssh.uri/debian unstable main contrib
