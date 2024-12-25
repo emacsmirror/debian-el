@@ -152,7 +152,7 @@ This can be set to dlocate, which has the advantage of better
 performance, but uses cached data that may be out of date."
   :group 'apt-utils
   :type '(choice (const :tag "dpkg" "/usr/bin/dpkg")
-                 (const : tag "dlocate" "/usr/bin/dlocate")
+                 (const :tag "dlocate" "/usr/bin/dlocate")
                  (file :must-match t)))
 
 (defcustom apt-utils-display-installed-status t
