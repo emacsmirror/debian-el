@@ -1,11 +1,16 @@
-debian-el (37.18) UNRELEASED; urgency=medium
+debian-el (37.18~1.gbp022f62) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @022f6224afa030b83d26f779903d3d0f9fb94d85 **
 
   * Drop info handling from d/elpa
     - They are now handled by d/info
   * Drop obsolete d/elpa-debian-el.lintian-overrides
   * Change section from lisp to editors in d/control
+  * Fix typo that breaks the :tag keyword in apt-utils.el
+  * Add faceup ERT tests to test font lock in modes
+    - Current covering apt-sources-mode.
 
- -- Xiyue Deng <manphiz@gmail.com>  Mon, 23 Dec 2024 21:07:32 -0800
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 03 Jan 2025 15:47:15 -0800
 
 debian-el (37.17) unstable; urgency=medium
 
