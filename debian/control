@@ -33,10 +33,3 @@ Description: Emacs helpers specific to Debian users
  deb-view - view contents of Debian package, similarly to tar-mode;
  gnus-BTS - provides buttons for bug numbers seen in Gnus messages;
  preseed - major mode for editing debian-installer preseed files.
-
-Package: debian-el
-Architecture: all
-Depends: ${misc:Depends}, elpa-debian-el
-Description: Transition package, debian-el to elpa-debian-el
- The debian-el emacs addon has been elpafied.  This dummy package
- helps ease transition from debian-el to elpa-debian-el.
