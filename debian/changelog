@@ -1,6 +1,4 @@
-debian-el (37.18~2.gbp16e478) UNRELEASED; urgency=medium
-
-  ** SNAPSHOT build @16e478154b225195c9a9fbc5b1023a3774adf043 **
+debian-el (37.18) unstable; urgency=medium
 
   * Drop info handling from d/elpa
     - They are now handled by d/info
@@ -14,7 +12,7 @@ debian-el (37.18~2.gbp16e478) UNRELEASED; urgency=medium
     - This has existed in the past 3 releases at least.
     - Rename {,elpa-}debian-el.maintscript to keep its function.
 
- -- Xiyue Deng <manphiz@gmail.com>  Wed, 08 Jan 2025 13:11:27 -0800
+ -- Xiyue Deng <manphiz@gmail.com>  Wed, 08 Jan 2025 13:15:16 -0800
 
 debian-el (37.17) unstable; urgency=medium
 
