@@ -1,6 +1,6 @@
-debian-el (37.18~1.gbp022f62) UNRELEASED; urgency=medium
+debian-el (37.18~2.gbp16e478) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @022f6224afa030b83d26f779903d3d0f9fb94d85 **
+  ** SNAPSHOT build @16e478154b225195c9a9fbc5b1023a3774adf043 **
 
   * Drop info handling from d/elpa
     - They are now handled by d/info
@@ -9,8 +9,12 @@ debian-el (37.18~1.gbp022f62) UNRELEASED; urgency=medium
   * Fix typo that breaks the :tag keyword in apt-utils.el
   * Add faceup ERT tests to test font lock in modes
     - Current covering apt-sources-mode.
+  * Simple fix of URI regexp for URI with space
+  * Drop transitional package debian-el
+    - This has existed in the past 3 releases at least.
+    - Rename {,elpa-}debian-el.maintscript to keep its function.
 
- -- Xiyue Deng <manphiz@gmail.com>  Fri, 03 Jan 2025 15:47:15 -0800
+ -- Xiyue Deng <manphiz@gmail.com>  Wed, 08 Jan 2025 13:11:27 -0800
 
 debian-el (37.17) unstable; urgency=medium
 
