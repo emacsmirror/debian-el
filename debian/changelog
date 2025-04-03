@@ -1,3 +1,18 @@
+debian-el (37.19~exp1) experimental; urgency=medium
+
+  * Bump version after release
+  * Add `lexical-binding:nil' directives
+    - Emacs 30.1 will warn if a file does not have a lexical-binding
+      directive.
+    - As we don't have good test coverage, it's safer to use the default
+      dynamic binding for now.
+  * Use run-mode-hooks instead of run-hooks
+    - run-hooks may cause font lock issues since Emacs 30.1.
+  * Drop old FSF address from d/copyright
+  * Update Standards-Version to 4.7.2; no change needed
+
+ -- Xiyue Deng <manphiz@gmail.com>  Thu, 03 Apr 2025 11:26:32 -0700
+
 debian-el (37.18) unstable; urgency=medium
 
   * Drop info handling from d/elpa
