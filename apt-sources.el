@@ -269,7 +269,7 @@ Sets up command `font-lock-mode'.
   (set-syntax-table apt-sources-mode-syntax-table)
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '(apt-sources-font-lock-keywords))
-  (run-hooks 'apt-sources-mode-hook))
+  (run-mode-hooks 'apt-sources-mode-hook))
 
 (defun apt-sources-new-source (name)
   "Insert interactively a new source line into the current buffer.
@@ -487,7 +487,7 @@ This function will rise an error if we are not on a source line."
 			    (re-search-forward "^deb[^ ]*" (line-end-position) t 1))
 	     (insert "deb"))))))
 
-(run-hooks 'apt-sources-load-hook)
+(run-mode-hooks 'apt-sources-load-hook)
 (add-to-list 'auto-mode-alist '("sources\\.list\\'" . apt-sources-mode))
 (add-to-list 'auto-mode-alist '("sources\\.list\\.d/.*\\.list\\'" . apt-sources-mode))
 

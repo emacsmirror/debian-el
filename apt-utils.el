@@ -443,7 +443,7 @@ buffer."
       ;; new packages with apt-utils-follow-link or
       ;; apt-utils-choose-package-link.
       (goto-char (point-min))
-      (run-hooks 'apt-utils-show-package-hooks)))
+      (run-mode-hooks 'apt-utils-show-package-hooks)))
   (set-buffer-modified-p nil)
   (setq buffer-read-only t))
 
@@ -1651,7 +1651,7 @@ buffer."
       (bury-buffer))
     (when kill-buffer
       (kill-buffer buffer)))
-  (run-hooks 'apt-utils-quit-hooks))
+  (run-mode-hooks 'apt-utils-quit-hooks))
 
 (defun apt-utils-cleanup ()
   "Clean up lists used by `apt-utils-mode'.
@@ -2097,7 +2097,7 @@ Key definitions:
              apt-utils-menu)
     (easy-menu-add apt-utils-menu))
   (add-hook 'kill-buffer-hook 'apt-utils-cleanup nil t)
-  (run-hooks 'apt-utils-mode-hook))
+  (run-mode-hooks 'apt-utils-mode-hook))
 
 ;; Debugging
 

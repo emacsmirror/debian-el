@@ -50,7 +50,7 @@
   (setq major-mode 'preseed-mode
  	mode-name "Preseed"
  	local-abbrev-table preseed-mode-abbrev-table)
-  (run-hooks 'preseed-mode-hook)
+  (run-mode-hooks 'preseed-mode-hook)
   (set (make-local-variable 'font-lock-defaults)
        '(preseed-font-lock-keywords nil nil ((?_ . "w")))))
 

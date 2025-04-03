@@ -2226,7 +2226,7 @@ If SUBMENU is t, then check for current sexp submenu only."
                                     (gnus-alive-p))))
                      (error "Please start `gnus' (or `gnus-slave') first"))
                  (debian-bug-prompt-bug-number "Bug number to fetch")))
-  (run-hooks 'debian-bug-get-bug-as-email-hook)
+  (run-mode-hooks 'debian-bug-get-bug-as-email-hook)
   (cond
    ((and (eq mail-user-agent 'mh-e-user-agent)
          (featurep 'mh-inc))
