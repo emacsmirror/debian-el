@@ -1,4 +1,4 @@
-;;; preseed.el --- a major-mode for editing debian-installer preseed files
+;;; preseed.el --- a major-mode for editing debian-installer preseed files. -*- lexical-binding:nil -*-
 
 ;; Copyright (C) 2004 W. Borgert <debacle@debian.org>
 

@@ -1,4 +1,4 @@
-;;; gnus-BTS.el --- access the Debian Bug Tracking System from Gnus  -*-no-byte-compile: t; -*-
+;;; gnus-BTS.el --- access the Debian Bug Tracking System from Gnus  -*-no-byte-compile: t; lexical-binding:nil -*-
 
 ;; Copyright (C) 2001 Andreas Fuchs <asf@acm.org>
 

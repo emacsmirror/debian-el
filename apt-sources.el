@@ -1,4 +1,4 @@
-;;; apt-sources.el --- Mode for editing apt source.list file
+;;; apt-sources.el --- Mode for editing apt source.list file. -*- lexical-binding:nil -*-
 ;;
 ;; Version: 0.9.9
 ;; $Revision:

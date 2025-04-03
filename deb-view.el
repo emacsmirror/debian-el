@@ -1,4 +1,4 @@
-;;; deb-view.el --- view Debian package files with tar-mode
+;;; deb-view.el --- view Debian package files with tar-mode. -*- lexical-binding:nil -*-
 
 ;; Copyright (C) 1998 Rick Macdonald <rickmacd@shaw.ca>
 ;; Copyright (C) 2003, 2004, 2005, 2009 Peter S Galbraith <psg@debian.org>

@@ -1,4 +1,4 @@
-;; Autoloads for package startup
+;; Autoloads for package startup -*- lexical-binding:nil -*-
 
 ;; Be backwards compatible with old debian-el package
 

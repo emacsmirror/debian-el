@@ -1,4 +1,4 @@
-;;; debian-el.el --- startup file for the debian-el package
+;;; debian-el.el --- startup file for the debian-el package. -*- lexical-binding:nil -*-
 
 ;; Author: Debian Emacsen Team <debian-emacsen@lists.debian.org>
 ;; Version: 37.19-git

@@ -1,4 +1,4 @@
-;;; apt-utils.el --- Emacs interface to APT (Debian package management)
+;;; apt-utils.el --- Emacs interface to APT (Debian package management) -*- lexical-binding:nil -*-
 
 ;; Copyright (C) 2002-2010 Matthew P. Hodges
 
