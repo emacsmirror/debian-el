@@ -1,3 +1,9 @@
+debian-el (37.19~exp2) experimental; urgency=medium
+
+  * Add preliminary support for deb822-style APT source files
+
+ -- Xiyue Deng <manphiz@gmail.com>  Thu, 03 Apr 2025 17:44:32 -0700
+
 debian-el (37.19~exp1) experimental; urgency=medium
 
   * Bump version after release
