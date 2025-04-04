@@ -1,0 +1,20 @@
+«x:# Modernized from /etc/apt/sources.list»
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://deb.debian.org/debian/»
+«k:Suites:» «t:trixie»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
+
+«x:# Modernized from /etc/apt/sources.list»
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://security.debian.org/debian-security/»
+«k:Suites:» «t:trixie-security»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
+
+«x:# Modernized from /etc/apt/sources.list»
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://deb.debian.org/debian/»
+«k:Suites:» «t:trixie-updates»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg

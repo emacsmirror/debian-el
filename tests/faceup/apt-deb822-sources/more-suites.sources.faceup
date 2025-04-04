@@ -1,0 +1,18 @@
+«x:# Test multiple suites»
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://deb.debian.org/debian/»
+«k:Suites:» «t:jessie» «t:buster» «t:bullseye» «t:bo» «t:hamm» «t:trixie» «t:duke» «t:testing» «t:sid» «t:unstable» «t:experimental»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
+
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://security.debian.org/debian-security/»
+«k:Suites:» «t:bullseye-security» «t:trixie-security» «t:stable-security» «t:testing-security»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
+
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://deb.debian.org/debian/»
+«k:Suites:» «t:trixie-updates» «t:stable-updates» «t:testing-updates»
+«k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
+«k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg

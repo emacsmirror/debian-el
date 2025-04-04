@@ -1,0 +1,18 @@
+# Test multiple suites
+Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: jessie buster bullseye bo hamm trixie duke testing sid unstable experimental
+Components: main non-free-firmware contrib non-free 
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+URIs: http://security.debian.org/debian-security/
+Suites: bullseye-security trixie-security stable-security testing-security
+Components: main non-free-firmware contrib non-free 
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb deb-src
+URIs: http://deb.debian.org/debian/
+Suites: trixie-updates stable-updates testing-updates
+Components: main non-free-firmware contrib non-free 
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
