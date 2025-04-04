@@ -26,8 +26,6 @@
 
 ;;; Code:
 
-
-
 (defgroup apt-deb822-sources nil
   "Mode for editing deb822-style apt source files."
   :group 'tools
@@ -47,12 +45,19 @@
   "Regexps to highlight in font-lock.")
 
 (defvar apt-deb822-sources-mode--field-names
-  '("Types"
+  '("Enabled"
+    "Types"
     "URIs"
     "Suites"
     "Components"
-    "Signed-By")
+    "Options"
+    "Signed-By"
+    "X-Repolib-Name")
   "Supported field names in deb822-style APT source files.")
+
+(defvar apt-deb822-sources-mode--enabled
+  '("yes" "no")
+  "Supported enabled status in deb822-style APT source files.")
 
 (defvar apt-deb822-sources-mode--types
   '("deb-src" "deb")
@@ -109,6 +114,12 @@
   (add-to-list 'apt-deb822-sources-mode-font-lock-keywords
                '("#.*$" . font-lock-comment-face)))
 
+(defun apt-deb822-sources-mode--font-lock-add-enabled (enabled-statuses)
+  (dolist (enabled-status enabled-statuses)
+    (add-to-list 'apt-deb822-sources-mode-font-lock-keywords
+                 `(,(concat "^Enabled:.*\\_<\\(" enabled-status "\\)\\_>")
+                   (1 font-lock-builtin-face)))))
+
 (defun apt-deb822-sources-mode--font-lock-add-uris (uris)
   (dolist (uri uris)
     (add-to-list 'apt-deb822-sources-mode-font-lock-keywords
@@ -150,6 +161,8 @@
   (set-syntax-table apt-deb822-sources-mode-syntax-table)
   ;; Add font locks
   (apt-deb822-sources-mode--font-lock-add-comments)
+  (apt-deb822-sources-mode--font-lock-add-enabled
+   apt-deb822-sources-mode--enabled)
   (apt-deb822-sources-mode--font-lock-add-field-names
    apt-deb822-sources-mode--field-names)
   (apt-deb822-sources-mode--font-lock-add-types apt-deb822-sources-mode--types)
