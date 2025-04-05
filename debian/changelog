@@ -1,3 +1,10 @@
+debian-el (37.19~exp3) experimental; urgency=medium
+
+  * Add support for more deb822-style fields
+  * Add support for Ubuntu suites and components
+
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 04 Apr 2025 18:09:57 -0700
+
 debian-el (37.19~exp2) experimental; urgency=medium
 
   * Add preliminary support for deb822-style APT source files
