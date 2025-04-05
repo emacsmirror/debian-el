@@ -5,14 +5,31 @@
 «k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
 «k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
 
+«k:Enabled:» «b:yes»
 «k:Types:» «f:deb» «f:deb-src»
 «k:URIs:» «d:http://security.debian.org/debian-security/»
 «k:Suites:» «t:bullseye-security» «t:trixie-security» «t:stable-security» «t:testing-security»
 «k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
 «k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
 
+«k:Enabled:» «b:no»
 «k:Types:» «f:deb» «f:deb-src»
 «k:URIs:» «d:http://deb.debian.org/debian/»
 «k:Suites:» «t:trixie-updates» «t:stable-updates» «t:testing-updates»
 «k:Components:» «v:main» «v:non-free-firmware» «v:contrib» «v:non-free» 
 «k:Signed-By:» /usr/share/keyrings/debian-archive-keyring.gpg
+
+«x:# Ubuntu»
+«k:Enabled:» «b:yes»
+«k:Types:» «f:deb» «f:deb-src»
+«k:URIs:» «d:http://archive.ubuntu.com/ubuntu»
+«k:Suites:» «t:disco» «t:disco-updates» «t:disco-security» «t:disco-backports»
+«k:Components:» «v:main» «v:universe» «v:multiverse» «v:restricted»
+
+«x:# Repolib»
+«k:X-Repolib-Name:» Pop!_OS PPA
+«k:Enabled:» «b:yes»
+«k:Types:» «f:deb»
+«k:URIs:» «d:http://ppa.launchpad.net/system76/pop/ubuntu»
+«k:Suites:» «t:disco»
+«k:Components:» «v:main»
