@@ -63,7 +63,7 @@
   '("deb-src" "deb")
   "Supported types in deb822-style APT source files.")
 
-(defvar apt-deb822-sources-mode--suites
+(defvar apt-deb822-sources-mode--debian-suites
   '("unstable" "sid"
     "experimental"
     "testing"
@@ -89,14 +89,78 @@
     "trixie"
     "forky"
     "duke")
-  "Supported suites in deb822-style APT source files.")
+  "Supported Debian suites in deb822-style APT source files.")
 
-(defvar apt-deb822-sources-mode--components
+(defvar apt-deb822-sources-mode--ubuntu-suites
+  '("warty"
+    "hoary"
+    "breezy"
+    "dapper"
+    "edgy"
+    "feisty"
+    "gutsy"
+    "hardy"
+    "intrepid"
+    "jaunty"
+    "karmic"
+    "lucid"
+    "maverick"
+    "natty"
+    "oneiric"
+    "precise"
+    "quantal"
+    "raring"
+    "saucy"
+    "trusty"
+    "utopic"
+    "vivid"
+    "wily"
+    "xenial"
+    "yakkety"
+    "zesty"
+    "artful"
+    "bionic"
+    "cosmic"
+    "disco"
+    "eoan"
+    "focal"
+    "groovy"
+    "hirsute"
+    "impish"
+    "jammy"
+    "kinetic"
+    "lunar"
+    "mantic"
+    "noble"
+    "oracular"
+    "plucky")
+  "Supported Ubuntu suites in deb822-style APT source files.")
+
+(defvar apt-deb822-sources-mode--suites
+  (append
+   apt-deb822-sources-mode--debian-suites
+   apt-deb822-sources-mode--ubuntu-suites)
+  "All supported suites in deb822-style APT source files.")
+
+(defvar apt-deb822-sources-mode--debian-components
   '("main"
     "contrib"
     "non-free-firmware"
     "non-free")
   "Supported components in deb822-style APT source files.")
+
+(defvar apt-deb822-sources-mode--ubuntu-components
+  '("main"
+    "universe"
+    "multiverse"
+    "restricted")
+  "Supported components in deb822-style APT source files.")
+
+(defvar apt-deb822-sources-mode--components
+  (append
+   apt-deb822-sources-mode--debian-components
+   apt-deb822-sources-mode--ubuntu-components)
+  "All supported components in deb822-style APT source files.")
 
 (defvar apt-deb822-sources-mode--uris
   '("https?"
