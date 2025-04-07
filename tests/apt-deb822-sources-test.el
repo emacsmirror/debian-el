@@ -15,4 +15,6 @@
   (should (apt-deb822-sources-font-lock-test-apps
            "faceup/apt-deb822-sources/basic.sources"))
   (should (apt-deb822-sources-font-lock-test-apps
-           "faceup/apt-deb822-sources/more-suites.sources")))
+           "faceup/apt-deb822-sources/more-suites.sources"))
+  (should (apt-deb822-sources-font-lock-test-apps
+           "faceup/apt-deb822-sources/typos.sources")))

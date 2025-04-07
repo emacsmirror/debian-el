@@ -1,0 +1,12 @@
+«x:# Typos in field names»
+Type: deb deb-src
+URLs: «d:http://deb.debian.org/debian/»
+Suits: bullseye
+Component: main non-free-firmware contrib non-free 
+Signed: /usr/share/keyrings/debian-archive-keyring.gpg
+
+«x:# Typos in values»
+«k:Enabled:» yess nno
+«k:Types:» debian deb-sr
+«k:Suites:» bookwarm trixe oraculr kinetc
+«k:Components:» non-free-firmwre contribute no-free 
