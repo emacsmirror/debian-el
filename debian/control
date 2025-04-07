@@ -28,6 +28,8 @@ Description: Emacs helpers specific to Debian users
  This package contains:
  .
  apt-sources - major mode for editing Debian sources.list files;
+ apt-deb822-sources - major mode for editing deb822-style Debian
+                      sources.list files;
  apt-utils - interface to APT (Debian package management);
  debian-bug - an Emacs command to submit a bug report;
  deb-view - view contents of Debian package, similarly to tar-mode;
