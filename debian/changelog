@@ -1,3 +1,9 @@
+debian-el (37.19~exp5) experimental; urgency=medium
+
+  * Add preliminary texinfo documentation for apt-deb822-sources
+
+ -- Xiyue Deng <manphiz@gmail.com>  Mon, 07 Apr 2025 14:27:02 -0700
+
 debian-el (37.19~exp4) experimental; urgency=medium
 
   * Add apt-deb822-sources info to package description
