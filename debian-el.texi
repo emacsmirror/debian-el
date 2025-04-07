@@ -46,6 +46,7 @@ basis, do:
 
 @menu
 * apt-sources::                 Mode for editing apt sources.list files
+* apt-deb822-sources::          Mode for editing apt deb822-style source files
 * apt-utils::                   Emacs interface to APT
 * debian-bug::                  Report a bug to Debian's bug tracking system
 * deb-view::                    View Debian package archive files with tar-mode
@@ -68,7 +69,7 @@ works, this text is also licensed under the GPL V2 (See
 /usr/share/common-licenses/GPL-2) and is edited by Peter S. Galbraith
 @email{psg@@debian.org}.
 
-@node apt-sources, apt-utils, Top, Top
+@node apt-sources, apt-deb822-sources, Top, Top
 @chapter apt-sources - Mode for editing apt sources.list files.
 
 This mode is for editing @file{/etc/apt/sources.list} and
@@ -109,7 +110,36 @@ to replicate an existing line (@kbd{C-c C-r}) that will be changed to
 the 'deb' or 'deb-src' corresponding line. If it replicates a 'deb'
 line, an identical 'deb-src' source line will be created.
 
-@node apt-utils, debian-bug, apt-sources, Top
+@node apt-deb822-sources, apt-utils, apt-sources, Top
+@chapter apt-deb822-sources - Modes for editing deb822-style apt source files
+
+Recent APT supports a deb822-style source file format.  APT source files
+using this newer format are usually located at
+@file{/etc/apt/sources.list.d/*.sources}.  This mode provides
+highlighting support for this new format.
+
+As an example, given one-line-style APT source file that looks like
+
+@example
+  deb https://deb.debian.org/debian bookworm main non-free-firmware contrib non-free
+  deb-src https://deb.debian.org/debian bookworm main non-free-firmware contrib non-free
+@end example
+
+An equivalent deb822-style source file will look like
+
+@example
+  Types: deb deb-src
+  URIs: https://deb.debian.org/debian/
+  Suites: bookworm
+  Components: main non-free-firmware contrib non-free 
+  Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+@end example
+
+A more thorough explanation of the deb822-style source format can be
+found at
+@url{https://repolib.readthedocs.io/en/latest/deb822-format.html}.
+
+@node apt-utils, debian-bug, apt-deb822-sources, Top
 @chapter apt-utils - Emacs interface to APT
 
 Start things off using e.g.:
