@@ -1,3 +1,11 @@
+debian-el (37.19~exp4) experimental; urgency=medium
+
+  * Add apt-deb822-sources info to package description
+  * Enable autopkgtest-pkg-elpa in d/control
+  * Add entry for apt-deb822-sources.el in d/copyright
+
+ -- Xiyue Deng <manphiz@gmail.com>  Mon, 07 Apr 2025 01:48:31 -0700
+
 debian-el (37.19~exp3) experimental; urgency=medium
 
   * Add support for more deb822-style fields
