@@ -27,7 +27,8 @@
 «k:Components:» «v:main» «v:universe» «v:multiverse» «v:restricted»
 
 «x:# Repolib»
-«k:X-Repolib-Name:» Pop!_OS PPA
+«x:# More example in https://repolib.readthedocs.io/en/latest/deb822-format.html»
+«k:X-Repolib-Name:» Pop!_OS PPA  «x:# For documenting repo info»
 «k:Enabled:» «b:yes»
 «k:Types:» «f:deb»
 «k:URIs:» «d:http://ppa.launchpad.net/system76/pop/ubuntu»
