@@ -1,3 +1,9 @@
+debian-el (37.19.1) unstable; urgency=medium
+
+  * Ensure comment font lock takes precedence (Closes: #1102650)
+
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 11 Apr 2025 13:45:02 -0700
+
 debian-el (37.19) unstable; urgency=medium
 
   * Upload to unstable
