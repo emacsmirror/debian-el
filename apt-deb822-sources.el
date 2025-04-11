@@ -223,7 +223,6 @@
   (use-local-map apt-deb822-sources-mode-map)
   (set-syntax-table apt-deb822-sources-mode-syntax-table)
   ;; Add font locks
-  (apt-deb822-sources-mode--font-lock-add-comments)
   (apt-deb822-sources-mode--font-lock-add-enabled
    apt-deb822-sources-mode--enabled)
   (apt-deb822-sources-mode--font-lock-add-field-names
@@ -235,6 +234,8 @@
    apt-deb822-sources-mode--components)
   (apt-deb822-sources-mode--font-lock-add-uris
    apt-deb822-sources-mode--uris)
+  ;; The comment font lock should be the last to ensure it takes precedence.
+  (apt-deb822-sources-mode--font-lock-add-comments)
   (setq-local font-lock-defaults
               '(apt-deb822-sources-mode-font-lock-keywords
                 nil  ;; keywords-only
