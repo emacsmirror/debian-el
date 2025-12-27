@@ -1,3 +1,13 @@
+debian-el (37.19.2) unstable; urgency=medium
+
+  * Handle HTML encoding of mailto link in RFS template
+    - The mailto link uses the HTML encoding and may result in an invalid
+      URI because the encoded string starts with "&".
+    - Perform an HTML decoding of the `mailto' string before calling
+      browse-url-mail.
+
+ -- Xiyue Deng <manphiz@gmail.com>  Sat, 27 Dec 2025 05:30:14 -0800
+
 debian-el (37.19.1) unstable; urgency=medium
 
   * Ensure comment font lock takes precedence (Closes: #1102650)
