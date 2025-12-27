@@ -5,8 +5,10 @@ debian-el (37.19.2) unstable; urgency=medium
       URI because the encoded string starts with "&".
     - Perform an HTML decoding of the `mailto' string before calling
       browse-url-mail.
+  * Drop `Rules-Requires-Root: no'
+    - This has been the default since dpkg 1.22.13.
 
- -- Xiyue Deng <manphiz@gmail.com>  Sat, 27 Dec 2025 05:30:14 -0800
+ -- Xiyue Deng <manphiz@gmail.com>  Sat, 27 Dec 2025 05:34:54 -0800
 
 debian-el (37.19.1) unstable; urgency=medium
 
