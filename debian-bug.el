@@ -2569,6 +2569,7 @@ end of the mail.
 
 Throws an error if MENTORS-TEMPLATE-URL does not point to a
 mentors RFS template page."
+  (eval-and-compile (require 'mm-url))
   (interactive "sRFS template link: ")
   (unless (string-match-p "^https://mentors.debian.net/sponsors/rfs-howto/[^/]+/?"
                           mentors-template-url)
@@ -2581,8 +2582,9 @@ mentors RFS template page."
      (goto-char (point-min))
      (unless (re-search-forward "<a\\s-+href=\"\\(mailto.+\\)\">" nil t)
        (error "The RFS template page is ill-formed.  Please try again."))
-     (let ((mailto-string (buffer-substring (match-beginning 1)
-                                            (match-end 1))))
+     (let ((mailto-string (mm-url-decode-entities-string
+                           (buffer-substring (match-beginning 1)
+                                            (match-end 1)))))
        (when debian-bug-request-for-sponsor-add-signature
          (let ((fullname (or (getenv "DEBFULLNAME")
                              (getenv "DEBNAME")  ;; reportbug
