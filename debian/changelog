@@ -1,7 +1,7 @@
 debian-el (37.19.3~exp1) experimental; urgency=medium
 
   * Fix duplicated words in comments
-  * Check for a valid debian-bug-From-address before invoking reportbug
+  * Check for a valid email in envvars before invoking reportbug
     - reportbug fails when no valid email is set through DEBEMAIL,
       REPORTBUGEMAIL, or EMAIL.
     - Report an error when no valid email can be found through those
@@ -9,7 +9,7 @@ debian-el (37.19.3~exp1) experimental; urgency=medium
   * Update Standards-Version to 4.7.3; no change needed
   * Drop `Priority: optional'; now default
 
- -- Xiyue Deng <manphiz@gmail.com>  Fri, 13 Mar 2026 17:17:53 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Fri, 13 Mar 2026 17:49:08 -0700
 
 debian-el (37.19.2) unstable; urgency=medium
 
