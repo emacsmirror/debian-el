@@ -762,7 +762,9 @@ function simply returns BTS-ADDRESS."
         ;; hence break the generated template.  Suggested by Nis Martensen
         ;; <nis.martensen@mailbox.org> in https://bugs.debian.org/1070881.
         (with-environment-variables (("HOME" ""))
-          (when (null debian-bug-From-address)
+          (when (not (or (getenv "DEBEMAIL")
+                         (getenv "REPORTBUGEMAIL")
+                         (getenv "EMAIL")))
             (error "No valid email address for reportbug. Please set a valid email address through enviornmental variables `DEBEMAIL', `REPORTBUGEMAIL', or `EMAIL'."))
           (apply 'call-process reportbug-cmd))
         (debian-bug--set-version version)
