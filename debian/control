@@ -1,6 +1,5 @@
 Source: debian-el
 Section: editors
-Priority: optional
 Maintainer: Debian Emacsen team <debian-emacsen@lists.debian.org>
 Uploaders:
  David Bremner <bremner@debian.org>,
