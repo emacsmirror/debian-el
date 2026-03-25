@@ -1,8 +1,8 @@
-debian-el (37.19.3) UNRELEASED; urgency=medium
+debian-el (37.19.3) unstable; urgency=medium
 
   * Upload to unstable (Closes: #1130529)
 
- -- Xiyue Deng <manphiz@gmail.com>  Tue, 24 Mar 2026 10:38:53 -0700
+ -- Xiyue Deng <manphiz@gmail.com>  Wed, 25 Mar 2026 02:30:47 -0700
 
 debian-el (37.19.3~exp1) experimental; urgency=medium
 
